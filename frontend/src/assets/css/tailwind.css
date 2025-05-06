@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Variáveis de cores personalizadas */
+:root {
+  --color-primary: #ff8e21;
+  --color-secondary: #3b82f6;
+  --color-accent: #10b981;
+  --color-background: #ffffff;
+  --color-text: #1f2937;
+}
+
+/* Classes personalizadas */
+@layer components {
+  .btn-primary {
+    @apply bg-primary text-white font-medium py-2 px-4 rounded-lg hover:bg-primary-dark transition duration-300;
+  }
+
+  .btn-secondary {
+    @apply bg-secondary text-white font-medium py-2 px-4 rounded-lg hover:bg-secondary-dark transition duration-300;
+  }
+
+  .card {
+    @apply bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-300;
+  }
+
+  .form-input {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary;
+  }
+}
+
+/* Animações */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .container {
+    @apply px-4;
+  }
+}
