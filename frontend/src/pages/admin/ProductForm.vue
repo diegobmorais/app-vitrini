@@ -366,9 +366,7 @@ export default {
                 weight: '',
                 length: '',
                 width: '',
-                height: '',
-                meta_title: '',
-                meta_description: '',
+                height: '',               
                 slug: '',
                 images: []
             },
