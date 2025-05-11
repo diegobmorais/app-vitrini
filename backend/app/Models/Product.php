@@ -31,6 +31,13 @@ class Product extends Model
         'slug',
         'images'
     ];
+    protected $casts = [
+        'track_inventory' => 'boolean',
+        'allow_backorders' => 'boolean',
+        'featured' => 'boolean',
+        'images' => 'array',
+        'tags' => 'array',
+    ];
     public function category()
     {
         return $this->belongsTo(Category::class);
