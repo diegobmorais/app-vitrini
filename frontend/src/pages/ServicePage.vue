@@ -267,63 +267,7 @@
           price: 35.00,
           categoryId: 1,
           image: '/placeholder.svg?height=300&width=500'
-        },
-        {
-          id: 3,
-          name: 'Tosa Completa',
-          description: 'Tosa completa do pelo do pet conforme o estilo desejado.',
-          price: 70.00,
-          categoryId: 1,
-          image: '/placeholder.svg?height=300&width=500'
-        },
-        {
-          id: 4,
-          name: 'Consulta Veterinária',
-          description: 'Avaliação completa da saúde do seu pet com um veterinário especializado.',
-          price: 120.00,
-          categoryId: 2,
-          image: '/placeholder.svg?height=300&width=500'
-        },
-        {
-          id: 5,
-          name: 'Vacinação',
-          description: 'Aplicação de vacinas essenciais para a saúde do seu pet.',
-          price: 90.00,
-          categoryId: 2,
-          image: '/placeholder.svg?height=300&width=500'
-        },
-        {
-          id: 6,
-          name: 'Adestramento Básico',
-          description: 'Ensine comandos básicos ao seu pet com nossos adestradores profissionais.',
-          price: 200.00,
-          categoryId: 3,
-          image: '/placeholder.svg?height=300&width=500'
-        },
-        {
-          id: 7,
-          name: 'Hospedagem Diária',
-          description: 'Seu pet ficará em um ambiente seguro e confortável enquanto você estiver fora.',
-          price: 80.00,
-          categoryId: 4,
-          image: '/placeholder.svg?height=300&width=500'
-        },
-        {
-          id: 8,
-          name: 'Day Care - Meio Período',
-          description: 'Cuidamos do seu pet durante meio período do dia com atividades recreativas.',
-          price: 45.00,
-          categoryId: 5,
-          image: '/placeholder.svg?height=300&width=500'
-        },
-        {
-          id: 9,
-          name: 'Day Care - Período Integral',
-          description: 'Cuidamos do seu pet durante o dia todo com atividades recreativas e alimentação.',
-          price: 75.00,
-          categoryId: 5,
-          image: '/placeholder.svg?height=300&width=500'
-        }
+        }        
       ])
       
       const testimonials = ref([
