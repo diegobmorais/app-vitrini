@@ -5,21 +5,27 @@ use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\StockMovementController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\WarehouseController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('login', [AuthController::class, 'login']);
 
-Route::middleware('auth:sanctum')->group( function () {  
+Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     //Brands
-    Route::resource('brand', BrandController::class);
+    Route::apiResource('brand', BrandController::class);
     //category
-    Route::resource('category', CategoryController::class);
+    Route::apiResource('category', CategoryController::class);
     //products
-    Route::resource('product', ProductController::class);
+    Route::apiResource('product', ProductController::class);
     //service
-    Route::resource('service', ServiceController::class);
+    Route::apiResource('service', ServiceController::class);
     //supplier
-    Route::resource('supplier', SupplierController::class);
+    Route::apiResource('supplier', SupplierController::class);
+    //warehouse stock
+    Route::apiResource('warehouses', WarehouseController::class);
+    //stock movements
+    Route::apiResource('stock-movements', StockMovementController::class)->except(['update']);
 });

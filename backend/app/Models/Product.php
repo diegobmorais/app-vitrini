@@ -46,4 +46,15 @@ class Product extends Model
     {
         return $this->belongsTo(Brand::class);
     }
+    public function stockMovements()
+    {
+        return $this->hasMany(StockMovement::class);
+    }
+
+    public function currentStock()
+    {
+        return $this->stockMovements()
+            ->selectRaw('product_id, SUM(CASE WHEN type = "in" THEN quantity ELSE -quantity END) as total')
+            ->groupBy('product_id');
+    }
 }
