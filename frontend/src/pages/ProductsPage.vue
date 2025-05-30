@@ -313,8 +313,14 @@ export default {
 
     const fetchProducts = async () => {
       try {
-        const response = await axios.get('product');   
-        products.value = response.data;      
+        const params = {};
+
+        if (route.query.category) {
+          params.category = route.query.category;
+        }
+
+        const response = await axios.get('product', { params });
+        products.value = response.data.data;
       } catch (error) {
         console.error('Erro ao buscar produtos:', error);
       }
@@ -322,7 +328,7 @@ export default {
 
     const fetchCategories = async () => {
       try {
-        const response = await axios.get('category');    
+        const response = await axios.get('category');
         categories.value = response.data;
       } catch (error) {
         console.error('Erro ao buscar categorias:', error);
@@ -404,7 +410,7 @@ export default {
         case 'newest':
           result.sort((a, b) => (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0));
           break;
-        default: // relevance - default sorting
+        default:
           break;
       }
 
@@ -465,7 +471,7 @@ export default {
     // Initialize filters from URL on page load
     onMounted(() => {
       fetchProducts();
-      fetchCategories();
+      fetchCategories();     
 
       const query = route.query;
 

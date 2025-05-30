@@ -12,11 +12,11 @@
               Produtos de qualidade, preços justos e entrega rápida para o seu melhor amigo.
             </p>
             <div class="flex flex-wrap gap-4">
-              <router-link to="/products"
+              <router-link to="/produtos"
                 class="btn-primary px-6 py-3 rounded-lg font-medium text-white bg-amber-500 hover:bg-amber-600 transition-colors">
                 Ver Produtos
               </router-link>
-              <router-link to="/about"
+              <router-link to="/sobre"
                 class="btn-secondary px-6 py-3 rounded-lg font-medium text-white bg-transparent border border-white hover:bg-white hover:text-indigo-700 transition-colors">
                 Sobre Nós
               </router-link>
@@ -37,7 +37,7 @@
         <h2 class="text-3xl font-bold text-center mb-12">Categorias em Destaque</h2>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
           <div v-for="(category, index) in featuredCategories" :key="index" class="category-card">
-            <router-link :to="`/products?category=${category.slug}`"
+            <router-link :to="`/produtos?cat=${category.id}`"
               class="block bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:scale-105">
               <div class="aspect-square relative overflow-hidden">
                 <img :src="category.image" :alt="category.name" class="w-full h-full object-cover" />
