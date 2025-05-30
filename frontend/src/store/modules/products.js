@@ -77,7 +77,7 @@ export default {
           sort: state.filters.sort,
         }
 
-        const response = await axios.get("/products", { params })
+        const response = await axios.get("/product", { params })
 
         commit("SET_PRODUCTS", response.data.data)
         commit("SET_PAGINATION", {
@@ -99,7 +99,7 @@ export default {
       try {
         commit("SET_LOADING", true)
 
-        const response = await axios.get(`/products/${slug}`)
+        const response = await axios.get(`/product/${slug}`)
 
         commit("SET_PRODUCT", response.data)
         commit("SET_ERROR", null)

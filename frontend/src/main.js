@@ -6,7 +6,7 @@ import axios from "axios"
 import "./assets/css/tailwind.css"
 
 // Configuração global do Axios
-axios.defaults.baseURL = "/api"
+axios.defaults.baseURL = 'http://localhost:8000/api'
 axios.defaults.headers.common["X-Requested-With"] = "XMLHttpRequest"
 axios.defaults.headers.common["Accept"] = "application/json"
 
