@@ -13,9 +13,7 @@ use Illuminate\Support\Facades\Route;
 Route::post('login', [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout']);   
-    //service
-    Route::apiResource('service', ServiceController::class);
+    Route::post('/logout', [AuthController::class, 'logout']); 
     //supplier
     Route::apiResource('supplier', SupplierController::class);
     //warehouse stock
@@ -23,11 +21,15 @@ Route::middleware('auth:sanctum')->group(function () {
     //stock movements
     Route::apiResource('stock-movements', StockMovementController::class)->except(['update']);
 });
-
 // Routes public
+
  //Brands
  Route::apiResource('brand', BrandController::class);
  //category
  Route::apiResource('category', CategoryController::class);
+ Route::get('categories/featured', [CategoryController::class, 'categoriesFeatured']);
  //products
  Route::apiResource('product', ProductController::class);
+ Route::get('products/featured', [ProductController::class, 'productsFeatured']);
+//service
+Route::apiResource('service', ServiceController::class);

@@ -121,4 +121,13 @@ class CategoryController extends Controller
             ], 200);
         }
     }
+    public function categoriesFeatured()
+    {
+        $categories = Category::where('featured', true)->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $categories,
+        ]);
+    }
 }

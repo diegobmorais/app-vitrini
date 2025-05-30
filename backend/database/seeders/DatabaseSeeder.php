@@ -28,5 +28,6 @@ class DatabaseSeeder extends Seeder
         Brand::factory(10)->create();
         Category::factory(10)->create();
         Product::factory(50)->create();
+        $this->call(ServiceSeeder::class);
     }
 }
