@@ -13,9 +13,7 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        if (Auth::user()) {
-            return Category::all();
-        }
+        return Category::all();
     }
     /**
      * Store a newly created resource in storage.
@@ -80,7 +78,7 @@ class CategoryController extends Controller
 
         $validateRequest = $request->validate([
             'name' => 'required|max:90',
-            'slug' => 'nullable|unique:category,slug,'. $category->id,
+            'slug' => 'nullable|unique:category,slug,' . $category->id,
             'description' => 'required|max:150'
         ]);
 
@@ -99,20 +97,20 @@ class CategoryController extends Controller
                 "message" => "Error",
                 "error" => $e->getMessage()
             ], 500);
-        }        
+        }
     }
     /**
      * Remove the specified resource from storage.
      */
     public function destroy($id)
     {
-        if (!Auth::check() || Auth::user()->role_id !== 1){
+        if (!Auth::check() || Auth::user()->role_id !== 1) {
             return response()->json(['message' => 'Access Danied'], 403);
         }
 
         $category = Category::find($id);
 
-        if (!$category){        
+        if (!$category) {
             return response()->json([
                 'message' => 'Category not found'
             ], 404);
