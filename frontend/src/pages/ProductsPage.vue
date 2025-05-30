@@ -322,8 +322,7 @@ export default {
 
     const fetchCategories = async () => {
       try {
-        const response = await axios.get('category');
-        console.log("categoria", response);
+        const response = await axios.get('category');    
         categories.value = response.data;
       } catch (error) {
         console.error('Erro ao buscar categorias:', error);

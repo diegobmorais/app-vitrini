@@ -42,7 +42,7 @@
                 </div>
                 <p class="text-gray-600 mb-4">{{ service.description }}</p>
                 <div class="flex justify-between items-center">
-                  <span class="text-2xl font-bold text-blue-600">R$ {{ service.price.toFixed(2) }}</span>
+                  <span class="text-2xl font-bold text-blue-600">R$ {{ Number(service.price).toFixed(2) }}</span>
                   <button 
                     @click="openServiceModal(service)"
                     class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
@@ -144,7 +144,7 @@
             <div class="mb-6">
               <h4 class="text-lg font-semibold text-gray-800 mb-2">{{ selectedService.name }}</h4>
               <p class="text-gray-600 mb-2">{{ selectedService.description }}</p>
-              <p class="text-blue-600 font-bold">R$ {{ selectedService.price.toFixed(2) }}</p>
+              <p class="text-blue-600 font-bold">R$ {{ Number(selectedService.price).toFixed(2)}}</p>
             </div>
             
             <form @submit.prevent="bookService">
@@ -224,6 +224,7 @@
   import { ref, computed, onMounted } from 'vue'
   import { useStore } from 'vuex'
   import { useRouter } from 'vue-router'
+import axios from 'axios'
   
   export default {
     name: 'ServicesPage',
@@ -243,33 +244,27 @@
       })
       
       // Mock data - in a real app, this would come from an API
-      const categories = ref([
-        { id: 1, name: 'Banho & Tosa' },
-        { id: 2, name: 'Veterinário' },
-        { id: 3, name: 'Adestramento' },
-        { id: 4, name: 'Hospedagem' },
-        { id: 5, name: 'Day Care' }
-      ])
+      const categories = ref([])
       
-      const services = ref([
-        {
-          id: 1,
-          name: 'Banho Completo',
-          description: 'Banho com shampoo especial, secagem, escovação e perfume.',
-          price: 50.00,
-          categoryId: 1,
-          image: '/placeholder.svg?height=300&width=500'
-        },
-        {
-          id: 2,
-          name: 'Tosa Higiênica',
-          description: 'Tosa nas áreas íntimas, patas e face do pet.',
-          price: 35.00,
-          categoryId: 1,
-          image: '/placeholder.svg?height=300&width=500'
-        }        
-      ])
-      
+      const services = ref([])
+
+      const fetchServices = async () => {
+      try {
+        const response = await axios.get('service');
+        services.value = response.data;    
+      } catch (error) {
+        console.error('Erro ao buscar produtos:', error);
+      }
+    };
+
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get('category');       
+        categories.value = response.data;
+      } catch (error) {
+        console.error('Erro ao buscar categorias:', error);
+      }
+    };
       const testimonials = ref([
         {
           name: 'Ana Silva',
@@ -304,7 +299,7 @@
       
       const filteredServices = computed(() => {
         if (!selectedCategory.value) return services.value
-        return services.value.filter(service => service.categoryId === selectedCategory.value)
+        return services.value.filter(service => service.category_id === selectedCategory.value)
       })
       
       const minDate = computed(() => {
@@ -363,7 +358,9 @@
       }
       
       onMounted(() => {
-        // In a real app, you would fetch data from an API here
+        fetchServices();
+        fetchCategories();
+       
       })
       
       return {
