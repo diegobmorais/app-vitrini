@@ -31,5 +31,6 @@ Route::middleware('auth:sanctum')->group(function () {
  //products
  Route::apiResource('product', ProductController::class);
  Route::get('products/featured', [ProductController::class, 'productsFeatured']);
+ Route::get('product-detail/{slug}', [ProductController::class, 'showBySlug']);
 //service
 Route::apiResource('service', ServiceController::class);

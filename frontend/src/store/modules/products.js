@@ -99,7 +99,7 @@ export default {
       try {
         commit("SET_LOADING", true)
 
-        const response = await axios.get(`/product/${slug}`)
+        const response = await axios.get(`/product-detail/${slug}`)
 
         commit("SET_PRODUCT", response.data)
         commit("SET_ERROR", null)

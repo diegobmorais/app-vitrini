@@ -311,7 +311,6 @@
   <script>
   import { ref, computed, onMounted, watch } from 'vue'
   import { useStore } from 'vuex'
-  import { useRoute } from 'vue-router'
   import ProductCard from '../components/shop/ProductCard.vue'
   
   export default {
@@ -326,8 +325,7 @@
       }
     },
     setup(props) {
-      const store = useStore()
-      const route = useRoute()
+      const store = useStore()   
       
       // Local state
       const quantity = ref(1)
@@ -367,7 +365,7 @@
         const now = new Date()
         const diffTime = Math.abs(now - productDate)
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-        return diffDays <= 14 // Produto é considerado novo se tiver menos de 14 dias
+        return diffDays <= 14 
       })
       
       const allImages = computed(() => {

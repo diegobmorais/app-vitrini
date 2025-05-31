@@ -18,15 +18,15 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         $query = Product::query();
-   
+
         if ($request->has('category')) {
             $category = Category::where('slug', $request->category)->first();
             if ($category) {
                 $query->where('category_id', $category->id);
             }
-        } 
+        }
         $products = $query->get();
-    
+
         return response()->json([
             'success' => true,
             'data' => $products
@@ -112,5 +112,15 @@ class ProductController extends Controller
             'success' => true,
             'data' => $products,
         ]);
+    }
+    public function showBySlug($slug)
+    {        
+        $product = Product::where('slug', $slug)->first();
+     
+        if (!$product) {
+            return response()->json(['message' => 'Produto não encontrado.'], 404);
+        }
+
+        return response()->json($product);
     }
 }
