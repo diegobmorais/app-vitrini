@@ -1,4 +1,4 @@
-import axios from "axios"
+import api from "@/main"
 
 const state = {
   categories: [],
@@ -25,7 +25,7 @@ const actions = {
   async fetchCategories({ commit }) {
     commit("setLoading", true)
     try {
-      const response = await axios.get("category")
+      const response = await api.get("api/category")
       commit("setCategories", response.data)
       commit("setError", null)
     } catch (error) {
@@ -39,7 +39,7 @@ const actions = {
   async fetchCategoryById({ commit }, categoryId) {
     commit("setLoading", true)
     try {
-      const response = await axios.get(`/category/${categoryId}`)
+      const response = await api.get(`api/category/${categoryId}`)
       commit("setCurrentCategory", response.data)
       commit("setError", null)
     } catch (error) {

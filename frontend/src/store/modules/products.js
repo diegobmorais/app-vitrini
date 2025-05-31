@@ -1,4 +1,4 @@
-import axios from "axios"
+import api from "@/main"
 
 export default {
   namespaced: true,
@@ -77,7 +77,7 @@ export default {
           sort: state.filters.sort,
         }
 
-        const response = await axios.get("/product", { params })
+        const response = await api.get("api/product", { params })
 
         commit("SET_PRODUCTS", response.data.data)
         commit("SET_PAGINATION", {
@@ -99,7 +99,7 @@ export default {
       try {
         commit("SET_LOADING", true)
 
-        const response = await axios.get(`/product-detail/${slug}`)
+        const response = await api.get(`api/product-detail/${slug}`)
 
         commit("SET_PRODUCT", response.data)
         commit("SET_ERROR", null)

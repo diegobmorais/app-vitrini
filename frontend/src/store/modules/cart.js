@@ -158,7 +158,7 @@ export default {
           payment_method: checkoutData.paymentMethod,
         }
 
-        const response = await axios.post("/checkout", payload)
+        const response = await axios.post("api/checkout", payload)
 
         // Limpar o carrinho após checkout bem-sucedido
         dispatch("clearCart")

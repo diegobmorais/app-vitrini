@@ -7,14 +7,14 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\StockMovementController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\WarehouseController;
 use Illuminate\Support\Facades\Route;
 
-Route::post('login', [AuthController::class, 'login']);
-Route::post('register', [AuthController::class, 'register']);
-
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout']); 
+    Route::get('check-auth', [AuthController::class, 'checkAuth']);
+    //user
+    Route::put('me/update', [UserController::class, 'updateProfile']);
     //supplier
     Route::apiResource('supplier', SupplierController::class);
     //warehouse stock
@@ -22,8 +22,9 @@ Route::middleware('auth:sanctum')->group(function () {
     //stock movements
     Route::apiResource('stock-movements', StockMovementController::class)->except(['update']);
 });
-// Routes public
 
+// Routes public
+Route::post('register', [AuthController::class, 'register']);
  //Brands
  Route::apiResource('brand', BrandController::class);
  //category

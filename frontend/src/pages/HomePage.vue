@@ -123,7 +123,7 @@
 <script>
 import { onMounted, ref } from 'vue';
 import ProductCard from '../components/shop/ProductCard.vue';
-import axios from 'axios';
+import api from '@/main';
 
 export default {
   name: 'HomePage',
@@ -163,7 +163,7 @@ export default {
     ]);
     const fetchProducts = async () => {
       try {
-        const response = await axios.get('products/featured');
+        const response = await api.get('api/products/featured');
         featuredProducts.value = response.data.data;     
       } catch (error) {
         console.error('Erro ao buscar produtos:', error);
@@ -172,7 +172,7 @@ export default {
 
     const fetchCategories = async () => {
       try {
-        const response = await axios.get('categories/featured');
+        const response = await api.get('api/categories/featured');
         featuredCategories.value = response.data.data;  
       } catch (error) {
         console.error('Erro ao buscar categorias:', error);

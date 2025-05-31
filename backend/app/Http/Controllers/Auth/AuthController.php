@@ -14,26 +14,39 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            "email" => "required|email",
-            "password" => "required"
+            'email' => ['required', 'email'],
+            'password' => ['required'],
         ]);
-        if (!Auth::attempt($credentials)) {
-            return response()->json(["message" => "Invalid Credentials"], 401);
+
+        if (Auth::attempt($credentials)) {
+            // Regenera a sessão e cria o token de API
+            $request->session()->regenerate();
+
+            return response()->json([
+                'user' => Auth::user(),
+                'session_id' => session()->getId()
+            ])->withCookie(cookie(
+                'laravel_session',
+                session()->getId(),
+                0,
+                '/',
+                parse_url(env('APP_URL'), PHP_URL_HOST),
+                false,
+                true
+            ));
         }
-        $user = Auth::user();
-        $token = $user->createToken('Token')->plainTextToken;
 
         return response()->json([
-            'user' => $user,
-            'token' => $token
-        ], 200);
+            'message' => 'Credenciais inválidas'
+        ], 401);
     }
     public function logout(Request $request)
     {
-        $request->user()->tokens()->delete();
-        return response()->json([
-            'message' => 'Logout successful'
-        ]);
+        Auth::guard('web')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return response()->json(['message' => 'Logout efetuado com sucesso.']);
     }
     public function register(Request $request)
     {
@@ -53,7 +66,15 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
             'role_id' => 2,
         ]);
-   
+
         return response()->json(['message' => 'Usuário registrado com sucesso.', 'user' => $user], 201);
+    }
+    public function checkAuth(Request $request)
+    {
+        return response()->json([
+            'authenticated' => Auth::check(),
+            'user' => Auth::user() ?? null,
+            'session_id' => session()->getId()
+        ]);
     }
 }

@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen flex flex-col bg-gray-50 text-gray-800">
     <header-component></header-component>
-    
+
     <main class="flex-grow">
       <router-view v-slot="{ Component }">
         <transition name="fade" mode="out-in">
@@ -9,12 +9,12 @@
         </transition>
       </router-view>
     </main>
-    
+
     <footer-component></footer-component>
-    
+
     <!-- Notificações -->
     <!-- <notifications-container /> -->
-    
+
     <!-- Modal de carrinho -->
     <!-- <cart-modal v-if="showCartModal" @close="showCartModal = false" /> -->
   </div>
@@ -39,18 +39,16 @@ export default {
   setup() {
     const store = useStore()
     const showCartModal = computed(() => store.state.cart.showModal)
-    
+
     onMounted(() => {
       // Carregar dados iniciais
       store.dispatch('categories/fetchCategories')
       store.dispatch('cart/loadCart')
-      
+
       // Verificar autenticação
-      if (localStorage.getItem('token')) {
-        store.dispatch('auth/checkAuth')
-      }
+      store.dispatch('auth/checkAuthState');
     })
-    
+
     return {
       showCartModal
     }

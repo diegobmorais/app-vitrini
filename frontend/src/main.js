@@ -5,28 +5,62 @@ import store from "./store"
 import axios from "axios"
 import "./assets/css/tailwind.css"
 
-// Configuração global do Axios
-axios.defaults.baseURL = 'http://localhost:8000/api'
-axios.defaults.headers.common["X-Requested-With"] = "XMLHttpRequest"
-axios.defaults.headers.common["Accept"] = "application/json"
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL,
+  withCredentials: true,
+  headers: {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+    'X-Requested-With': 'XMLHttpRequest'
+  }
+});
 
-// Adiciona o token CSRF para requisições
-const token = document.head.querySelector('meta[name="csrf-token"]')
-if (token) {
-  axios.defaults.headers.common["X-CSRF-TOKEN"] = token.content
-}
+api.interceptors.request.use(async (config) => {
+  // Verifica se é uma requisição que precisa de CSRF
+  const requiresCsrf = ['post', 'put', 'patch', 'delete'].includes(config.method.toLowerCase());
 
-// Interceptor para tratamento de erros
-axios.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response && error.response.status === 401) {
-      store.dispatch("auth/logout")
-      router.push({ name: "login" })
+  if (requiresCsrf) {
+    try {
+      // Obtém o cookie CSRF
+      await axios.get(`${import.meta.env.VITE_API_BASE_URL}sanctum/csrf-cookie`, {
+        withCredentials: true
+      });
+
+      // Extrai o token do cookie
+      const csrfToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('XSRF-TOKEN='))
+        ?.split('=')[1];
+
+      // Adiciona o token ao header se existir
+      if (csrfToken) {
+        config.headers['X-XSRF-TOKEN'] = decodeURIComponent(csrfToken);
+      }
+    } catch (error) {
+      console.error('Erro ao obter CSRF token:', error);
     }
-    return Promise.reject(error)
-  },
-)
+  }
+
+  return config;
+});
+api.interceptors.response.use(response => {
+  // Verifica se é a resposta de login
+  if (response.config.url.includes('/login') && response.status === 200) {
+    // Armazena os dados do usuário e sessão
+    store.dispatch('auth/setUser', response.data.user);
+    localStorage.setItem('session_id', response.data.session_id);
+  }
+  return response;
+}, error => {
+  if (error.response?.status === 401) {
+    store.dispatch('auth/logout');
+    router.push('/login');
+  }
+  return Promise.reject(error);
+});
+
+export { api };
+export default api;
 
 const app = createApp(App)
 

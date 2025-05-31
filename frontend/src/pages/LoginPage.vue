@@ -161,7 +161,7 @@
 
 <script>
 import store from '@/store'
-import axios from 'axios'
+import api from '@/main'
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -253,7 +253,9 @@ export default {
       isLoading.value = true
 
       try {
-        const url = isRegisterMode.value ? 'register' : 'login'
+        await api.get('/sanctum/csrf-cookie')
+
+        const url = isRegisterMode.value ? 'api/register' : 'login'
         const payload = isRegisterMode.value
           ? {
             name: form.name,
@@ -266,26 +268,20 @@ export default {
             password: form.password,
           }
 
-        const response = await axios.post(url, payload, {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        })
+        const response = await api.post(url, payload)
+
         store.dispatch('auth/login', {
-          user: response.data.user,
-          token: response.data.token
+          user: response.data.user
         })
 
-        // Redireciona após sucesso
-        router.push('/minha-conta')
+        // Redireciona após sucesso 
+        router.push('/')
       } catch (error) {
-        console.error('Erro:', error)
-        if (error.response && error.response.data && error.response.data.errors) {
-          const validationErrors = error.response.data.errors
-          Object.keys(validationErrors).forEach(key => {
-            errors[key] = validationErrors[key][0]
-          })
-        }
+        console.error('Erro detalhado:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          headers: error.response?.headers
+        });
       } finally {
         isLoading.value = false
       }

@@ -274,7 +274,7 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import ProductCard from '../components/shop/ProductCard.vue';
-import axios from 'axios';
+import api from '@/main';
 
 export default {
   name: 'ProductsPage',
@@ -319,7 +319,7 @@ export default {
           params.category = route.query.category;
         }
 
-        const response = await axios.get('product', { params });
+        const response = await api.get('api/product', { params });
         products.value = response.data.data;
       } catch (error) {
         console.error('Erro ao buscar produtos:', error);
@@ -328,7 +328,7 @@ export default {
 
     const fetchCategories = async () => {
       try {
-        const response = await axios.get('category');
+        const response = await api.get('api/category');
         categories.value = response.data;
       } catch (error) {
         console.error('Erro ao buscar categorias:', error);
