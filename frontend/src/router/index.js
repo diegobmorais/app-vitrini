@@ -99,7 +99,7 @@ const routes = [
     path: "/minha-conta",
     name: "account",
     component: AccountPage,
-    meta: { title: "Minha Conta"/*, requiresAuth: true*/},
+    meta: { title: "Minha Conta", requiresAuth: true},
   },
   {
     path: "/:pathMatch(.*)*",

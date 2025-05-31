@@ -7,13 +7,13 @@
           <span class="mr-4"><i class="fas fa-phone mr-1"></i> {{ contactPhone }}</span>
           <span><i class="fas fa-envelope mr-1"></i> {{ contactEmail }}</span>
         </div>
-        <div class="flex items-center space-x-4">
-          <router-link to="/login">
-            <a href="#" class="text-white hover:text-primary-200 transition">
-              <i class="fas fa-user"></i>
-              <span class="ml-1 hidden sm:inline">Minha Conta</span>
-            </a>
+        <div class="flex items-center space-x-6">
+          <span v-if="isAuthenticated" class="hidden sm:inline">Olá, {{ userName }}</span>
+          <router-link to="/minha-conta" class="text-white hover:text-primary-200 transition flex items-center">
+            <i class="fas fa-user"></i>
+            <span class="ml-1 hidden sm:inline">Minha Conta</span>
           </router-link>
+
           <cart-button :cart-items="cartItems" :cart-total="cartTotal"></cart-button>
         </div>
       </div>
@@ -105,6 +105,8 @@
 </template>
 
 <script>
+import store from '@/store'
+
 export default {
   props: {
     shopName: {
@@ -146,6 +148,15 @@ export default {
         { label: 'Contato', path: '/contato' }
       ]
     }
+  },
+  computed: {
+    userName() {
+      const user = store.getters['auth/getUser']
+      return user ? user.name : ''
+    },
+    isAuthenticated() {
+    return store.getters['auth/isAuthenticated']
+  }
   },
   mounted() {
     this.fetchCartData();
