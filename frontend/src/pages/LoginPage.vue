@@ -161,10 +161,8 @@
 
 <script>
 import store from '@/store'
-import api from '@/main'
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-
 
 export default {
   name: 'LoginPage',
@@ -253,10 +251,9 @@ export default {
       isLoading.value = true
 
       try {
-        await api.get('/sanctum/csrf-cookie')
 
         const url = isRegisterMode.value ? 'api/register' : 'login'
-        const payload = isRegisterMode.value
+        const credentials = isRegisterMode.value
           ? {
             name: form.name,
             email: form.email,
@@ -268,11 +265,7 @@ export default {
             password: form.password,
           }
 
-        const response = await api.post(url, payload)
-
-        store.dispatch('auth/login', {
-          user: response.data.user
-        })
+        await store.dispatch('auth/login', { url, credentials })
 
         // Redireciona após sucesso 
         router.push('/')

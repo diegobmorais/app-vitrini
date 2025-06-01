@@ -1,28 +1,30 @@
 import { createApp } from "vue"
 import App from "./App.vue"
 import router from "./router"
-import store from "./store"
+import store from "@/store"
 import axios from "axios"
 import "./assets/css/tailwind.css"
 
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
-  withCredentials: true,
-  headers: {
-    'Accept': 'application/json',
-    'Content-Type': 'application/json',
-    'X-Requested-With': 'XMLHttpRequest'
-  }
-});
+// Configuração global do AxiosAdd commentMore actions
+axios.defaults.withCredentials = true;
+axios.defaults.baseURL = 'http://localhost:8000/'
+axios.defaults.headers.common["X-Requested-With"] = "XMLHttpRequest"
+axios.defaults.headers.common["Accept"] = "application/json"
 
-api.interceptors.request.use(async (config) => {
+// Adiciona o token CSRF para requisições
+const token = document.head.querySelector('meta[name="csrf-token"]')
+if (token) {
+  axios.defaults.headers.common["X-CSRF-TOKEN"] = token.content
+}
+// Interceptor para tratamento de erros
+axios.interceptors.request.use(async (config) => {
   // Verifica se é uma requisição que precisa de CSRF
   const requiresCsrf = ['post', 'put', 'patch', 'delete'].includes(config.method.toLowerCase());
 
   if (requiresCsrf) {
     try {
       // Obtém o cookie CSRF
-      await axios.get(`${import.meta.env.VITE_API_BASE_URL}sanctum/csrf-cookie`, {
+      await axios.get('sanctum/csrf-cookie', {
         withCredentials: true
       });
 
@@ -40,16 +42,10 @@ api.interceptors.request.use(async (config) => {
       console.error('Erro ao obter CSRF token:', error);
     }
   }
-
   return config;
 });
-api.interceptors.response.use(response => {
-  // Verifica se é a resposta de login
-  if (response.config.url.includes('/login') && response.status === 200) {
-    // Armazena os dados do usuário e sessão
-    store.dispatch('auth/setUser', response.data.user);
-    localStorage.setItem('session_id', response.data.session_id);
-  }
+
+axios.interceptors.response.use(response => {
   return response;
 }, error => {
   if (error.response?.status === 401) {
@@ -58,9 +54,7 @@ api.interceptors.response.use(response => {
   }
   return Promise.reject(error);
 });
-
-export { api };
-export default api;
+export default axios;
 
 const app = createApp(App)
 

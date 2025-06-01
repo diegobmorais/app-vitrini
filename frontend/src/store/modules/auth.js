@@ -1,5 +1,7 @@
 // src/store/modules/auth.js
 
+import axios from "axios"
+
 export default {
   namespaced: true,
   state: () => ({
@@ -14,50 +16,56 @@ export default {
     setToken(state, token) {
       state.token = token
     },
+    setSession(state, sessionId) {
+      state.session_id = sessionId
+    },
+    setInitialized(state) {
+      state.initialized = true
+    },
     logout(state) {
       state.user = null
       state.token = null
     }
   },
   actions: {
-    async login({ commit }, credentials) {
+    async login({ commit }, data) {
       try {
-        await this._vm.$axios.get('/sanctum/csrf-cookie')
+        await axios.get('sanctum/csrf-cookie')
 
-        const response = await this._vm.$axios.post('/login', credentials)
+        const response = await axios.post(data.url, data.credentials)        
        
-        commit('SET_USER', response.data.user)
-        commit('SET_SESSION', response.data.session_id)
-
+        commit('setUser', response.data.user)
+        commit('setSession', response.data.session_id)
+        
         return response
       } catch (error) {
-        commit('CLEAR_AUTH')
+        commit('logout')
         throw error
       }
     },
 
     async logout({ commit }) {
-      await this._vm.$axios.post('/logout')
-      commit('CLEAR_AUTH')
+      await axios.post('logout')
+      commit('logout')
     },
 
     async checkAuth({ commit, state }) {
       try {     
         if (state.initialized && !state.session_id) return false
 
-        const response = await this._vm.$axios.get('api/check-auth')
-        commit('SET_USER', response.data)
-        commit('SET_INITIALIZED')
+        const response = await axios.get('api/check-auth')
+        commit('setUser', response.data)
+        commit('setInitialized')
         return true
       } catch (error) {
-        commit('CLEAR_AUTH')
-        commit('SET_INITIALIZED')
+        commit('logout')
+        commit('setInitialized')
         return false
       }
     }
   },
   getters: {
-    isAuthenticated: state => !!state.token,
+    isAuthenticated: state => !!state.session_id,
     getUser: state => state.user,
     getSessionId: (state) => state.session_id,
     isInitialized: (state) => state.initialized
