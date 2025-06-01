@@ -68,5 +68,4 @@ export default {
   opacity: 0;
 }
 
-/* Estilos globais adicionais podem ser adicionados aqui */
 </style>

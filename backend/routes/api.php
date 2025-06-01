@@ -14,6 +14,11 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->group(function () {  
     //user
     Route::put('me/update', [UserController::class, 'updateProfile']);
+    Route::get('me', function(){
+        return response()->json([
+            'user' => Auth::user()
+        ]);
+    });
     //supplier
     Route::apiResource('supplier', SupplierController::class);
     //warehouse stock
