@@ -19,21 +19,12 @@ class AuthController extends Controller
         ]);
 
         if (Auth::attempt($credentials)) {
-            // Regenera a sessão e cria o token de API
             $request->session()->regenerate();
 
             return response()->json([
                 'user' => Auth::user(),
                 'session_id' => session()->getId()
-            ])->withCookie(cookie(
-                'laravel_session',
-                session()->getId(),
-                0,
-                '/',
-                parse_url(env('APP_URL'), PHP_URL_HOST),
-                false,
-                true
-            ));
+            ]);
         }
 
         return response()->json([
@@ -70,7 +61,14 @@ class AuthController extends Controller
         return response()->json(['message' => 'Usuário registrado com sucesso.', 'user' => $user], 201);
     }
     public function checkAuth(Request $request)
-    {
+    {   
+        if (!Auth::check()) {
+            return response()->json([
+                'authenticated' => false,
+                'user' => null,
+                'session_id' => session()->getId()
+            ], 401);
+        }
         return response()->json([
             'authenticated' => Auth::check(),
             'user' => Auth::user() ?? null,

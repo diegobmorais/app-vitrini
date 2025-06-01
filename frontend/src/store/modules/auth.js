@@ -50,12 +50,14 @@ export default {
     },
 
     async checkAuth({ commit, state }) {
-      try {     
-        if (state.initialized && !state.session_id) return false
+      try {           
 
-        const response = await axios.get('api/check-auth')
+        if (state.initialized && !state.session_id) return false
+        const response = await axios.get('check-auth')       
+        
         commit('setUser', response.data)
         commit('setInitialized')
+        console.log('checkAuth: ', response);
         return true
       } catch (error) {
         commit('logout')
@@ -65,7 +67,7 @@ export default {
     }
   },
   getters: {
-    isAuthenticated: state => !!state.session_id,
+    isAuthenticated: state => !!state.user && !!state.session_id,
     getUser: state => state.user,
     getSessionId: (state) => state.session_id,
     isInitialized: (state) => state.initialized
