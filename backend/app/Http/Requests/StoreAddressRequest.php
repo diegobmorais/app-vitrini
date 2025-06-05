@@ -11,7 +11,7 @@ class StoreAddressRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -27,7 +27,7 @@ class StoreAddressRequest extends FormRequest
             'complement' => 'nullable|string|max:255',
             'neighborhood' => 'required|string|max:255',
             'city' => 'required|string|max:255',
-            'state' => 'required|string|max:2',
+            'state' => 'required|string|max:150',
             'zipcode' => 'required|string|max:20',
             'for_delivery' => 'boolean',
         ];

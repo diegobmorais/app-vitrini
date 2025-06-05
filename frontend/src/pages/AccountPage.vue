@@ -84,7 +84,7 @@
                 <div>
                   <button type="submit"
                     class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-                    :disabled="isSubmitting">                   
+                    :disabled="isSubmitting">
                     <span>Salvar</span>
                   </button>
                 </div>
@@ -134,11 +134,13 @@
             <div v-if="activeTab === 'addresses'" class="space-y-6">
               <div class="flex justify-between items-center mb-4">
                 <h3 class="text-xl font-semibold text-gray-900">Meus Endereços</h3>
-                <button @click="showAddressForm = true"
+                <button @click="createAddress"
                   class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
                   Adicionar endereço
                 </button>
               </div>
+              <AddressForm :visible="showAddressForm" :address="currentAddress" :isEdit="isEdit"
+                @close="showAddressForm = false" @saved="saveAddress" />
 
               <div v-if="addresses.length === 0" class="text-center py-8">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-400 mx-auto mb-4" fill="none"
@@ -152,19 +154,23 @@
               </div>
 
               <div v-else class="space-y-4">
-                <div v-for="(address, index) in addresses" :key="index" class="border border-gray-200 rounded-lg p-4">
+                <div v-for="(address) in addresses" :key="address.id" class="border border-gray-200 rounded-lg p-4">
                   <div class="flex justify-between">
                     <div>
                       <p class="font-medium text-gray-900">{{ address.name }}</p>
+                      <span v-if="address.for_delivery"
+                        class="ml-2 px-2 py-0.5 text-xs bg-green-100 text-green-800 rounded">
+                        Endereço para entrega
+                      </span>
                       <p class="text-gray-600">{{ address.street }}, {{ address.number }}</p>
                       <p class="text-gray-600">{{ address.neighborhood }} - {{ address.city }}/{{ address.state }}</p>
                       <p class="text-gray-600">CEP: {{ address.zipcode }}</p>
                     </div>
                     <div class="flex space-x-2">
-                      <button @click="editAddress(index)" class="text-primary hover:text-primary-dark">
+                      <button @click="editAddress(address)" class="text-primary hover:text-primary-dark">
                         Editar
                       </button>
-                      <button @click="deleteAddress(index)" class="text-red-600 hover:text-red-800">
+                      <button @click="deleteAddress(address)" class="text-red-600 hover:text-red-800">
                         Excluir
                       </button>
                     </div>
@@ -323,12 +329,17 @@
 
 <script>
 import { getAuthenticatedUser } from '@/store/modules/user'
+import addressService from '@/services/addressService.js'
+import AddressForm from '@/components/address/AddressForm.vue'
 import axios from 'axios'
 import Swal from 'sweetalert2'
 import { ref, computed, onMounted } from 'vue'
 
 export default {
   name: 'AccountPage',
+  components: {
+    AddressForm
+  },
   metaInfo: {
     title: 'Minha Conta'
   },
@@ -355,29 +366,73 @@ export default {
     // Estado de submissão
     const isSubmitting = ref(false)
 
-    // Endereços (simulados)
-    const addresses = ref([
-      {
-        name: 'Casa',
-        street: 'Rua das Flores',
-        number: '123',
-        complement: 'Apto 101',
-        neighborhood: 'Jardim Primavera',
-        city: 'São Paulo',
-        state: 'SP',
-        zipcode: '01234-567'
-      },
-      {
-        name: 'Trabalho',
-        street: 'Avenida Paulista',
-        number: '1000',
-        complement: 'Sala 45',
-        neighborhood: 'Bela Vista',
-        city: 'São Paulo',
-        state: 'SP',
-        zipcode: '01310-100'
+    // Endereços
+    const addresses = ref([])
+    const showAddressForm = ref(false)
+    const currentAddress = ref(null)
+    const isEdit = ref(false)
+
+    const loadAddresses = async () => {
+      const { data } = await addressService.getAll()
+      addresses.value = data
+    }
+
+    const createAddress = () => {
+      currentAddress.value = {}
+      isEdit.value = false
+      showAddressForm.value = true
+    }
+
+    const editAddress = (address) => {
+      if (!address) return;
+      console.log('adress', address);
+      
+      currentAddress.value = {
+        ...address,
+        for_delivery: address.for_delivery ?? false,
+      };
+      isEdit.value = true 
+      showAddressForm.value = true
+    }
+
+    const deleteAddress = async (address) => {     
+      const result = await Swal.fire({
+        title: 'Tem certeza?',
+        text: "Deseja realmente excluir este endereço?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sim, excluir',  
+        cancelButtonText: 'Cancelar'
+      })
+      if (result.isConfirmed) {
+        try {
+          await addressService.destroy(address.id)
+          await loadAddresses()
+          Swal.fire('Excluído!', 'Endereço excluído com sucesso.', 'success')
+        } catch (error) {
+          Swal.fire('Erro', 'Falha ao excluir endereço.', 'error')
+        }
       }
-    ])
+    }
+
+    const saveAddress = async (address) => {
+      if (address.for_delivery) {
+        for (const other of addresses.value) {
+          if (other.id !== address.id && other.for_delivery) {
+            await addressService.update(other.id, { ...other, for_delivery: false })
+          }
+        }
+      }
+
+      if (isEdit.value) {
+        await addressService.update(address.id, address)
+      } else {
+        await addressService.create(address)
+      }
+
+      await loadAddresses()
+      showAddressForm.value = false
+    }
 
     // Pedidos (simulados)
     const orders = ref([
@@ -390,16 +445,6 @@ export default {
           { name: 'Brinquedo Interativo', quantity: 1, price: 45.50 }
         ],
         total: 225.30
-      },
-      {
-        id: '10002',
-        date: '2023-06-02T10:15:00',
-        status: 'processing',
-        items: [
-          { name: 'Cama para Gatos', quantity: 1, price: 120.00 },
-          { name: 'Arranhador', quantity: 1, price: 75.90 }
-        ],
-        total: 195.90
       }
     ])
 
@@ -412,20 +457,6 @@ export default {
         price: 89.90,
         image: '/placeholder.svg?height=300&width=300'
       },
-      {
-        id: 2,
-        name: 'Brinquedo Interativo',
-        slug: 'brinquedo-interativo',
-        price: 45.50,
-        image: '/placeholder.svg?height=300&width=300'
-      },
-      {
-        id: 3,
-        name: 'Cama para Gatos',
-        slug: 'cama-para-gatos',
-        price: 120.00,
-        image: '/placeholder.svg?height=300&width=300'
-      }
     ])
 
     // Notificações (simuladas)
@@ -436,20 +467,6 @@ export default {
         message: 'Seu pedido #10001 foi entregue com sucesso.',
         date: '2023-05-16T09:45:00',
         read: true
-      },
-      {
-        id: 2,
-        title: 'Promoção especial',
-        message: 'Aproveite 20% de desconto em toda a linha de produtos para gatos.',
-        date: '2023-06-01T14:30:00',
-        read: false
-      },
-      {
-        id: 3,
-        title: 'Pedido em processamento',
-        message: 'Seu pedido #10002 está sendo preparado para envio.',
-        date: '2023-06-02T11:20:00',
-        read: false
       }
     ])
 
@@ -487,7 +504,7 @@ export default {
           showConfirmButton: false
         });
 
-        isSubmitting.value = true
+        isSubmitting.value = false
 
       } catch (error) {
         console.error('Erro ao atualizar perfil:', error)
@@ -511,20 +528,6 @@ export default {
         isSubmitting.value = false
         alert('Senha alterada com sucesso!')
       }, 1000)
-    }
-
-    const showAddressForm = ref(false)
-
-    const editAddress = (index) => {
-      // Implementação da edição de endereço
-      alert(`Editando endereço ${index + 1}`)
-    }
-
-    const deleteAddress = (index) => {
-      // Implementação da exclusão de endereço
-      if (confirm('Tem certeza que deseja excluir este endereço?')) {
-        addresses.value.splice(index, 1)
-      }
     }
 
     const viewOrderDetails = (orderId) => {
@@ -586,7 +589,8 @@ export default {
     }
     onMounted(async () => {
       try {
-        user.value = await getAuthenticatedUser()       
+        user.value = await getAuthenticatedUser()
+        loadAddresses();
 
       } catch (error) {
         console.error('Erro ao buscar usuário:', error)
@@ -605,6 +609,8 @@ export default {
       userInitials,
       updateProfile,
       updatePassword,
+      createAddress,
+      saveAddress,
       showAddressForm,
       editAddress,
       deleteAddress,

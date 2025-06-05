@@ -11,7 +11,7 @@ class UpdateAddressRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -27,7 +27,7 @@ class UpdateAddressRequest extends FormRequest
             'complement' => 'nullable|string|max:255',
             'neighborhood' => 'sometimes|string|max:255',
             'city' => 'sometimes|string|max:255',
-            'state' => 'sometimes|string|max:2',
+            'state' => 'sometimes|string|max:190',
             'zipcode' => 'sometimes|string|max:20',
             'for_delivery' => 'sometimes|boolean',
         ];
