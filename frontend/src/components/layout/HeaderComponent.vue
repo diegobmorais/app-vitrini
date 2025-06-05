@@ -8,7 +8,9 @@
           <span><i class="fas fa-envelope mr-1"></i> {{ contactEmail }}</span>
         </div>
         <div class="flex items-center space-x-6">
-          <span v-if="isAuthenticated" class="hidden sm:inline">Olá, {{ userName }}</span>
+          <span v-if="isAuthenticated" class="hidden sm:inline">
+            Olá, {{ userName }}
+          </span>
           <router-link to="/minha-conta" class="text-white hover:text-primary-200 transition flex items-center">
             <i class="fas fa-user"></i>
             <span class="ml-1 hidden sm:inline">Minha Conta</span>
@@ -106,6 +108,7 @@
 
 <script>
 import store from '@/store'
+import { toRaw } from 'vue';
 
 export default {
   props: {
@@ -151,12 +154,12 @@ export default {
   },
   computed: {
     userName() {
-      const user = store.getters['auth/getUser']
-      return user ? user.name : ''
+      const rawUser = toRaw(store.getters['auth/getUser']);
+      return rawUser?.user.name || 'Visitante';
     },
     isAuthenticated() {
-    return store.getters['auth/isAuthenticated']
-  }
+      return store.getters['auth/isAuthenticated']
+    }
   },
   mounted() {
     this.fetchCartData();

@@ -41,13 +41,11 @@ export default {
     const showCartModal = computed(() => store.state.cart.showModal)
 
     onMounted(() => {
-      // Verificar autenticação
       store.dispatch('auth/checkAuth');
-
       // Carregar dados iniciais
       store.dispatch('categories/fetchCategories')
-      store.dispatch('cart/loadCart')    
-     
+      store.dispatch('cart/loadCart')
+
     })
 
     return {
@@ -67,5 +65,4 @@ export default {
 .fade-leave-to {
   opacity: 0;
 }
-
 </style>

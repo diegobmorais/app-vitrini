@@ -14,22 +14,22 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required'],
+            'email' => 'required|email',
+            'password' => 'required'
         ]);
 
-        if (Auth::attempt($credentials)) {
-            $request->session()->regenerate();
-
+        if (!Auth::attempt($credentials)) {
             return response()->json([
-                'user' => Auth::user(),
-                'session_id' => session()->getId()
-            ]);
+                'message' => 'Credenciais inválidas'
+            ], 401);
         }
 
+        $request->session()->regenerate(); 
+
         return response()->json([
-            'message' => 'Credenciais inválidas'
-        ], 401);
+            'user' => Auth::user(),
+            'session_id' => session()->getId() 
+        ]);
     }
     public function logout(Request $request)
     {
@@ -61,7 +61,7 @@ class AuthController extends Controller
         return response()->json(['message' => 'Usuário registrado com sucesso.', 'user' => $user], 201);
     }
     public function checkAuth(Request $request)
-    {   
+    {
         if (!Auth::check()) {
             return response()->json([
                 'authenticated' => false,

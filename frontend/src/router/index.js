@@ -99,7 +99,7 @@ const routes = [
     path: "/minha-conta",
     name: "account",
     component: AccountPage,
-    meta: { title: "Minha Conta", requiresAuth: true},
+    meta: { title: "Minha Conta", requiresAuth: true },
   },
   {
     path: "/:pathMatch(.*)*",
@@ -125,7 +125,7 @@ const routes = [
         path: "/painel-administrador/produtos",
         name: "admin-products",
         component: Products,
-      },      
+      },
       {
         path: "/painel-administrador/clientes",
         name: "admin-customers",
@@ -179,7 +179,7 @@ const routes = [
         component: Services,
       },
     ]
-  } 
+  }
 ]
 
 const router = createRouter({
@@ -194,21 +194,35 @@ const router = createRouter({
   },
 })
 
-// Navegação global
-router.beforeEach((to, from, next) => {
-  // Atualizar título da página
-  document.title = `${to.meta.title} | Pet Shop`
+router.beforeEach(async (to, from, next) => {
+  document.title = `${to.meta.title} | Pet Shop`;
 
-  // Verificar autenticação para rotas protegidas
-  const isAuthenticated = store.getters["auth/isAuthenticated"]
-
-  if (to.meta.requiresAuth && !isAuthenticated) {
-    next({ name: "login", query: { redirect: to.fullPath } })
-  } else if (to.meta.guestOnly && isAuthenticated) {
-    next({ name: "home" })
-  } else {
-    next()
+  if (!to.meta.requiresAuth) {
+    next();
+    return;
   }
-})
+
+  try {
+    const isAuth = await store.dispatch('auth/checkAuth');
+
+    if (!isAuth && to.name !== 'login') {
+      next({ name: "login", query: { redirect: to.fullPath } });
+      return;
+    }
+
+    if (isAuth && to.meta.guestOnly) {
+      next({ name: "home" });
+      return;
+    }
+
+    next();
+  } catch (error) {
+    if (to.name !== 'login') {
+      next({ name: "login" });
+    } else {
+      next();
+    }
+  }
+});
 
 export default router

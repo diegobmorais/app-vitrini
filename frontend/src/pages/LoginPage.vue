@@ -252,7 +252,7 @@ export default {
 
       try {
 
-        const url = isRegisterMode.value ? 'api/register' : 'login'
+        const url = isRegisterMode.value ? 'api/register' : 'api/login'
         const credentials = isRegisterMode.value
           ? {
             name: form.name,

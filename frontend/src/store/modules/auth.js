@@ -32,12 +32,13 @@ export default {
       try {
         await axios.get('sanctum/csrf-cookie')
 
-        const response = await axios.post(data.url, data.credentials)        
-       
-        commit('setUser', response.data.user)
-        commit('setSession', response.data.session_id)
-        
-        return response
+        const response = await axios.post(data.url, data.credentials)
+
+        commit('setUser', response.data.user);
+
+        axios.defaults.headers.common['X-Session-ID'] = response.data.session_id;
+
+        return response;
       } catch (error) {
         commit('logout')
         throw error
@@ -45,30 +46,34 @@ export default {
     },
 
     async logout({ commit }) {
-      await axios.post('logout')
+      await axios.post('api/logout')
       commit('logout')
     },
 
     async checkAuth({ commit, state }) {
-      try {           
+      try {
+        if (state.initialized && state.user) return true;
 
-        if (state.initialized && !state.session_id) return false
-        const response = await axios.get('check-auth')       
-        
+        if (state.initialized && !state.user) return false;
+
+        const response = await axios.get('api/check-auth')
+
         commit('setUser', response.data)
         commit('setInitialized')
-        console.log('checkAuth: ', response);
+
         return true
       } catch (error) {
-        commit('logout')
-        commit('setInitialized')
-        return false
+        if (error.response?.status === 401) {
+          commit('logout');
+        }
+        commit('setInitialized');
+        return false;
       }
     }
   },
   getters: {
-    isAuthenticated: state => !!state.user && !!state.session_id,
-    getUser: state => state.user,
+    isAuthenticated: (state) => { return !!state.user; },
+    getUser: state => ({ ...state.user }),
     getSessionId: (state) => state.session_id,
     isInitialized: (state) => state.initialized
   }

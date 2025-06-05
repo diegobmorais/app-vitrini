@@ -586,8 +586,7 @@ export default {
     }
     onMounted(async () => {
       try {
-        user.value = await getAuthenticatedUser()
-        console.log(user.value);
+        user.value = await getAuthenticatedUser()       
 
       } catch (error) {
         console.error('Erro ao buscar usuário:', error)
