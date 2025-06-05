@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AddressController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
@@ -27,6 +28,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('warehouses', WarehouseController::class);
     //stock movements
     Route::apiResource('stock-movements', StockMovementController::class)->except(['update']);
+    //address
+    Route::apiResource('address', AddressController::class);
 });
 
 // Routes public
