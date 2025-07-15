@@ -2,8 +2,8 @@
     <div v-if="visible" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
         <div class="bg-white p-6 rounded-lg w-full max-w-lg">
             <h2 class="text-xl font-semibold mb-4">
-                {{ isEdit ? 'Editar Endereço' : 'Novo Endereço' }}
-            </h2>
+                {{ props.isEdit ? 'Editar Endereço' : 'Novo Endereço' }}                
+            </h2>            
 
             <form @submit.prevent="submit">
                 <div class="grid grid-cols-2 gap-4">
@@ -33,18 +33,16 @@
 </template>
 
 <script setup>
+import LoginPage from '@/pages/LoginPage.vue';
 import axios from 'axios';
-import { reactive, ref, watch } from 'vue'
+import { reactive, watchEffect } from 'vue'
 
-const props = defineProps({
-    visible: Boolean,
+const props = defineProps({   
     address: Object,
     isEdit: Boolean
 })
 
 const emit = defineEmits(['close', 'saved'])
-
-const isEdit = ref(props, 'isEdit')
 
 const form = reactive({
     id: props.address?.id ?? null,
@@ -59,42 +57,45 @@ const form = reactive({
     for_delivery: props.address?.for_delivery ?? false,
 });
 
-watch(
-    () => props.address,
-    (newAddress) => {
-        if (props.isEdit && newAddress) {
-            form.id = newAddress.id ?? null;
-            form.name = newAddress.name ?? '';
-            form.street = newAddress.street ?? '';
-            form.number = newAddress.number ?? '';
-            form.complement = newAddress.complement ?? '';
-            form.zipcode = newAddress.zipcode ?? '';
-            form.city = newAddress.city ?? '';
-            form.state = newAddress.state ?? '';
-            form.neighborhood = newAddress.neighborhood ?? '';
-            form.for_delivery = newAddress.for_delivery ?? false;
-        } else {           
-            form.id = null;
-            form.name = '';
-            form.street = '';
-            form.number = '';
-            form.complement = '';
-            form.zipcode = '';
-            form.city = '';
-            form.state = '';
-            form.neighborhood = '';
-            form.for_delivery = false;
-        }
-    },
-    { immediate: true }
+watchEffect(() => {
+    if (!props.visible) return;
+
+    const newAddress = props.address; 
+
+    if (props.isEdit && newAddress) {
+        form.id = newAddress.id ?? null;
+        form.name = newAddress.name ?? '';
+        form.street = newAddress.street ?? '';
+        form.number = newAddress.number ?? '';
+        form.complement = newAddress.complement ?? '';
+        form.zipcode = newAddress.zipcode ?? '';
+        form.city = newAddress.city ?? '';
+        form.state = newAddress.state ?? '';
+        form.neighborhood = newAddress.neighborhood ?? '';
+        form.for_delivery = newAddress.for_delivery ?? false;
+    } else {
+        form.id = null;
+        form.name = '';
+        form.street = '';
+        form.number = '';
+        form.complement = '';
+        form.zipcode = '';
+        form.city = '';
+        form.state = '';
+        form.neighborhood = '';
+        form.for_delivery = false;
+    }
+    console.log('is edit', props.isEdit);
+},
+    { immediate: true }   
+    
 )
 
 const close = () => emit('close')
 
-const submit = async () => {
-    console.log('isEdit prop dentro do submit:', isEdit.value);
+const submit = async () => {    
     try {
-        if (isEdit.value) {
+        if (props.isEdit) {
             console.log('editar');
 
             await axios.put(`api/address/${form.id}`, form);

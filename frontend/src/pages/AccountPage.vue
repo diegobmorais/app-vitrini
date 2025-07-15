@@ -139,7 +139,7 @@
                   Adicionar endereço
                 </button>
               </div>
-              <AddressForm :visible="showAddressForm" :address="currentAddress" :isEdit="isEdit"
+              <AddressForm v-if="showAddressForm" :address="currentAddress" :isEdit="isEdit"
                 @close="showAddressForm = false" @saved="saveAddress" />
 
               <div v-if="addresses.length === 0" class="text-center py-8">
@@ -344,7 +344,6 @@ export default {
     title: 'Minha Conta'
   },
   setup() {
-    // Estado do usuário (simulado)
     const user = ref({})
 
     // Abas
@@ -380,28 +379,30 @@ export default {
     const createAddress = () => {
       currentAddress.value = {}
       isEdit.value = false
+      console.log('valor de isEdit', isEdit.value);
       showAddressForm.value = true
     }
 
     const editAddress = (address) => {
       if (!address) return;
       console.log('adress', address);
-      
+
       currentAddress.value = {
         ...address,
         for_delivery: address.for_delivery ?? false,
       };
-      isEdit.value = true 
+      isEdit.value = true
+      console.log('valor de isEdit', isEdit.value);
       showAddressForm.value = true
     }
 
-    const deleteAddress = async (address) => {     
+    const deleteAddress = async (address) => {
       const result = await Swal.fire({
         title: 'Tem certeza?',
         text: "Deseja realmente excluir este endereço?",
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: 'Sim, excluir',  
+        confirmButtonText: 'Sim, excluir',
         cancelButtonText: 'Cancelar'
       })
       if (result.isConfirmed) {
