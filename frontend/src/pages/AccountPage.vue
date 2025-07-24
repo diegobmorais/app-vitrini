@@ -376,11 +376,10 @@ export default {
       addresses.value = data
     }
 
-    const createAddress = () => {
-      currentAddress.value = {}
-      isEdit.value = false
-      console.log('valor de isEdit', isEdit.value);
-      showAddressForm.value = true
+    const createAddress = () => {    
+      currentAddress.value = {}  
+      showAddressForm.value = true 
+      isEdit.value = false      
     }
 
     const editAddress = (address) => {
@@ -391,8 +390,7 @@ export default {
         ...address,
         for_delivery: address.for_delivery ?? false,
       };
-      isEdit.value = true
-      console.log('valor de isEdit', isEdit.value);
+      isEdit.value = true      
       showAddressForm.value = true
     }
 
