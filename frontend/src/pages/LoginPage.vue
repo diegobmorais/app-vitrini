@@ -266,9 +266,10 @@ export default {
           }
 
         await store.dispatch('auth/login', { url, credentials })
-
-        // Redireciona após sucesso 
-        router.push('/')
+     
+        router.push('/minha-conta').then(() => {    
+          window.location.reload()
+        })
       } catch (error) {
         console.error('Erro detalhado:', {
           status: error.response?.status,

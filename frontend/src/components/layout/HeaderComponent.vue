@@ -7,20 +7,22 @@
           <span class="mr-4"><i class="fas fa-phone mr-1"></i> {{ contactPhone }}</span>
           <span><i class="fas fa-envelope mr-1"></i> {{ contactEmail }}</span>
         </div>
-        <div class="flex items-center space-x-6">
+        <div class="flex items-center space-x-6 text-white text-sm">
           <span v-if="isAuthenticated" class="hidden sm:inline">
             Olá, {{ userName }}
           </span>
-          <router-link to="/minha-conta" class="text-white hover:text-primary-200 transition flex items-center">
-            <i class="fas fa-user"></i>
-            <span class="ml-1 hidden sm:inline">Minha Conta</span>
+          <router-link to="/minha-conta" class="hover:text-primary-200 transition">
+            Minha Conta
           </router-link>
-
-          <cart-button :cart-items="cartItems" :cart-total="cartTotal"></cart-button>
+          <button v-if="isAuthenticated" @click="logout" class="hover:text-primary-dark transition underline">
+            Sair
+          </button>
+          <cart-button :cart-items="cartItems" :cart-total="cartTotal" />
         </div>
+
       </div>
     </div>
-
+        
     <!-- Main Header -->
     <div class="bg-white shadow-md py-4 sticky top-0 z-30">
       <div class="container mx-auto px-4">
@@ -107,7 +109,9 @@
 </template>
 
 <script>
+import router from '@/router';
 import store from '@/store'
+import axios from 'axios';
 import { toRaw } from 'vue';
 
 export default {
@@ -164,7 +168,7 @@ export default {
   mounted() {
     this.fetchCartData();
     // Apply primary color from props to CSS variables
-    document.documentElement.style.setProperty('--color-primary-600', this.primaryColor);
+    document.documentElement.style.setProperty('--color-primary-dark', this.primaryColor);
   },
   methods: {
     isActive(path) {
@@ -193,6 +197,15 @@ export default {
         { id: 2, name: 'Brinquedo Interativo', quantity: 2, price: 29.90 }
       ];
       this.cartTotal = this.cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+    },
+    logout() {
+      try {
+        axios.post('/api/logout')
+        store.commit('auth/logout');
+        router.push('/')
+      } catch (error) {
+        console.error('Erro ao fazer logout:', error)
+      }
     }
   }
 }

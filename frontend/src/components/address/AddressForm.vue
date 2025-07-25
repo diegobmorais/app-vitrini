@@ -34,76 +34,61 @@
 
 <script setup>
 import axios from 'axios';
-import { reactive, watch } from 'vue'
+import { reactive, watchEffect } from 'vue'
 
 const props = defineProps({
     address: Object,
     isEdit: Boolean
 })
-console.log('Props no setup:', props)
 const emit = defineEmits(['close', 'saved'])
 
 const form = reactive({
-    id: props.address?.id ?? null,
-    name: props.address?.name || '',
-    street: props.address?.street || '',
-    number: props.address?.number || '',
-    complement: props.address?.complement || '',
-    zipcode: props.address?.zipcode || '',
-    city: props.address?.city || '',
-    state: props.address?.state || '',
-    neighborhood: props.address?.neighborhood || '',
-    for_delivery: props.address?.for_delivery ?? false,
-});
+    id: null,
+    name: '',
+    street: '',
+    number: '',
+    complement: '',
+    zipcode: '',
+    city: '',
+    state: '',
+    neighborhood: '',
+    for_delivery: false,
+})
 
-watch(
-    () => [props.address, props.isEdit],
-    ([newAddress, isEdit]) => {
-        if (isEdit && newAddress) {
-            form.id = newAddress.id ?? null;
-            form.name = newAddress.name ?? '';
-            form.street = newAddress.street ?? '';
-            form.number = newAddress.number ?? '';
-            form.complement = newAddress.complement ?? '';
-            form.zipcode = newAddress.zipcode ?? '';
-            form.city = newAddress.city ?? '';
-            form.state = newAddress.state ?? '';
-            form.neighborhood = newAddress.neighborhood ?? '';
-            form.for_delivery = newAddress.for_delivery ?? false;
-            console.log('is edit editar endereço', isEdit);
-        } else {
-            form.id = null;
-            form.name = '';
-            form.street = '';
-            form.number = '';
-            form.complement = '';
-            form.zipcode = '';
-            form.city = '';
-            form.state = '';
-            form.neighborhood = '';
-            form.for_delivery = false;
-            console.log('is edit novo endereço', isEdit);
-        }
-    },
-    { immediate: true }
-);
-
+watchEffect(() => {
+    if (props.isEdit && props.address) {
+        Object.assign(form, {
+            id: props.address.id ?? null,
+            name: props.address.name ?? '',
+            street: props.address.street ?? '',
+            number: props.address.number ?? '',
+            complement: props.address.complement ?? '',
+            zipcode: props.address.zipcode ?? '',
+            city: props.address.city ?? '',
+            state: props.address.state ?? '',
+            neighborhood: props.address.neighborhood ?? '',
+            for_delivery: props.address.for_delivery ?? false,
+        })
+    } else {
+        Object.assign(form, {
+            id: null,
+            name: '',
+            street: '',
+            number: '',
+            complement: '',
+            zipcode: '',
+            city: '',
+            state: '',
+            neighborhood: '',
+            for_delivery: false,
+        })
+    }
+})
 const close = () => emit('close')
 
-const submit = async () => {
+const submit = () => {
     try {
-        if (props.isEdit) {
-            console.log('editar');
-
-            await axios.put(`api/address/${form.id}`, form);
-        } else {
-            console.log('post');
-
-            await axios.post('api/address', form);
-        }
-
-        emit('saved');
-        emit('close');
+        emit('saved', { ...form })          
     } catch (error) {
         console.error('Erro ao salvar endereço:', error);
     }

@@ -345,6 +345,13 @@ export default {
   },
   setup() {
     const user = ref({})
+    // Estado de submissão
+    const isSubmitting = ref(false)
+    // Endereços
+    const addresses = ref([])
+    const showAddressForm = ref(false)
+    const currentAddress = ref({})
+    const isEdit = ref(false)
 
     // Abas
     const activeTab = ref('profile')
@@ -362,35 +369,25 @@ export default {
       confirmPassword: ''
     })
 
-    // Estado de submissão
-    const isSubmitting = ref(false)
-
-    // Endereços
-    const addresses = ref([])
-    const showAddressForm = ref(false)
-    const currentAddress = ref(null)
-    const isEdit = ref(false)
-
     const loadAddresses = async () => {
       const { data } = await addressService.getAll()
       addresses.value = data
     }
 
-    const createAddress = () => {    
-      currentAddress.value = {}  
-      showAddressForm.value = true 
-      isEdit.value = false      
+    const createAddress = () => {
+      currentAddress.value = {}
+      isEdit.value = false
+      showAddressForm.value = true
     }
 
     const editAddress = (address) => {
       if (!address) return;
-      console.log('adress', address);
 
       currentAddress.value = {
         ...address,
         for_delivery: address.for_delivery ?? false,
       };
-      isEdit.value = true      
+      isEdit.value = true
       showAddressForm.value = true
     }
 
@@ -415,6 +412,8 @@ export default {
     }
 
     const saveAddress = async (address) => {
+      if (!address) return
+      
       if (address.for_delivery) {
         for (const other of addresses.value) {
           if (other.id !== address.id && other.for_delivery) {
@@ -422,13 +421,11 @@ export default {
           }
         }
       }
-
       if (isEdit.value) {
         await addressService.update(address.id, address)
       } else {
         await addressService.create(address)
       }
-
       await loadAddresses()
       showAddressForm.value = false
     }
@@ -506,7 +503,6 @@ export default {
         isSubmitting.value = false
 
       } catch (error) {
-        console.error('Erro ao atualizar perfil:', error)
         Swal.fire({
           icon: 'error',
           title: 'Erro ao salvar',
@@ -601,6 +597,8 @@ export default {
       tabs,
       passwordForm,
       isSubmitting,
+      isEdit,
+      currentAddress,
       addresses,
       orders,
       favorites,
