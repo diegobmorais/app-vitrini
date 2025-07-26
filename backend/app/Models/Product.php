@@ -19,6 +19,7 @@ class Product extends Model
         'tax_class',
         'track_inventory',
         'stock',
+        'supplier_id',
         'low_stock_threshold',
         'allow_backorders',
         'status',
