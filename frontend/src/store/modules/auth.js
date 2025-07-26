@@ -52,24 +52,23 @@ export default {
 
     async checkAuth({ commit, state }) {
       try {
-        if (state.initialized && state.user) return true;
-
-        if (state.initialized && !state.user) return false;
-
-        const response = await axios.get('api/check-auth')
-
-        commit('setUser', response.data)
-        commit('setInitialized')
-
-        return true
-      } catch (error) {
-        if (error.response?.status === 401) {
-          commit('logout');
+        if (state.initialized) {
+          return !!state.user;
         }
+
+        const response = await axios.get('/api/check-auth');
+
+        commit('setUser', response.data);
+        commit('setInitialized');
+
+        return true;
+      } catch (error) {
+        commit('logout');
         commit('setInitialized');
         return false;
       }
     }
+
   },
   getters: {
     isAuthenticated: (state) => { return !!state.user; },

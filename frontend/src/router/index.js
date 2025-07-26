@@ -43,7 +43,8 @@ const routes = [
   {
     path: "/servicos",
     name: 'services',
-    component: ServicePage
+    component: ServicePage,
+    meta: { title: 'Serviços' }
   },
   {
     path: "/produto/:slug",
@@ -110,73 +111,87 @@ const routes = [
   {
     path: "/painel-administrador",
     component: AdminLayout,
+    meta: { title: 'Painel Administador', requiresAuth: true },
     children: [
       {
         path: "",
         name: "dashboard",
         component: Dashboard,
+        meta: { title: 'Dashboard' }
       },
       {
-        path: "/admin/produto/criar-produto",
+        path: "produto/criar-produto",
         name: "create-product",
         component: ProductForm,
+        meta: { title: 'Criar Produto' }
       },
       {
-        path: "/painel-administrador/produtos",
+        path: "painel-administrador/produtos",
         name: "admin-products",
         component: Products,
+        meta: { title: 'Produtos' }
       },
       {
-        path: "/painel-administrador/clientes",
+        path: "painel-administrador/clientes",
         name: "admin-customers",
         component: Customers,
+        meta: { title: 'Clientes' }
       },
       {
-        path: "/painel-administrador/cliente/create",
+        path: "painel-administrador/cliente/create",
         name: "admin-customer-create",
         component: CustomerForm,
+        meta: { title: 'Criar Clientes' }
       },
       {
-        path: "/painel-administrador/cliente/:id/edit",
+        path: "painel-administrador/cliente/:id/edit",
         name: "admin-customer-edit",
         component: CustomerForm,
+        meta: { title: 'Editar Cliente' },
         props: true,
       },
       {
-        path: "/painel-administrador/fornecedores",
+        path: "painel-administrador/fornecedores",
         name: "admin-suppliers",
         component: Suppliers,
+        meta: { title: 'Fornecedores' }
       },
       {
-        path: "/painel-administrador/fornecedor/create",
+        path: "painel-administrador/fornecedor/create",
         name: "admin-supplier-create",
         component: SupplierForm,
+        meta: { title: 'Criar Fornecedor' }
       },
       {
-        path: "/painel-administrador/fornecedor/:id/edit",
+        path: "painel-administrador/fornecedor/:id/edit",
         name: "admin-supplier-edit",
         component: SupplierForm,
+        meta: { title: 'Editar Fornecedor' },
         props: true,
       },
       {
-        path: "/painel-administrador/estoque",
+        path: "painel-administrador/estoque",
         name: "admin-inventory",
         component: Inventory,
+        meta: { title: 'Estoque' }
       },
       {
-        path: "/painel-administrador/pedidos",
+        path: "painel-administrador/pedidos",
         name: "admin-orders",
         component: Orders,
+        meta: { title: 'Pedidos' }
       },
       {
-        path: "/painel-administrador/configuracoes",
+        path: "painel-administrador/configuracoes",
         name: "admin-settings",
         component: Settings,
+        meta: { title: 'Configurações' }
       },
       {
-        path: "/painel-administrador/servicos",
+        path: "painel-administrador/servicos",
         name: "admin-services",
         component: Services,
+        meta: { title: 'Serviços' }
       },
     ]
   }
@@ -194,35 +209,23 @@ const router = createRouter({
   },
 })
 
+// router/index.js
 router.beforeEach(async (to, from, next) => {
-  document.title = `${to.meta.title} | Pet Shop`;
+  document.title = `${to.meta.title || 'Pet Shop'} | Pet Shop`
 
-  if (!to.meta.requiresAuth) {
-    next();
-    return;
+  const isInitialized = store.getters['auth/isInitialized']
+  let isAuthenticated = store.getters['auth/isAuthenticated']
+
+  if (!isInitialized) {
+    isAuthenticated = await store.dispatch('auth/checkAuth')
+    console.log(to.meta)
   }
 
-  try {
-    const isAuth = await store.dispatch('auth/checkAuth');
-
-    if (!isAuth && to.name !== 'login') {
-      next({ name: "login", query: { redirect: to.fullPath } });
-      return;
-    }
-
-    if (isAuth && to.meta.guestOnly) {
-      next({ name: "home" });
-      return;
-    }
-
-    next();
-  } catch (error) {
-    if (to.name !== 'login') {
-      next({ name: "login" });
-    } else {
-      next();
-    }
+  if (to.meta.requiresAuth && !isAuthenticated) {
+    return next({ name: 'login', query: { redirect: to.fullPath } })    
   }
-});
+
+  return next()
+})
 
 export default router

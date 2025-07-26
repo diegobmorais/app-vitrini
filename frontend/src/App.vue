@@ -13,10 +13,10 @@
     <footer-component></footer-component>
 
     <!-- Notificações -->
-    <!-- <notifications-container /> -->
+     <!-- <notifications-container />-->
 
     <!-- Modal de carrinho -->
-    <!-- <cart-modal v-if="showCartModal" @close="showCartModal = false" /> -->
+     <cart-modal v-if="showCartModal" @close="showCartModal = false" />
   </div>
 </template>
 
@@ -40,9 +40,7 @@ export default {
     const store = useStore()
     const showCartModal = computed(() => store.state.cart.showModal)
 
-    onMounted(() => {
-      store.dispatch('auth/checkAuth');
-      // Carregar dados iniciais
+    onMounted(() => {    
       store.dispatch('categories/fetchCategories')
       store.dispatch('cart/loadCart')
 

@@ -20,8 +20,10 @@ axios.interceptors.response.use(response => {
       store.dispatch('auth/logout');
     }
 
-    if (router.currentRoute.value.name !== 'login') {
-      router.push({ name: 'login' });
+    const currentRoute = router.currentRoute.value;
+    
+    if (currentRoute.meta.requiresAuth && currentRoute.name !== 'login') {
+      router.push({ name: 'login', query: { redirect: currentRoute.fullPath } });
     }
   }
   return Promise.reject(error);
