@@ -15,7 +15,7 @@
         </div>
 
         <!-- Notifications -->
-        <notifications-container />
+        <!-- <notifications-container /> -->
     </div>
 </template>
 

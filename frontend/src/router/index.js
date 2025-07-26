@@ -115,80 +115,80 @@ const routes = [
     children: [
       {
         path: "",
-        name: "dashboard",
+        name: "/dashboard",
         component: Dashboard,
         meta: { title: 'Dashboard' }
       },
       {
-        path: "produto/criar-produto",
+        path: "/produto/criar-produto",
         name: "create-product",
         component: ProductForm,
         meta: { title: 'Criar Produto' }
       },
       {
-        path: "painel-administrador/produtos",
+        path: "/painel-administrador/produtos",
         name: "admin-products",
         component: Products,
         meta: { title: 'Produtos' }
       },
       {
-        path: "painel-administrador/clientes",
+        path: "/painel-administrador/clientes",
         name: "admin-customers",
         component: Customers,
         meta: { title: 'Clientes' }
       },
       {
-        path: "painel-administrador/cliente/create",
+        path: "/painel-administrador/cliente/create",
         name: "admin-customer-create",
         component: CustomerForm,
         meta: { title: 'Criar Clientes' }
       },
       {
-        path: "painel-administrador/cliente/:id/edit",
+        path: "/painel-administrador/cliente/:id/edit",
         name: "admin-customer-edit",
         component: CustomerForm,
         meta: { title: 'Editar Cliente' },
         props: true,
       },
       {
-        path: "painel-administrador/fornecedores",
+        path: "/painel-administrador/fornecedores",
         name: "admin-suppliers",
         component: Suppliers,
         meta: { title: 'Fornecedores' }
       },
       {
-        path: "painel-administrador/fornecedor/create",
+        path: "/painel-administrador/fornecedor/create",
         name: "admin-supplier-create",
         component: SupplierForm,
         meta: { title: 'Criar Fornecedor' }
       },
       {
-        path: "painel-administrador/fornecedor/:id/edit",
+        path: "/painel-administrador/fornecedor/:id/edit",
         name: "admin-supplier-edit",
         component: SupplierForm,
         meta: { title: 'Editar Fornecedor' },
         props: true,
       },
       {
-        path: "painel-administrador/estoque",
+        path: "/painel-administrador/estoque",
         name: "admin-inventory",
         component: Inventory,
         meta: { title: 'Estoque' }
       },
       {
-        path: "painel-administrador/pedidos",
+        path: "/painel-administrador/pedidos",
         name: "admin-orders",
         component: Orders,
         meta: { title: 'Pedidos' }
       },
       {
-        path: "painel-administrador/configuracoes",
+        path: "/painel-administrador/configuracoes",
         name: "admin-settings",
         component: Settings,
         meta: { title: 'Configurações' }
       },
       {
-        path: "painel-administrador/servicos",
+        path: "/painel-administrador/servicos",
         name: "admin-services",
         component: Services,
         meta: { title: 'Serviços' }

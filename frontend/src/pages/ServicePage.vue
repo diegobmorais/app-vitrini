@@ -16,15 +16,14 @@
     <!-- Services Categories -->
     <section class="py-12 px-4">
       <div class="container mx-auto max-w-6xl">
-        <div class="flex flex-wrap justify-center gap-4 mb-12">
+        <!-- <div class="flex flex-wrap justify-center gap-4 mb-12">
           <button v-for="category in categories" :key="category.id"
             @click="selectedCategory = category.id === selectedCategory ? null : category.id"
             class="px-6 py-2 rounded-full text-sm font-medium transition-colors"
             :class="selectedCategory === category.id ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'">
             {{ category.name }}
           </button>
-        </div>
-
+        </div> -->
         <!-- Services List -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           <div v-for="service in filteredServices" :key="service.id"

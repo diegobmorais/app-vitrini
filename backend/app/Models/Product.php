@@ -59,4 +59,7 @@ class Product extends Model
             ->selectRaw('product_id, SUM(CASE WHEN type = "in" THEN quantity ELSE -quantity END) as total')
             ->groupBy('product_id');
     }
+    public function tags(){
+        return $this->belongsToMany(Tag::class);
+    }
 }
