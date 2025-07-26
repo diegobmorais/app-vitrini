@@ -8,23 +8,33 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\StockMovementController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\TagController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WarehouseController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login']);
 
-Route::middleware('auth:sanctum')->group(function () {      
+Route::middleware('auth:sanctum')->group(function () {
     //user
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::put('me/update', [UserController::class, 'updateProfile']);
-    Route::get('me', function(){
+    Route::get('me', function () {
         return response()->json([
             'user' => Auth::user()
         ]);
     });
+    //products
+    Route::apiResource('product', ProductController::class);
+    //Brands
+    Route::apiResource('brands', BrandController::class);
+    //tags
+    Route::apiResource('tags', TagController::class);
+    //category
+    Route::apiResource('category', CategoryController::class);
     //supplier
-    Route::apiResource('supplier', SupplierController::class);
+    Route::apiResource('suppliers', SupplierController::class);
     //warehouse stock
     Route::apiResource('warehouses', WarehouseController::class);
     //stock movements
@@ -36,14 +46,8 @@ Route::middleware('auth:sanctum')->group(function () {
 // Routes public
 Route::get('check-auth', [AuthController::class, 'checkAuth']);
 Route::post('register', [AuthController::class, 'register']);
- //Brands
- Route::apiResource('brand', BrandController::class);
- //category
- Route::apiResource('category', CategoryController::class);
- Route::get('categories/featured', [CategoryController::class, 'categoriesFeatured']);
- //products
- Route::apiResource('product', ProductController::class);
- Route::get('products/featured', [ProductController::class, 'productsFeatured']);
- Route::get('product-detail/{slug}', [ProductController::class, 'showBySlug']);
+Route::get('categories/featured', [CategoryController::class, 'categoriesFeatured']);
+Route::get('products/featured', [ProductController::class, 'productsFeatured']);
+Route::get('product-detail/{slug}', [ProductController::class, 'showBySlug']);
 //service
 Route::apiResource('service', ServiceController::class);

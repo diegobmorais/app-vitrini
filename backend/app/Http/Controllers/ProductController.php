@@ -91,6 +91,7 @@ class ProductController extends Controller
             if (empty($data['slug'])) {
                 $data['slug'] = Str::slug($data['name']);
             }
+            $data['tags'] = $request->tags;
 
             $product = Product::create($data);
 

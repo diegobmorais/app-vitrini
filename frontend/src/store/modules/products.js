@@ -87,8 +87,8 @@ export default {
           totalItems: response.data.total,
           perPage: response.data.per_page,
         })
-        commit("SET_ERROR", null)        
-        
+        commit("SET_ERROR", null)
+
         return response.data.data;
       } catch (error) {
         commit("SET_ERROR", error.response?.data?.message || "Erro ao carregar produtos")
@@ -97,12 +97,21 @@ export default {
         commit("SET_LOADING", false)
       }
     },
+    async createProduct(_, payload) {
+      const response = await api.post('/api/product', payload)
+      return response.data
+    },
+
+    async updateProduct(_, { id, data }) {
+      const response = await api.put(`/api/product/${id}`, data)
+      return response.data
+    },
 
     async fetchProduct({ commit }, slug) {
       try {
         commit("SET_LOADING", true)
 
-        const response = await api.get(`api/product-detail/${slug}`)   
+        const response = await api.get(`api/product-detail/${slug}`)
 
         commit("SET_PRODUCT", response.data)
         commit("SET_ERROR", null)

@@ -13,7 +13,7 @@ class SupplierController extends Controller
      */
     public function index()
     {
-        $suppliers = Supplier::latest()->paginate(15);
+        $suppliers = Supplier::all();
 
         return response()->json($suppliers);
     }

@@ -30,7 +30,7 @@ class StoreProductRequest extends FormRequest
             'price' => 'required|numeric|min:0',
             'compare_price' => 'nullable|numeric|gte:price',
             'cost' => 'nullable|numeric|min:0',
-            'tax_class' => 'required|string|in:default,reduced,zero',
+            'tax_class' => 'nullable|string|in:default,standard,reduced,zero',
             'track_inventory' => 'required|boolean',
             'stock' => 'required_if:track_inventory,true|integer|min:0',
             'low_stock_threshold' => 'nullable|integer|min:0',

@@ -100,7 +100,7 @@
                                     Imposto</label>
                                 <select id="tax_class" v-model="product.tax_class"
                                     class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
-                                    <option value="">Nenhum</option>
+                                    <option value="default">Nenhum</option>
                                     <option value="standard">Padrão</option>
                                     <option value="reduced">Reduzido</option>
                                     <option value="zero">Isento</option>
@@ -252,17 +252,22 @@
                                     </option>
                                 </select>
                             </div>
-
                             <div>
-                                <label for="brand" class="block text-sm font-medium text-gray-700">Tags</label>
-                                <select id="brand" v-model="product.brand_id"
+                                <label for="supplier" class="block text-sm font-medium text-gray-700">Fornecedor</label>
+                                <select id="supplier" v-model="product.supplier_id"
                                     class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
-                                    <option value="">Selecione as tags</option>
-                                    <option v-for="tag in tagas" :key="tag.id" :value="tag.id">
-                                        {{ tag.name }}
+                                    <option value="">Selecione um Fornecedor</option>
+                                    <option v-for="supplier in suppliers" :key="supplier.id" :value="supplier.id">
+                                        {{ supplier.company_name }}
                                     </option>
                                 </select>
                             </div>
+                            <div>
+                                <label for="tags" class="block text-sm font-medium text-gray-700">Tags</label>
+                                <multiselect v-model="product.tags" :options="tags"
+                                    :multiple="true" :close-on-select="false" placeholder="Selecione as tags"
+                                    label="name" track-by="id" />
+                            </div>                       
                         </div>
                     </div>
 
@@ -329,10 +334,15 @@
 </template>
 
 <script>
+import Multiselect from 'vue-multiselect'
+import 'vue-multiselect/dist/vue-multiselect.min.css'
 import { mapState, mapActions } from 'vuex';
 
 export default {
     name: 'AdminProductForm',
+    components: {
+        Multiselect
+    },
     data() {
         return {
             product: {
@@ -352,22 +362,24 @@ export default {
                 featured: false,
                 category_id: '',
                 brand_id: '',
+                supplier_id: '',
                 tags: [],
                 weight: '',
                 length: '',
                 width: '',
-                height: '',               
+                height: '',
                 slug: '',
                 images: []
             },
-            tagsInput: '',
             loading: false
         };
     },
     computed: {
         ...mapState({
-            categories: state => state.categories.items,
-            brands: state => state.brands ? state.brands.items : []
+            categories: state => state.categories.categories ? state.categories.categories : [],
+            brands: state => state.brands.brands ? state.brands.brands : [],
+            tags: state => state.tags.tags ? state.tags.tags : [],
+            suppliers: state => state.suppliers.suppliers ? state.suppliers.suppliers : [],
         }),
         isEditing() {
             return !!this.$route.params.id;
@@ -377,34 +389,39 @@ export default {
         ...mapActions({
             fetchCategories: 'categories/fetchCategories',
             fetchBrands: 'brands/fetchBrands',
+            fetchTags: 'tags/fetchTags',
             createProduct: 'products/createProduct',
             updateProduct: 'products/updateProduct',
-            fetchProduct: 'products/fetchProduct'
+            fetchSuppliers: 'suppliers/fetchSuppliers'
         }),
+
         async saveProduct() {
             this.loading = true;
-
+            const payload = {
+                ...this.product,
+                tags: this.product.tags.map(tag => tag.name)
+            }
             try {
                 if (this.isEditing) {
                     await this.updateProduct({
                         id: this.$route.params.id,
                         data: this.product
                     });
-                    this.$store.dispatch('notifications/add', {
+                    this.$store.dispatch('notifications/addNotification', {
                         type: 'success',
                         message: 'Produto atualizado com sucesso!'
                     });
                 } else {
-                    await this.createProduct(this.product);
-                    this.$store.dispatch('notifications/add', {
+                    await this.createProduct(payload);
+                    this.$store.dispatch('notifications/addNotification', {
                         type: 'success',
                         message: 'Produto criado com sucesso!'
                     });
                 }
 
-                this.$router.push('/admin/produtos');
+                this.$router.push('/painel-administrador/produtos');
             } catch (error) {
-                this.$store.dispatch('notifications/add', {
+                this.$store.dispatch('notifications/addNotification', {
                     type: 'error',
                     message: `Erro ao salvar produto: ${error.message}`
                 });
@@ -412,22 +429,18 @@ export default {
                 this.loading = false;
             }
         },
-        addTag() {
-            const tag = this.tagsInput.trim();
-            if (tag && !this.product.tags.includes(tag)) {
-                this.product.tags.push(tag);
-            }
-            this.tagsInput = '';
-        },
-        removeTag(index) {
-            this.product.tags.splice(index, 1);
-        },
         openFileInput() {
             this.$refs.fileInput.click();
         },
         handleFileUpload() {
             //
         }
-    }
+    },
+    mounted() {
+        this.fetchCategories();
+        this.fetchBrands();
+        this.fetchTags();
+        this.fetchSuppliers();
+    },
 }
 </script>

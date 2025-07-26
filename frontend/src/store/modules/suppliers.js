@@ -1,3 +1,5 @@
+import api from "@/main"
+
 const state = {
     suppliers: [],
     loading: false,
@@ -15,50 +17,11 @@ const state = {
   const actions = {
     async fetchSuppliers({ commit }) {
       try {
-        commit("setLoading", true)
-        // Simulação de chamada à API
-        const response = await new Promise((resolve) => {
-          setTimeout(() => {
-            resolve({
-              data: [
-                {
-                  id: 1,
-                  name: "PetFood Distribuidora",
-                  cnpj: "12.345.678/0001-90",
-                  contact_name: "João Silva",
-                  email: "joao@petfood.com",
-                  phone: "(11) 98765-4321",
-                  products_count: 42,
-                  active: true,
-                  logo: null,
-                },
-                {
-                  id: 2,
-                  name: "Brinquedos Pet Ltda",
-                  cnpj: "98.765.432/0001-10",
-                  contact_name: "Maria Souza",
-                  email: "maria@brinquedospet.com",
-                  phone: "(11) 91234-5678",
-                  products_count: 28,
-                  active: true,
-                  logo: null,
-                },
-                {
-                  id: 3,
-                  name: "Acessórios PetShop",
-                  cnpj: "45.678.901/0001-23",
-                  contact_name: "Carlos Oliveira",
-                  email: "carlos@acessoriospet.com",
-                  phone: "(11) 94567-8901",
-                  products_count: 15,
-                  active: false,
-                  logo: null,
-                },
-              ],
-            })
-          }, 500)
-        })
+        commit("setLoading", true)    
+        const response = await api.get('api/suppliers')          
         commit("setSuppliers", response.data)
+        
+        return response.data
       } catch (error) {
         commit("setError", error.message)
       } finally {

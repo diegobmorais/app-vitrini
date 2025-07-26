@@ -8,6 +8,8 @@ import suppliers from "./modules/suppliers"
 import customers from "./modules/customers"
 import inventory from "./modules/inventory"
 import orders from "./modules/orders"
+import tags from "./modules/tags"
+import brands from "./modules/brands"
 
 export default createStore({
   modules: {
@@ -15,6 +17,8 @@ export default createStore({
     cart,
     products,
     categories,
+    tags,
+    brands,
     notifications,
     suppliers,
     customers,

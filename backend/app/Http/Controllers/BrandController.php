@@ -12,13 +12,10 @@ class BrandController extends Controller
      * Display a listing of the resource.
      */
     public function index()
-    {
-        if (Auth::user()) {
-            $brands = Brand::all();
-
-            return response()->json([
-                'brands' => $brands
-            ], 200);
+    {  
+        if (Auth::user()) {          
+            $brands = Brand::all();         
+            return response()->json($brands, 200);
         }
     }
     /**
