@@ -28,6 +28,8 @@ const actions = {
       const response = await api.get("api/category")
       commit("setCategories", response.data)
       commit("setError", null)
+     
+      return response.data
     } catch (error) {
       commit("setError", error.message || "Erro ao carregar categorias")
       console.error("Error fetching categories:", error)

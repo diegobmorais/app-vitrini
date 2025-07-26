@@ -19,19 +19,67 @@ class ProductController extends Controller
     {
         $query = Product::query();
 
-        if ($request->has('category')) {
-            $category = Category::where('slug', $request->category)->first();
-            if ($category) {
-                $query->where('category_id', $category->id);
+        // Filtro por categoria
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+
+        // Filtro de busca por nome ou SKU
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                    ->orWhere('sku', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        // Filtro por preço
+        if ($request->filled('min_price')) {
+            $query->where('price', '>=', $request->min_price);
+        }
+
+        if ($request->filled('max_price')) {
+            $query->where('price', '<=', $request->max_price);
+        }
+
+        // Ordenação
+        if ($request->filled('sort')) {
+            switch ($request->sort) {
+                case 'name_asc':
+                    $query->orderBy('name', 'asc');
+                    break;
+                case 'name_desc':
+                    $query->orderBy('name', 'desc');
+                    break;
+                case 'price_asc':
+                    $query->orderBy('price', 'asc');
+                    break;
+                case 'price_desc':
+                    $query->orderBy('price', 'desc');
+                    break;
+                case 'stock_asc':
+                    $query->orderBy('stock', 'asc');
+                    break;
+                case 'stock_desc':
+                    $query->orderBy('stock', 'desc');
+                    break;
+                case 'created_at_desc':
+                    $query->orderBy('created_at', 'desc');
+                    break;
+                case 'created_at_asc':
+                    $query->orderBy('created_at', 'asc');
+                    break;
+                default:
+                    $query->orderBy('name');
             }
         }
-        $products = $query->get();
+        // Paginação
+        $perPage = $request->input('per_page', 10);
+        $products = $query->with('category')
+            ->paginate($perPage);
 
-        return response()->json([
-            'success' => true,
-            'data' => $products
-        ]);
+        return response()->json($products);
     }
+
     /**
      * Store a newly created resource in storage.
      */
@@ -114,9 +162,9 @@ class ProductController extends Controller
         ]);
     }
     public function showBySlug($slug)
-    {        
+    {
         $product = Product::where('slug', $slug)->first();
-     
+
         if (!$product) {
             return response()->json(['message' => 'Produto não encontrado.'], 404);
         }

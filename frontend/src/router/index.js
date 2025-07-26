@@ -217,8 +217,7 @@ router.beforeEach(async (to, from, next) => {
   let isAuthenticated = store.getters['auth/isAuthenticated']
 
   if (!isInitialized) {
-    isAuthenticated = await store.dispatch('auth/checkAuth')
-    console.log(to.meta)
+    isAuthenticated = await store.dispatch('auth/checkAuth')  
   }
 
   if (to.meta.requiresAuth && !isAuthenticated) {

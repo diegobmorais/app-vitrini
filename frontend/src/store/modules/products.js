@@ -6,6 +6,7 @@ export default {
   state: {
     products: [],
     product: null,
+    items: [],
     loading: false,
     error: null,
     filters: {
@@ -34,7 +35,7 @@ export default {
 
   mutations: {
     SET_PRODUCTS(state, products) {
-      state.products = products
+      state.items = products
     },
     SET_PRODUCT(state, product) {
       state.product = product
@@ -86,7 +87,9 @@ export default {
           totalItems: response.data.total,
           perPage: response.data.per_page,
         })
-        commit("SET_ERROR", null)
+        commit("SET_ERROR", null)        
+        
+        return response.data.data;
       } catch (error) {
         commit("SET_ERROR", error.response?.data?.message || "Erro ao carregar produtos")
         console.error("Error fetching products:", error)
@@ -99,7 +102,7 @@ export default {
       try {
         commit("SET_LOADING", true)
 
-        const response = await api.get(`api/product-detail/${slug}`)
+        const response = await api.get(`api/product-detail/${slug}`)   
 
         commit("SET_PRODUCT", response.data)
         commit("SET_ERROR", null)

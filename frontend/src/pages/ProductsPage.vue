@@ -320,7 +320,8 @@ export default {
         }
 
         const response = await api.get('api/product', { params });
-        products.value = response.data.data;
+        products.value = response.data.data;      
+        
       } catch (error) {
         console.error('Erro ao buscar produtos:', error);
       }

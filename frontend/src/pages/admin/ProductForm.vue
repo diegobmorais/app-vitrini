@@ -254,24 +254,14 @@
                             </div>
 
                             <div>
-                                <label for="tags" class="block text-sm font-medium text-gray-700">Tags</label>
-                                <input type="text" id="tags" v-model="tagsInput" @keydown.enter.prevent="addTag"
-                                    placeholder="Digite e pressione Enter"
-                                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
-
-                                <div class="mt-2 flex flex-wrap gap-2">
-                                    <span v-for="(tag, index) in product.tags" :key="index"
-                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                        {{ tag }}
-                                        <button @click="removeTag(index)" type="button"
-                                            class="ml-1 inline-flex text-blue-400 hover:text-blue-600 focus:outline-none">
-                                            <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
-                                        </button>
-                                    </span>
-                                </div>
+                                <label for="brand" class="block text-sm font-medium text-gray-700">Tags</label>
+                                <select id="brand" v-model="product.brand_id"
+                                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                                    <option value="">Selecione as tags</option>
+                                    <option v-for="tag in tagas" :key="tag.id" :value="tag.id">
+                                        {{ tag.name }}
+                                    </option>
+                                </select>
                             </div>
                         </div>
                     </div>
