@@ -127,7 +127,7 @@
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <router-link :to="`/admin/products/${product.id}/edit`" class="text-blue-600 hover:text-blue-900 mr-3">
+                <router-link :to="`/produto/${product.id}/editar`" class="text-blue-600 hover:text-blue-900 mr-3">
                   Editar
                 </router-link>
                 <button @click="confirmDelete(product)" class="text-red-600 hover:text-red-900">
@@ -265,222 +265,164 @@
   </div>
 </template>
 
-<script>
-import { mapState, mapActions } from 'vuex';
+<script setup>
+import { useCategoryStore } from '@/store/modules/useCategoryStore';
+import { useProductStore } from '@/store/modules/useProductStore';
+import { ref, computed, onMounted, watch } from 'vue';
 
-export default {
-  name: 'AdminProducts',
-  data() {
-    return {
-      search: '',
-      categoryFilter: '',
-      stockFilter: '',
-      sortBy: 'name_asc',
-      currentPage: 1,
-      perPage: 10,
-      showDeleteModal: false,
-      productToDelete: null,
-    };
-  },
-  computed: {
-    ...mapState({
-      products: state => state.products.items,
-      categories: state => state.categories.categories,
-      loading: state => state.products.loading,
-      totalProducts: state => state.products.total
-    }),
-    filteredProducts() {   
-      if (!Array.isArray(this.products)) return [];
+import { useStore } from 'vuex';
 
-      let filtered = [...this.products];
+const productStore = useProductStore();
+const categoryStore = useCategoryStore();
+const vuex = useStore(); 
 
-      if (this.categoryFilter) {
-        filtered = filtered.filter(p => p.category_id === this.categoryFilter);
-      }
+const search = ref('');
+const categoryFilter = ref('');
+const stockFilter = ref('');
+const sortBy = ref('name_asc');
+const currentPage = ref(1);
+const perPage = ref(10);
 
-      // Aplicar filtro de busca
-      if (this.search) {
-        const searchLower = this.search.toLowerCase();
-        filtered = filtered.filter(product =>
-          product.name.toLowerCase().includes(searchLower) ||
-          product.sku.toLowerCase().includes(searchLower)
-        );
-      }
+const showDeleteModal = ref(false);
+const productToDelete = ref(null);
 
-      // Aplicar filtro de categoria
-      if (this.categoryFilter) {
-        filtered = filtered.filter(product => product.category_id === this.categoryFilter);
-      }
+const products = computed(() => productStore.items || []);
+const categories = computed(() => categoryStore.categories || []);
 
-      // Aplicar filtro de estoque
-      if (this.stockFilter) {
-        switch (this.stockFilter) {
-          case 'in_stock':
-            filtered = filtered.filter(product => product.stock > 0);
-            break;
-          case 'low_stock':
-            filtered = filtered.filter(product => product.stock > 0 && product.stock <= 5);
-            break;
-          case 'out_of_stock':
-            filtered = filtered.filter(product => product.stock === 0);
-            break;
-        }
-      }
+const filteredProducts = computed(() => {
+  let filtered = [...products.value];
 
-      // Aplicar ordenação
-      switch (this.sortBy) {
-        case 'name_asc':
-          filtered.sort((a, b) => a.name.localeCompare(b.name));
-          break;
-        case 'name_desc':
-          filtered.sort((a, b) => b.name.localeCompare(a.name));
-          break;
-        case 'price_asc':
-          filtered.sort((a, b) => a.price - b.price);
-          break;
-        case 'price_desc':
-          filtered.sort((a, b) => b.price - a.price);
-          break;
-        case 'stock_asc':
-          filtered.sort((a, b) => a.stock - b.stock);
-          break;
-        case 'stock_desc':
-          filtered.sort((a, b) => b.stock - a.stock);
-          break;
-        case 'created_at_desc':
-          filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-          break;
-        case 'created_at_asc':
-          filtered.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-          break;
-      }
+  if (categoryFilter.value) {
+    filtered = filtered.filter(p => p.category_id === categoryFilter.value);
+  }
 
-      return filtered;
-    },
-    paginatedProducts() {
-      const start = (this.currentPage - 1) * this.perPage;
-      const end = start + this.perPage;
-      return this.filteredProducts.slice(start, end);
-    },
-    totalPages() {
-      return Math.ceil(this.filteredProducts.length / this.perPage);
-    },
-    displayedPages() {
-      const pages = [];
-      const maxPagesToShow = 5;
+  if (search.value) {
+    const s = search.value.toLowerCase();
+    filtered = filtered.filter(p =>
+      p.name.toLowerCase().includes(s) || p.sku.toLowerCase().includes(s)
+    );
+  }
 
-      if (this.totalPages <= maxPagesToShow) {
-        // Mostrar todas as páginas se houver menos que o máximo
-        for (let i = 1; i <= this.totalPages; i++) {
-          pages.push(i);
-        }
-      } else {
-        // Lógica para mostrar páginas com elipses
-        if (this.currentPage <= 3) {
-          // Caso 1: Página atual próxima ao início
-          for (let i = 1; i <= 5; i++) {
-            pages.push(i);
-          }
-        } else if (this.currentPage >= this.totalPages - 2) {
-          // Caso 2: Página atual próxima ao fim
-          for (let i = this.totalPages - 4; i <= this.totalPages; i++) {
-            pages.push(i);
-          }
-        } else {
-          // Caso 3: Página atual no meio
-          for (let i = this.currentPage - 2; i <= this.currentPage + 2; i++) {
-            pages.push(i);
-          }
-        }
-      }
-
-      return pages;
-    },
-    paginationStart() {
-      return (this.currentPage - 1) * this.perPage + 1;
-    },
-    paginationEnd() {
-      const end = this.currentPage * this.perPage;
-      return end > this.filteredProducts.length ? this.filteredProducts.length : end;
-    }
-  },
-  methods: {
-    ...mapActions({
-      fetchProducts: 'products/fetchProducts',
-      fetchCategories: 'categories/fetchCategories',
-      removeProduct: 'products/removeProduct'
-    }),
-    formatNumber(value) {
-      return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    },
-    getStatusText(status) {
-      const statusMap = {
-        'active': 'Ativo',
-        'draft': 'Rascunho',
-        'inactive': 'Inativo'
-      };
-      return statusMap[status] || status;
-    },
-    prevPage() {
-      if (this.currentPage > 1) {
-        this.currentPage--;
-      }
-    },
-    nextPage() {
-      if (this.currentPage < this.totalPages) {
-        this.currentPage++;
-      }
-    },
-    goToPage(page) {
-      this.currentPage = page;
-    },
-    confirmDelete(product) {
-      this.productToDelete = product;
-      this.showDeleteModal = true;
-    },
-    cancelDelete() {
-      this.showDeleteModal = false;
-      this.productToDelete = null;
-    },
-    deleteProduct() {
-      if (this.productToDelete) {
-        this.removeProduct(this.productToDelete.id)
-          .then(() => {
-            this.$store.dispatch('notifications/add', {
-              type: 'success',
-              message: `Produto "${this.productToDelete.name}" excluído com sucesso!`
-            });
-          })
-          .catch(error => {
-            this.$store.dispatch('notifications/add', {
-              type: 'error',
-              message: `Erro ao excluir produto: ${error.message}`
-            });
-          })
-          .finally(() => {
-            this.showDeleteModal = false;
-            this.productToDelete = null;
-          });
-      }
-    }
-  },
-  mounted() {
-    this.fetchProducts();
-    this.fetchCategories();    
-  },
-  watch: {
-    search() {
-      this.currentPage = 1;
-    },
-    categoryFilter() {
-      this.currentPage = 1;
-    },
-    stockFilter() {
-      this.currentPage = 1;
-    },
-    sortBy() {
-      this.currentPage = 1;
+  if (stockFilter.value) {
+    switch (stockFilter.value) {
+      case 'in_stock':
+        filtered = filtered.filter(p => p.stock > 0);
+        break;
+      case 'low_stock':
+        filtered = filtered.filter(p => p.stock > 0 && p.stock <= 5);
+        break;
+      case 'out_of_stock':
+        filtered = filtered.filter(p => p.stock === 0);
+        break;
     }
   }
+
+  switch (sortBy.value) {
+    case 'name_asc':
+      filtered.sort((a, b) => a.name.localeCompare(b.name));
+      break;
+    case 'name_desc':
+      filtered.sort((a, b) => b.name.localeCompare(a.name));
+      break;
+    case 'price_asc':
+      filtered.sort((a, b) => a.price - b.price);
+      break;
+    case 'price_desc':
+      filtered.sort((a, b) => b.price - a.price);
+      break;
+    case 'stock_asc':
+      filtered.sort((a, b) => a.stock - b.stock);
+      break;
+    case 'stock_desc':
+      filtered.sort((a, b) => b.stock - a.stock);
+      break;
+    case 'created_at_desc':
+      filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      break;
+    case 'created_at_asc':
+      filtered.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+      break;
+  }
+
+  return filtered;
+});
+console.log('produtos filtrados', filteredProducts);
+
+
+const totalPages = computed(() => Math.ceil(filteredProducts.value.length / perPage.value));
+
+const paginatedProducts = computed(() => {
+  const start = (currentPage.value - 1) * perPage.value;
+  return filteredProducts.value.slice(start, start + perPage.value);
+});
+
+const paginationStart = computed(() => (currentPage.value - 1) * perPage.value + 1);
+const paginationEnd = computed(() => {
+  const end = currentPage.value * perPage.value;
+  return end > filteredProducts.value.length ? filteredProducts.value.length : end;
+});
+
+const displayedPages = computed(() => {
+  const pages = [];
+  const max = 5;
+  const total = totalPages.value;
+
+  if (total <= max) {
+    for (let i = 1; i <= total; i++) pages.push(i);
+  } else if (currentPage.value <= 3) {
+    for (let i = 1; i <= 5; i++) pages.push(i);
+  } else if (currentPage.value >= total - 2) {
+    for (let i = total - 4; i <= total; i++) pages.push(i);
+  } else {
+    for (let i = currentPage.value - 2; i <= currentPage.value + 2; i++) pages.push(i);
+  }
+
+  return pages;
+});
+
+const prevPage = () => { if (currentPage.value > 1) currentPage.value--; };
+const nextPage = () => { if (currentPage.value < totalPages.value) currentPage.value++; };
+const goToPage = (page) => { currentPage.value = page; };
+
+const formatNumber = value => value.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+const getStatusText = status => ({ active: 'Ativo', draft: 'Rascunho', inactive: 'Inativo' }[status] || status);
+
+const confirmDelete = product => {
+  productToDelete.value = product;
+  showDeleteModal.value = true;
 };
+
+const cancelDelete = () => {
+  productToDelete.value = null;
+  showDeleteModal.value = false;
+};
+
+const deleteProduct = async () => {
+  if (!productToDelete.value) return;
+
+  try {
+    await productStore.removeProduct(productToDelete.value.id);
+    vuex.dispatch('notifications/add', {
+      type: 'success',
+      message: `Produto "${productToDelete.value.name}" excluído com sucesso!`
+    });
+  } catch (error) {
+    vuex.dispatch('notifications/add', {
+      type: 'error',
+      message: `Erro ao excluir produto: ${error.message}`
+    });
+  } finally {
+    showDeleteModal.value = false;
+    productToDelete.value = null;
+  }
+};
+
+watch([search, categoryFilter, stockFilter, sortBy], () => {
+  currentPage.value = 1;
+});
+
+onMounted(() => {
+  productStore.fetchProducts();
+  categoryStore.fetchCategories();
+});
 </script>

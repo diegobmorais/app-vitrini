@@ -327,299 +327,248 @@
   </div>
 </template>
 
-<script>
-import { getAuthenticatedUser } from '@/store/modules/user'
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import Swal from 'sweetalert2'
+import axios from 'axios'
 import addressService from '@/services/addressService.js'
 import AddressForm from '@/components/address/AddressForm.vue'
-import axios from 'axios'
-import Swal from 'sweetalert2'
-import { ref, computed, onMounted } from 'vue'
+import { useUserStore } from '@/store/modules/useUserStore'
 
-export default {
-  name: 'AccountPage',
-  components: {
-    AddressForm
-  },
-  metaInfo: {
-    title: 'Minha Conta'
-  },
-  setup() {
-    const user = ref({})
-    // Estado de submissão
-    const isSubmitting = ref(false)
-    // Endereços
-    const addresses = ref([])
-    const showAddressForm = ref(false)
-    const currentAddress = ref({})
-    const isEdit = ref(false)
 
-    // Abas
-    const activeTab = ref('profile')
-    const tabs = [
-      { id: 'profile', name: 'Perfil', icon: 'UserIcon' },
-      { id: 'addresses', name: 'Endereços', icon: 'HomeIcon' },
-      { id: 'orders', name: 'Pedidos', icon: 'ShoppingBagIcon' },
-      { id: 'favorites', name: 'Favoritos', icon: 'HeartIcon' },
-      { id: 'notifications', name: 'Notificações', icon: 'BellIcon' }
-    ]
+const userStore = useUserStore()
 
-    const passwordForm = ref({
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: ''
-    })
+// Refs locais
+const user = ref({})
+const isSubmitting = ref(false)
+const addresses = ref([])
+const showAddressForm = ref(false)
+const currentAddress = ref({})
+const isEdit = ref(false)
 
-    const loadAddresses = async () => {
-      const { data } = await addressService.getAll()
-      addresses.value = data
-    }
+const activeTab = ref('profile')
+const tabs = [
+  { id: 'profile', name: 'Perfil', icon: 'UserIcon' },
+  { id: 'addresses', name: 'Endereços', icon: 'HomeIcon' },
+  { id: 'orders', name: 'Pedidos', icon: 'ShoppingBagIcon' },
+  { id: 'favorites', name: 'Favoritos', icon: 'HeartIcon' },
+  { id: 'notifications', name: 'Notificações', icon: 'BellIcon' }
+]
 
-    const createAddress = () => {
-      currentAddress.value = {}
-      isEdit.value = false
-      showAddressForm.value = true
-    }
+const passwordForm = ref({
+  currentPassword: '',
+  newPassword: '',
+  confirmPassword: ''
+})
 
-    const editAddress = (address) => {
-      if (!address) return;
+// Funções para lidar com endereços
+async function loadAddresses() {
+  const { data } = await addressService.getAll()
+  addresses.value = data
+}
 
-      currentAddress.value = {
-        ...address,
-        for_delivery: address.for_delivery ?? false,
-      };
-      isEdit.value = true
-      showAddressForm.value = true
-    }
+function createAddress() {
+  currentAddress.value = {}
+  isEdit.value = false
+  showAddressForm.value = true
+}
 
-    const deleteAddress = async (address) => {
-      const result = await Swal.fire({
-        title: 'Tem certeza?',
-        text: "Deseja realmente excluir este endereço?",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Sim, excluir',
-        cancelButtonText: 'Cancelar'
-      })
-      if (result.isConfirmed) {
-        try {
-          await addressService.destroy(address.id)
-          await loadAddresses()
-          Swal.fire('Excluído!', 'Endereço excluído com sucesso.', 'success')
-        } catch (error) {
-          Swal.fire('Erro', 'Falha ao excluir endereço.', 'error')
-        }
-      }
-    }
+function editAddress(address) {
+  if (!address) return
+  currentAddress.value = { ...address, for_delivery: address.for_delivery ?? false }
+  isEdit.value = true
+  showAddressForm.value = true
+}
 
-    const saveAddress = async (address) => {
-      if (!address) return
-      
-      if (address.for_delivery) {
-        for (const other of addresses.value) {
-          if (other.id !== address.id && other.for_delivery) {
-            await addressService.update(other.id, { ...other, for_delivery: false })
-          }
-        }
-      }
-      if (isEdit.value) {
-        await addressService.update(address.id, address)
-      } else {
-        await addressService.create(address)
-      }
+async function deleteAddress(address) {
+  const result = await Swal.fire({
+    title: 'Tem certeza?',
+    text: 'Deseja realmente excluir este endereço?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Sim, excluir',
+    cancelButtonText: 'Cancelar'
+  })
+  if (result.isConfirmed) {
+    try {
+      await addressService.destroy(address.id)
       await loadAddresses()
-      showAddressForm.value = false
-    }
-
-    // Pedidos (simulados)
-    const orders = ref([
-      {
-        id: '10001',
-        date: '2023-05-15T14:30:00',
-        status: 'delivered',
-        items: [
-          { name: 'Ração Premium para Cães', quantity: 2, price: 89.90 },
-          { name: 'Brinquedo Interativo', quantity: 1, price: 45.50 }
-        ],
-        total: 225.30
-      }
-    ])
-
-    // Favoritos (simulados)
-    const favorites = ref([
-      {
-        id: 1,
-        name: 'Ração Premium para Cães',
-        slug: 'racao-premium-para-caes',
-        price: 89.90,
-        image: '/placeholder.svg?height=300&width=300'
-      },
-    ])
-
-    // Notificações (simuladas)
-    const notifications = ref([
-      {
-        id: 1,
-        title: 'Pedido entregue',
-        message: 'Seu pedido #10001 foi entregue com sucesso.',
-        date: '2023-05-16T09:45:00',
-        read: true
-      }
-    ])
-
-    // Iniciais do usuário para avatar
-    const userInitials = computed(() => {
-      if (!user.value.name) return ''
-      return user.value.name
-        .split(' ')
-        .map(name => name[0])
-        .join('')
-        .toUpperCase()
-        .substring(0, 2)
-    })
-
-    // Métodos
-    const updateProfile = async () => {
-      isSubmitting.value = true
-
-      try {
-        const payload = {
-          name: user.value.name,
-          email: user.value.email,
-          phone: user.value.phone,
-          birth_day: user.value.birth_day
-        }
-
-        const response = await axios.put('/api/me/update', payload)
-
-        user.value = response.data.user
-        Swal.fire({
-          icon: 'success',
-          title: 'Perfil atualizado!',
-          text: 'Suas informações foram salvas com sucesso.',
-          timer: 2000,
-          showConfirmButton: false
-        });
-
-        isSubmitting.value = false
-
-      } catch (error) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Erro ao salvar',
-          text: 'Não foi possível atualizar seus dados. Tente novamente.',
-        });
-      }
-    }
-
-    const updatePassword = () => {
-      isSubmitting.value = true
-      // Simulação de requisição
-      setTimeout(() => {
-        passwordForm.value = {
-          currentPassword: '',
-          newPassword: '',
-          confirmPassword: ''
-        }
-        isSubmitting.value = false
-        alert('Senha alterada com sucesso!')
-      }, 1000)
-    }
-
-    const viewOrderDetails = (orderId) => {
-      // Implementação da visualização de detalhes do pedido
-      alert(`Visualizando detalhes do pedido ${orderId}`)
-    }
-
-    const removeFromFavorites = (productId) => {
-      favorites.value = favorites.value.filter(product => product.id !== productId)
-    }
-
-    const addToCart = (product) => {
-      // Implementação da adição ao carrinho
-      alert(`Produto ${product.name} adicionado ao carrinho!`)
-    }
-
-    const markAsRead = (index) => {
-      notifications.value[index].read = true
-    }
-
-    const formatDate = (dateString) => {
-      const date = new Date(dateString)
-      return new Intl.DateTimeFormat('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      }).format(date)
-    }
-
-    const formatCurrency = (value) => {
-      return new Intl.NumberFormat('pt-BR', {
-        style: 'currency',
-        currency: 'BRL'
-      }).format(value)
-    }
-
-    const getStatusText = (status) => {
-      const statusMap = {
-        'pending': 'Pendente',
-        'processing': 'Em processamento',
-        'shipped': 'Enviado',
-        'delivered': 'Entregue',
-        'canceled': 'Cancelado'
-      }
-      return statusMap[status] || status
-    }
-
-    const getStatusClass = (status) => {
-      const classMap = {
-        'pending': 'bg-yellow-100 text-yellow-800',
-        'processing': 'bg-blue-100 text-blue-800',
-        'shipped': 'bg-purple-100 text-purple-800',
-        'delivered': 'bg-green-100 text-green-800',
-        'canceled': 'bg-red-100 text-red-800'
-      }
-      return classMap[status] || 'bg-gray-100 text-gray-800'
-    }
-    onMounted(async () => {
-      try {
-        user.value = await getAuthenticatedUser()
-        loadAddresses();
-
-      } catch (error) {
-        console.error('Erro ao buscar usuário:', error)
-      }
-    })
-    return {
-      user,
-      activeTab,
-      tabs,
-      passwordForm,
-      isSubmitting,
-      isEdit,
-      currentAddress,
-      addresses,
-      orders,
-      favorites,
-      notifications,
-      userInitials,
-      updateProfile,
-      updatePassword,
-      createAddress,
-      saveAddress,
-      showAddressForm,
-      editAddress,
-      deleteAddress,
-      viewOrderDetails,
-      removeFromFavorites,
-      addToCart,
-      markAsRead,
-      formatDate,
-      formatCurrency,
-      getStatusText,
-      getStatusClass
+      Swal.fire('Excluído!', 'Endereço excluído com sucesso.', 'success')
+    } catch (error) {
+      Swal.fire('Erro', 'Falha ao excluir endereço.', 'error')
     }
   }
 }
+
+async function saveAddress(address) {
+  if (!address) return
+  if (address.for_delivery) {
+    for (const other of addresses.value) {
+      if (other.id !== address.id && other.for_delivery) {
+        await addressService.update(other.id, { ...other, for_delivery: false })
+      }
+    }
+  }
+  if (isEdit.value) {
+    await addressService.update(address.id, address)
+  } else {
+    await addressService.create(address)
+  }
+  await loadAddresses()
+  showAddressForm.value = false
+}
+
+// Dados simulados para pedidos, favoritos e notificações (podem migrar para store ou API)
+const orders = ref([
+  {
+    id: '10001',
+    date: '2023-05-15T14:30:00',
+    status: 'delivered',
+    items: [
+      { name: 'Ração Premium para Cães', quantity: 2, price: 89.90 },
+      { name: 'Brinquedo Interativo', quantity: 1, price: 45.50 }
+    ],
+    total: 225.30
+  }
+])
+
+const favorites = ref([
+  {
+    id: 1,
+    name: 'Ração Premium para Cães',
+    slug: 'racao-premium-para-caes',
+    price: 89.90,
+    image: '/placeholder.svg?height=300&width=300'
+  }
+])
+
+const notifications = ref([
+  {
+    id: 1,
+    title: 'Pedido entregue',
+    message: 'Seu pedido #10001 foi entregue com sucesso.',
+    date: '2023-05-16T09:45:00',
+    read: true
+  }
+])
+
+// Computed para iniciais do usuário
+const userInitials = computed(() => {
+  if (!user.value.name) return ''
+  return user.value.name
+    .split(' ')
+    .map(name => name[0])
+    .join('')
+    .toUpperCase()
+    .substring(0, 2)
+})
+
+// Métodos
+async function updateProfile() {
+  isSubmitting.value = true
+  try {
+    const payload = {
+      name: user.value.name,
+      email: user.value.email,
+      phone: user.value.phone,
+      birth_day: user.value.birth_day
+    }
+    const response = await axios.put('/api/me/update', payload)
+    user.value = response.data.user
+    Swal.fire({
+      icon: 'success',
+      title: 'Perfil atualizado!',
+      text: 'Suas informações foram salvas com sucesso.',
+      timer: 2000,
+      showConfirmButton: false
+    })
+  } catch {
+    Swal.fire({
+      icon: 'error',
+      title: 'Erro ao salvar',
+      text: 'Não foi possível atualizar seus dados. Tente novamente.'
+    })
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+function updatePassword() {
+  isSubmitting.value = true
+  setTimeout(() => {
+    passwordForm.value = {
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    }
+    isSubmitting.value = false
+    alert('Senha alterada com sucesso!')
+  }, 1000)
+}
+
+function viewOrderDetails(orderId) {
+  alert(`Visualizando detalhes do pedido ${orderId}`)
+}
+
+function removeFromFavorites(productId) {
+  favorites.value = favorites.value.filter(p => p.id !== productId)
+}
+
+function addToCart(product) {
+  alert(`Produto ${product.name} adicionado ao carrinho!`)
+}
+
+function markAsRead(index) {
+  notifications.value[index].read = true
+}
+
+function formatDate(dateString) {
+  const date = new Date(dateString)
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(date)
+}
+
+function formatCurrency(value) {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  }).format(value)
+}
+
+function getStatusText(status) {
+  const statusMap = {
+    pending: 'Pendente',
+    processing: 'Em processamento',
+    shipped: 'Enviado',
+    delivered: 'Entregue',
+    canceled: 'Cancelado'
+  }
+  return statusMap[status] || status
+}
+
+function getStatusClass(status) {
+  const classMap = {
+    pending: 'bg-yellow-100 text-yellow-800',
+    processing: 'bg-blue-100 text-blue-800',
+    shipped: 'bg-purple-100 text-purple-800',
+    delivered: 'bg-green-100 text-green-800',
+    canceled: 'bg-red-100 text-red-800'
+  }
+  return classMap[status] || 'bg-gray-100 text-gray-800'
+}
+
+// Lifecycle hook
+onMounted(async () => {
+  try {
+    user.value = await userStore.getAuthenticatedUser()
+    await loadAddresses()
+  } catch (error) {
+    console.error('Erro ao buscar usuário:', error)
+  }
+})
 </script>

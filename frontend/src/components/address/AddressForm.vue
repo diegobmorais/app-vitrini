@@ -33,67 +33,72 @@
 </template>
 
 <script setup>
-import axios from 'axios';
 import { reactive, watchEffect } from 'vue'
 
 const props = defineProps({
-    address: Object,
-    isEdit: Boolean
+  address: Object,
+  isEdit: Boolean
 })
+
 const emit = defineEmits(['close', 'saved'])
 
 const form = reactive({
-    id: null,
-    name: '',
-    street: '',
-    number: '',
-    complement: '',
-    zipcode: '',
-    city: '',
-    state: '',
-    neighborhood: '',
-    for_delivery: false,
+  id: null,
+  name: '',
+  street: '',
+  number: '',
+  complement: '',
+  zipcode: '',
+  city: '',
+  state: '',
+  neighborhood: '',
+  for_delivery: false
 })
 
+// Preenche ou limpa o formulário conforme o modo edição
 watchEffect(() => {
-    if (props.isEdit && props.address) {
-        Object.assign(form, {
-            id: props.address.id ?? null,
-            name: props.address.name ?? '',
-            street: props.address.street ?? '',
-            number: props.address.number ?? '',
-            complement: props.address.complement ?? '',
-            zipcode: props.address.zipcode ?? '',
-            city: props.address.city ?? '',
-            state: props.address.state ?? '',
-            neighborhood: props.address.neighborhood ?? '',
-            for_delivery: props.address.for_delivery ?? false,
-        })
-    } else {
-        Object.assign(form, {
-            id: null,
-            name: '',
-            street: '',
-            number: '',
-            complement: '',
-            zipcode: '',
-            city: '',
-            state: '',
-            neighborhood: '',
-            for_delivery: false,
-        })
-    }
+  if (props.isEdit && props.address) {
+    Object.assign(form, {
+      id: props.address.id ?? null,
+      name: props.address.name ?? '',
+      street: props.address.street ?? '',
+      number: props.address.number ?? '',
+      complement: props.address.complement ?? '',
+      zipcode: props.address.zipcode ?? '',
+      city: props.address.city ?? '',
+      state: props.address.state ?? '',
+      neighborhood: props.address.neighborhood ?? '',
+      for_delivery: props.address.for_delivery ?? false,
+    })
+  } else {
+    Object.assign(form, {
+      id: null,
+      name: '',
+      street: '',
+      number: '',
+      complement: '',
+      zipcode: '',
+      city: '',
+      state: '',
+      neighborhood: '',
+      for_delivery: false
+    })
+  }
 })
+
+// Fecha o modal
 const close = () => emit('close')
 
+// Salva o endereço (envia evento para o pai)
 const submit = () => {
-    try {
-        emit('saved', { ...form })          
-    } catch (error) {
-        console.error('Erro ao salvar endereço:', error);
-    }
+  try {
+    emit('saved', { ...form })
+  } catch (error) {
+    console.error('Erro ao salvar endereço:', error)
+  }
 }
 </script>
+
 
 <style scoped>
 .input {

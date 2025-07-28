@@ -54,7 +54,7 @@
                   <label for="min-price" class="block text-xs text-gray-500 mb-1">Mínimo</label>
                   <div class="relative">
                     <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">R$</span>
-                    <input type="number" id="min-price" v-model="filters.minPrice" min="0"
+                    <input type="number" id="min-price" v-model.number="filters.minPrice" min="0"
                       class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
                   </div>
                 </div>
@@ -62,7 +62,7 @@
                   <label for="max-price" class="block text-xs text-gray-500 mb-1">Máximo</label>
                   <div class="relative">
                     <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">R$</span>
-                    <input type="number" id="max-price" v-model="filters.maxPrice" min="0"
+                    <input type="number" id="max-price" v-model.number="filters.maxPrice" min="0"
                       class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
                   </div>
                 </div>
@@ -270,236 +270,177 @@
   </div>
 </template>
 
-<script>
-import { ref, computed, onMounted, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import ProductCard from '../components/shop/ProductCard.vue';
-import api from '@/main';
+<script setup>
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import ProductCard from '@/components/shop/ProductCard.vue'
+import { useProductStore } from '@/store/modules/useProductStore'
+import { useCategoryStore } from '@/store/modules/useCategoryStore'
 
-export default {
-  name: 'ProductsPage',
-  components: {
-    ProductCard
-  },
-  setup() {
-    const route = useRoute();
-    const router = useRouter();
 
-    // View mode (grid or list)
-    const viewMode = ref('grid');
+// Pinia stores
+const productStore = useProductStore()
+const categoryStore = useCategoryStore()
 
-    // Pagination
-    const currentPage = ref(1);
-    const itemsPerPage = ref(9);
+const route = useRoute()
+const router = useRouter()
 
-    // Sorting
-    const sortOption = ref('relevance');
+// View mode (grid ou list)
+const viewMode = ref('grid')
 
-    // Filters
-    const filters = ref({
-      search: '',
-      categories: [],
-      minPrice: null,
-      maxPrice: null,
-      rating: null,
-      inStock: false
-    });
+// Paginação
+const currentPage = ref(1)
+const itemsPerPage = ref(9)
 
-    // Products data
-    const products = ref([]);
+// Ordenação
+const sortOption = ref('relevance')
 
-    // Categories data
-    const categories = ref([]);
+// Filtros
+const filters = ref({
+  search: '',
+  categories: [],
+  minPrice: null,
+  maxPrice: null,
+  rating: null,
+  inStock: false
+})
 
-    const fetchProducts = async () => {
-      try {
-        const params = {};
+// Produtos e categorias vindo da store
+const products = computed(() => productStore.products)
+const categories = computed(() => categoryStore.categories)
 
-        if (route.query.category) {
-          params.category = route.query.category;
-        }
+// Filtrar produtos baseado nos filtros
+const filteredProducts = computed(() => {
+  let result = [...products.value]
 
-        const response = await api.get('api/product', { params });
-        products.value = response.data.data;      
-        
-      } catch (error) {
-        console.error('Erro ao buscar produtos:', error);
-      }
-    };
-
-    const fetchCategories = async () => {
-      try {
-        const response = await api.get('api/category');
-        categories.value = response.data;
-      } catch (error) {
-        console.error('Erro ao buscar categorias:', error);
-      }
-    };
-    // Filter products based on current filters
-    const filteredProducts = computed(() => {
-      let result = [...products.value];
-
-      // Search filter
-      if (filters.value.search) {
-        const searchTerm = filters.value.search.toLowerCase();
-        result = result.filter(product =>
-          product.name.toLowerCase().includes(searchTerm) ||
-          (product.description && product.description.toLowerCase().includes(searchTerm))
-        );
-      }
-
-      // Category filter
-      if (filters.value.categories.length > 0) {
-        result = result.filter(product =>
-          filters.value.categories.includes(product.category_id)
-        );
-      }
-
-      // Price range filter
-      if (filters.value.minPrice !== null && filters.value.minPrice !== '') {
-        result = result.filter(product => {
-          const finalPrice = product.discount > 0
-            ? product.price * (100 - product.discount) / 100
-            : product.price;
-          return finalPrice >= filters.value.minPrice;
-        });
-      }
-
-      if (filters.value.maxPrice !== null && filters.value.maxPrice !== '') {
-        result = result.filter(product => {
-          const finalPrice = product.discount > 0
-            ? product.price * (100 - product.discount) / 100
-            : product.price;
-          return finalPrice <= filters.value.maxPrice;
-        });
-      }
-
-      // Rating filter
-      if (filters.value.rating !== null) {
-        result = result.filter(product =>
-          product.rating >= filters.value.rating
-        );
-      }
-
-      // Stock filter
-      if (filters.value.inStock) {
-        result = result.filter(product => product.stock > 0);
-      }
-
-      // Apply sorting
-      switch (sortOption.value) {
-        case 'price-asc':
-          result.sort((a, b) => {
-            const priceA = a.discount > 0 ? a.price * (100 - a.discount) / 100 : a.price;
-            const priceB = b.discount > 0 ? b.price * (100 - b.discount) / 100 : b.price;
-            return priceA - priceB;
-          });
-          break;
-        case 'price-desc':
-          result.sort((a, b) => {
-            const priceA = a.discount > 0 ? a.price * (100 - a.discount) / 100 : a.price;
-            const priceB = b.discount > 0 ? b.price * (100 - b.discount) / 100 : b.price;
-            return priceB - priceA;
-          });
-          break;
-        case 'name-asc':
-          result.sort((a, b) => a.name.localeCompare(b.name));
-          break;
-        case 'name-desc':
-          result.sort((a, b) => b.name.localeCompare(a.name));
-          break;
-        case 'newest':
-          result.sort((a, b) => (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0));
-          break;
-        default:
-          break;
-      }
-
-      return result;
-    });
-
-    // Pagination
-    const totalPages = computed(() =>
-      Math.ceil(filteredProducts.value.length / itemsPerPage.value)
-    );
-
-    const paginatedProducts = computed(() => {
-      const startIndex = (currentPage.value - 1) * itemsPerPage.value;
-      const endIndex = startIndex + itemsPerPage.value;
-      return filteredProducts.value.slice(startIndex, endIndex);
-    });
-
-    // Reset to page 1 when filters change
-    watch(filteredProducts, () => {
-      currentPage.value = 1;
-    });
-
-    // Methods
-    const applyFilters = () => {
-      // Update URL with filter params
-      const query = {};
-
-      if (filters.value.search) query.q = filters.value.search;
-      if (filters.value.categories.length > 0) query.cat = filters.value.categories.join(',');
-      if (filters.value.minPrice) query.min = filters.value.minPrice;
-      if (filters.value.maxPrice) query.max = filters.value.maxPrice;
-      if (filters.value.rating) query.rating = filters.value.rating;
-      if (filters.value.inStock) query.stock = 1;
-      if (sortOption.value !== 'relevance') query.sort = sortOption.value;
-
-      router.push({ query });
-    };
-
-    const resetFilters = () => {
-      filters.value = {
-        search: '',
-        categories: [],
-        minPrice: null,
-        maxPrice: null,
-        rating: null,
-        inStock: false
-      };
-      sortOption.value = 'relevance';
-      router.push({ query: {} });
-    };
-
-    const addToCart = (product) => {
-      // Implement cart functionality
-      console.log('Adding to cart:', product);
-      alert(`${product.name} adicionado ao carrinho!`);
-    };
-
-    // Initialize filters from URL on page load
-    onMounted(() => {
-      fetchProducts();
-      fetchCategories();     
-
-      const query = route.query;
-
-      if (query.q) filters.value.search = query.q;
-      if (query.cat) filters.value.categories = query.cat.split(',').map(Number);
-      if (query.min) filters.value.minPrice = Number(query.min);
-      if (query.max) filters.value.maxPrice = Number(query.max);
-      if (query.rating) filters.value.rating = Number(query.rating);
-      if (query.stock) filters.value.inStock = Boolean(Number(query.stock));
-      if (query.sort) sortOption.value = query.sort;
-    });
-
-    return {
-      viewMode,
-      currentPage,
-      itemsPerPage,
-      sortOption,
-      filters,
-      products,
-      categories,
-      filteredProducts,
-      totalPages,
-      paginatedProducts,
-      applyFilters,
-      resetFilters,
-      addToCart
-    };
+  if (filters.value.search) {
+    const term = filters.value.search.toLowerCase()
+    result = result.filter(p =>
+      p.name.toLowerCase().includes(term) ||
+      (p.description && p.description.toLowerCase().includes(term))
+    )
   }
-};
+
+  if (filters.value.categories.length) {
+    result = result.filter(p => filters.value.categories.includes(p.category_id))
+  }
+
+  if (filters.value.minPrice !== null && filters.value.minPrice !== '') {
+    result = result.filter(p => {
+      const finalPrice = p.discount > 0 ? p.price * (100 - p.discount) / 100 : p.price
+      return finalPrice >= filters.value.minPrice
+    })
+  }
+
+  if (filters.value.maxPrice !== null && filters.value.maxPrice !== '') {
+    result = result.filter(p => {
+      const finalPrice = p.discount > 0 ? p.price * (100 - p.discount) / 100 : p.price
+      return finalPrice <= filters.value.maxPrice
+    })
+  }
+
+  if (filters.value.rating !== null) {
+    result = result.filter(p => p.rating >= filters.value.rating)
+  }
+
+  if (filters.value.inStock) {
+    result = result.filter(p => p.stock > 0)
+  }
+
+  switch (sortOption.value) {
+    case 'price-asc':
+      result.sort((a, b) => {
+        const priceA = a.discount > 0 ? a.price * (100 - a.discount) / 100 : a.price
+        const priceB = b.discount > 0 ? b.price * (100 - b.discount) / 100 : b.price
+        return priceA - priceB
+      })
+      break
+    case 'price-desc':
+      result.sort((a, b) => {
+        const priceA = a.discount > 0 ? a.price * (100 - a.discount) / 100 : a.price
+        const priceB = b.discount > 0 ? b.price * (100 - b.discount) / 100 : b.price
+        return priceB - priceA
+      })
+      break
+    case 'name-asc':
+      result.sort((a, b) => a.name.localeCompare(b.name))
+      break
+    case 'name-desc':
+      result.sort((a, b) => b.name.localeCompare(a.name))
+      break
+    case 'newest':
+      result.sort((a, b) => (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0))
+      break
+    default:
+      break
+  }
+
+  return result
+})
+
+// Paginação
+const totalPages = computed(() =>
+  Math.ceil(filteredProducts.value.length / itemsPerPage.value)
+)
+
+const paginatedProducts = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value
+  return filteredProducts.value.slice(start, start + itemsPerPage.value)
+})
+
+// Resetar para página 1 quando filtros mudam
+watch(filteredProducts, () => {
+  currentPage.value = 1
+})
+
+// Atualizar URL com filtros
+const applyFilters = () => {
+  const query = {}
+
+  if (filters.value.search) query.q = filters.value.search
+  if (filters.value.categories.length) query.cat = filters.value.categories.join(',')
+  if (filters.value.minPrice) query.min = filters.value.minPrice
+  if (filters.value.maxPrice) query.max = filters.value.maxPrice
+  if (filters.value.rating) query.rating = filters.value.rating
+  if (filters.value.inStock) query.stock = 1
+  if (sortOption.value !== 'relevance') query.sort = sortOption.value
+
+  router.push({ query })
+}
+
+// Resetar filtros e URL
+const resetFilters = () => {
+  filters.value = {
+    search: '',
+    categories: [],
+    minPrice: null,
+    maxPrice: null,
+    rating: null,
+    inStock: false
+  }
+  sortOption.value = 'relevance'
+  router.push({ query: {} })
+}
+
+// Adicionar produto ao carrinho (implemente sua store de carrinho)
+const addToCart = (product) => {
+  // Exemplo: chamar store ou emitir evento
+  console.log('Adicionar ao carrinho:', product)
+  alert(`${product.name} adicionado ao carrinho!`)
+}
+
+// Carregar dados na montagem
+onMounted(() => {
+  productStore.fetchProducts()
+  categoryStore.fetchCategories()
+
+  const query = route.query
+  if (query.q) filters.value.search = query.q
+  if (query.cat) filters.value.categories = query.cat.split(',').map(Number)
+  if (query.min) filters.value.minPrice = Number(query.min)
+  if (query.max) filters.value.maxPrice = Number(query.max)
+  if (query.rating) filters.value.rating = Number(query.rating)
+  if (query.stock) filters.value.inStock = Boolean(Number(query.stock))
+  if (query.sort) sortOption.value = query.sort
+})
 </script>

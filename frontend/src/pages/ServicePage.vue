@@ -204,165 +204,125 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
-import api from '@/main'
 
-export default {
-  name: 'ServicesPage',
-  setup() {
-    const store = useStore()
-    const router = useRouter()
+import { useNotificationStore } from '@/store/modules/useNotificationStore'
+import { useCategoryStore } from '@/store/modules/useCategoryStore'
+import { useServiceStore } from '@/store/modules/useServiceStore'
 
-    const selectedCategory = ref(null)
-    const selectedService = ref(null)
-    const isSubmitting = ref(false)
 
-    const bookingForm = ref({
-      date: '',
-      time: '',
-      petId: '',
-      notes: ''
+// Stores Pinia
+const notificationStore = useNotificationStore()
+const serviceStore = useServiceStore()
+const categoryStore = useCategoryStore()
+
+const router = useRouter()
+
+// Estado local
+const selectedCategory = ref(null)
+const selectedService = ref(null)
+const isSubmitting = ref(false)
+
+const bookingForm = ref({
+  date: '',
+  time: '',
+  petId: '',
+  notes: ''
+})
+
+// Dados
+const testimonials = ref([
+  {
+    name: 'Ana Silva',
+    avatar: '/placeholder.svg?height=100&width=100',
+    rating: 5,
+    comment: 'Meu cachorro sempre volta feliz e cheiroso depois do banho. Ótimo atendimento!'
+  },
+  {
+    name: 'Carlos Oliveira',
+    avatar: '/placeholder.svg?height=100&width=100',
+    rating: 4,
+    comment: 'O serviço de adestramento ajudou muito com o comportamento do meu filhote.'
+  },
+  {
+    name: 'Mariana Costa',
+    avatar: '/placeholder.svg?height=100&width=100',
+    rating: 5,
+    comment: 'Deixei minha gata hospedada por uma semana e fui atualizada diariamente sobre como ela estava. Muito bom!'
+  }
+])
+
+// Pets do usuário - no app real, vem da conta do usuário
+const userPets = ref([
+  { id: 1, name: 'Rex', breed: 'Labrador' },
+  { id: 2, name: 'Luna', breed: 'Poodle' },
+  { id: 3, name: 'Mia', breed: 'Persa' }
+])
+
+const availableTimes = [
+  '09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00'
+]
+
+// Computed
+const filteredServices = computed(() => {
+  if (!selectedCategory.value) return serviceStore.services
+  return serviceStore.services.filter(s => s.category_id === selectedCategory.value)
+})
+
+const minDate = computed(() => {
+  const today = new Date()
+  return today.toISOString().split('T')[0]
+})
+
+const getCategoryName = (id) => {
+  const cat = categoryStore.categories.find(c => c.id === id)
+  return cat ? cat.name : ''
+}
+
+// Métodos
+const openServiceModal = (service) => {
+  const isAuthenticated = !!localStorage.getItem('user')
+
+  if (!isAuthenticated) {
+    router.push({ name: 'login', query: { redirect: router.currentRoute.value.fullPath } })
+    return
+  }
+
+  selectedService.value = service
+  bookingForm.value = { date: '', time: '', petId: '', notes: '' }
+}
+
+const bookService = async () => {
+  isSubmitting.value = true
+
+  try {
+    // Exemplo de chamada real: await api.post('api/book-service', {...})
+
+    await new Promise(resolve => setTimeout(resolve, 1000))
+
+    notificationStore.add({
+      type: 'success',
+      message: 'Serviço agendado com sucesso!',
+      timeout: 5000
     })
 
-    // Mock data - in a real app, this would come from an API
-    const categories = ref([])
-
-    const services = ref([])
-
-    const fetchServices = async () => {
-      try {
-        const response = await api.get('api/service');
-        services.value = response.data;
-      } catch (error) {
-        console.error('Erro ao buscar produtos:', error);
-      }
-    };
-
-    const fetchCategories = async () => {
-      try {
-        const response = await api.get('api/category');
-        categories.value = response.data;
-      } catch (error) {
-        console.error('Erro ao buscar categorias:', error);
-      }
-    };
-    const testimonials = ref([
-      {
-        name: 'Ana Silva',
-        avatar: '/placeholder.svg?height=100&width=100',
-        rating: 5,
-        comment: 'Meu cachorro sempre volta feliz e cheiroso depois do banho. Ótimo atendimento!'
-      },
-      {
-        name: 'Carlos Oliveira',
-        avatar: '/placeholder.svg?height=100&width=100',
-        rating: 4,
-        comment: 'O serviço de adestramento ajudou muito com o comportamento do meu filhote.'
-      },
-      {
-        name: 'Mariana Costa',
-        avatar: '/placeholder.svg?height=100&width=100',
-        rating: 5,
-        comment: 'Deixei minha gata hospedada por uma semana e fui atualizada diariamente sobre como ela estava. Muito bom!'
-      }
-    ])
-
-    // Mock user pets - in a real app, this would come from the user's account
-    const userPets = ref([
-      { id: 1, name: 'Rex', breed: 'Labrador' },
-      { id: 2, name: 'Luna', breed: 'Poodle' },
-      { id: 3, name: 'Mia', breed: 'Persa' }
-    ])
-
-    const availableTimes = [
-      '09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00'
-    ]
-
-    const filteredServices = computed(() => {
-      if (!selectedCategory.value) return services.value
-      return services.value.filter(service => service.category_id === selectedCategory.value)
+    selectedService.value = null
+  } catch (error) {
+    notificationStore.add({
+      type: 'error',
+      message: 'Erro ao agendar serviço. Tente novamente.',
+      timeout: 5000
     })
-
-    const minDate = computed(() => {
-      const today = new Date()
-      return today.toISOString().split('T')[0]
-    })
-
-    const getCategoryName = (categoryId) => {
-      const category = categories.value.find(cat => cat.id === categoryId)
-      return category ? category.name : ''
-    }
-
-    const openServiceModal = (service) => {
-      // Check if user is logged in
-      const isAuthenticated = localStorage.getItem('user') !== null
-
-      if (!isAuthenticated) {
-        router.push({ name: 'login', query: { redirect: router.currentRoute.value.fullPath } })
-        return
-      }
-
-      selectedService.value = service
-      // Reset form
-      bookingForm.value = {
-        date: '',
-        time: '',
-        petId: '',
-        notes: ''
-      }
-    }
-
-    const bookService = async () => {
-      try {
-        isSubmitting.value = true
-
-        // In a real app, this would be an API call
-        await new Promise(resolve => setTimeout(resolve, 1000))
-
-        // Show success notification
-        store.dispatch('notifications/add', {
-          type: 'success',
-          message: 'Serviço agendado com sucesso!',
-          timeout: 5000
-        })
-
-        selectedService.value = null
-      } catch (error) {
-        store.dispatch('notifications/add', {
-          type: 'error',
-          message: 'Erro ao agendar serviço. Tente novamente.',
-          timeout: 5000
-        })
-      } finally {
-        isSubmitting.value = false
-      }
-    }
-
-    onMounted(() => {
-      fetchServices();
-      fetchCategories();
-
-    })
-
-    return {
-      categories,
-      services,
-      testimonials,
-      selectedCategory,
-      filteredServices,
-      getCategoryName,
-      selectedService,
-      openServiceModal,
-      bookingForm,
-      availableTimes,
-      userPets,
-      minDate,
-      bookService,
-      isSubmitting
-    }
+  } finally {
+    isSubmitting.value = false
   }
 }
+
+// Carregar dados na montagem
+onMounted(() => {
+  serviceStore.fetchServices()
+  categoryStore.fetchCategories()
+})
 </script>

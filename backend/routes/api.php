@@ -24,15 +24,11 @@ Route::middleware('auth:sanctum')->group(function () {
         return response()->json([
             'user' => Auth::user()
         ]);
-    });
-    //products
-    Route::apiResource('product', ProductController::class);
+    });   
     //Brands
     Route::apiResource('brands', BrandController::class);
     //tags
-    Route::apiResource('tags', TagController::class);
-    //category
-    Route::apiResource('category', CategoryController::class);
+    Route::apiResource('tags', TagController::class);    
     //supplier
     Route::apiResource('suppliers', SupplierController::class);
     //warehouse stock
@@ -44,6 +40,8 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 // Routes public
+Route::apiResource('product', ProductController::class);
+Route::apiResource('category', CategoryController::class);
 Route::get('check-auth', [AuthController::class, 'checkAuth']);
 Route::post('register', [AuthController::class, 'register']);
 Route::get('categories/featured', [CategoryController::class, 'categoriesFeatured']);

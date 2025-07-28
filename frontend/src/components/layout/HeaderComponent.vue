@@ -22,7 +22,7 @@
 
       </div>
     </div>
-        
+
     <!-- Main Header -->
     <div class="bg-white shadow-md py-4 sticky top-0 z-30">
       <div class="container mx-auto px-4">
@@ -108,105 +108,99 @@
   </div>
 </template>
 
-<script>
-import router from '@/router';
-import store from '@/store'
-import axios from 'axios';
-import { toRaw } from 'vue';
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
-export default {
-  props: {
-    shopName: {
-      type: String,
-      default: 'Pet Shop'
-    },
-    logoUrl: {
-      type: String,
-      default: '/images/logo.png'
-    },
-    primaryColor: {
-      type: String,
-      default: '#3B82F6'
-    },
-    categories: {
-      type: Array,
-      default: () => []
-    },
-    contactPhone: {
-      type: String,
-      default: '(11) 99999-9999'
-    },
-    contactEmail: {
-      type: String,
-      default: 'contato@petshop.com'
-    }
-  },
-  data() {
-    return {
-      mobileMenuOpen: false,
-      searchQuery: '',
-      cartItems: [],
-      cartTotal: 0,
-      navItems: [
-        { label: 'Início', path: '/' },
-        { label: 'Produtos', path: '/produtos' },
-        { label: 'Serviços', path: '/servicos' },
-        { label: 'Sobre Nós', path: '/sobre' },
-        { label: 'Contato', path: '/contato' }
-      ]
-    }
-  },
-  computed: {
-    userName() {
-      const rawUser = toRaw(store.getters['auth/getUser']);
-      return rawUser?.user.name || 'Visitante';
-    },
-    isAuthenticated() {
-      return store.getters['auth/isAuthenticated']
-    }
-  },
-  mounted() {
-    this.fetchCartData();
-    // Apply primary color from props to CSS variables
-    document.documentElement.style.setProperty('--color-primary-dark', this.primaryColor);
-  },
-  methods: {
-    isActive(path) {
-      return this.$route && this.$route.path === path;
-    },
-    isActiveCategory(slug) {
-      return this.$route && this.$route.params.slug === slug;
-    },
-    searchProducts() {
-      if (this.searchQuery.trim()) {
-        this.$router.push({ path: '/search', query: { q: this.searchQuery } });
-        this.mobileMenuOpen = false;
-      }
-    },
-    fetchCartData() {
-      // This would be replaced with an actual API call
-      // Example: axios.get('/api/cart')
-      //   .then(response => {
-      //     this.cartItems = response.data.items;
-      //     this.cartTotal = response.data.total;
-      //   });
+import axios from 'axios'
+import { useAuthStore } from '@/store/modules/useAuthStore'
 
-      // Placeholder data
-      this.cartItems = [
-        { id: 1, name: 'Ração Premium', quantity: 1, price: 89.90 },
-        { id: 2, name: 'Brinquedo Interativo', quantity: 2, price: 29.90 }
-      ];
-      this.cartTotal = this.cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
-    },
-    logout() {
-      try {
-        axios.post('/api/logout')
-        store.commit('auth/logout');
-        router.push('/')
-      } catch (error) {
-        console.error('Erro ao fazer logout:', error)
-      }
-    }
+const props = defineProps({
+  shopName: {
+    type: String,
+    default: 'Pet Shop'
+  },
+  logoUrl: {
+    type: String,
+    default: '/images/logo.png'
+  },
+  primaryColor: {
+    type: String,
+    default: '#3B82F6'
+  },
+  categories: {
+    type: Array,
+    default: () => []
+  },
+  contactPhone: {
+    type: String,
+    default: '(11) 99999-9999'
+  },
+  contactEmail: {
+    type: String,
+    default: 'contato@petshop.com'
+  }
+})
+
+const router = useRouter()
+const route = useRoute()
+const authStore = useAuthStore()
+
+// States
+const mobileMenuOpen = ref(false)
+const searchQuery = ref('')
+const cartItems = ref([])
+const cartTotal = ref(0)
+
+const navItems = [
+  { label: 'Início', path: '/' },
+  { label: 'Produtos', path: '/produtos' },
+  { label: 'Serviços', path: '/servicos' },
+  { label: 'Sobre Nós', path: '/sobre' },
+  { label: 'Contato', path: '/contato' }
+]
+
+// Computed
+const userName = computed(() => authStore.getUser.user.name || 'Visitante')
+const isAuthenticated = computed(() => authStore.isAuthenticated)
+
+// Lifecycle
+onMounted(() => {
+  fetchCartData()
+  document.documentElement.style.setProperty('--color-primary-dark', props.primaryColor)
+})
+
+// Methods
+function isActive(path) {
+  return route.path === path
+}
+
+function isActiveCategory(slug) {
+  return route.params.slug === slug
+}
+
+function searchProducts() {
+  if (searchQuery.value.trim()) {
+    router.push({ path: '/search', query: { q: searchQuery.value } })
+    mobileMenuOpen.value = false
+  }
+}
+
+function fetchCartData() {
+  // Simulação de dados do carrinho
+  cartItems.value = [
+    { id: 1, name: 'Ração Premium', quantity: 1, price: 89.90 },
+    { id: 2, name: 'Brinquedo Interativo', quantity: 2, price: 29.90 }
+  ]
+  cartTotal.value = cartItems.value.reduce((total, item) => total + (item.price * item.quantity), 0)
+}
+
+async function logout() {
+  try {
+    await authStore.logout()
+    router.push('/')
+  } catch (error) {
+    console.error('Erro ao fazer logout:', error)
   }
 }
 </script>

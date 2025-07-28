@@ -120,96 +120,85 @@
   </div>
 </template>
 
-<script>
-import { onMounted, ref } from 'vue';
-import ProductCard from '../components/shop/ProductCard.vue';
-import api from '@/main';
+<script setup>
+import { ref, onMounted } from 'vue'
+import ProductCard from '../components/shop/ProductCard.vue'
+import api from '@/main'
 
-export default {
-  name: 'HomePage',
-  components: {
-    ProductCard
+const newsletterEmail = ref('')
+const isSubscribing = ref(false)
+
+const featuredCategories = ref([])
+const featuredProducts = ref([])
+
+const testimonials = ref([
+  {
+    name: 'Ana Silva',
+    avatar: '/images/avatar-1.jpg',
+    rating: 5,
+    text: 'Produtos de excelente qualidade. Meu cachorro adorou a ração premium e a entrega foi super rápida!',
+    location: 'São Paulo, SP'
   },
-  setup() {
-    const newsletterEmail = ref('');
-    const isSubscribing = ref(false);
-
-    const featuredCategories = ref([]);
-
-    const featuredProducts = ref([]);
-
-    const testimonials = ref([
-      {
-        name: 'Ana Silva',
-        avatar: '/images/avatar-1.jpg',
-        rating: 5,
-        text: 'Produtos de excelente qualidade. Meu cachorro adorou a ração premium e a entrega foi super rápida!',
-        location: 'São Paulo, SP'
-      },
-      {
-        name: 'Carlos Mendes',
-        avatar: '/images/avatar-2.jpg',
-        rating: 4,
-        text: 'Atendimento excepcional e preços justos. Recomendo para todos os donos de pets.',
-        location: 'Rio de Janeiro, RJ'
-      },
-      {
-        name: 'Mariana Costa',
-        avatar: '/images/avatar-3.jpg',
-        rating: 5,
-        text: 'Meus gatos ficaram apaixonados pelos brinquedos. Certamente voltarei a comprar mais vezes!',
-        location: 'Belo Horizonte, MG'
-      }
-    ]);
-    const fetchProducts = async () => {
-      try {
-        const response = await api.get('api/products/featured');
-        featuredProducts.value = response.data.data;     
-      } catch (error) {
-        console.error('Erro ao buscar produtos:', error);
-      }
-    };
-
-    const fetchCategories = async () => {
-      try {
-        const response = await api.get('api/categories/featured');
-        featuredCategories.value = response.data.data;  
-      } catch (error) {
-        console.error('Erro ao buscar categorias:', error);
-      }
-    };
-    const subscribeNewsletter = async () => {
-      isSubscribing.value = true;
-
-      try {
-        // Simulação de chamada de API
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        alert(`E-mail ${newsletterEmail.value} cadastrado com sucesso!`);
-        newsletterEmail.value = '';
-      } catch (error) {
-        console.error('Erro ao cadastrar e-mail:', error);
-        alert('Ocorreu um erro ao cadastrar seu e-mail. Por favor, tente novamente.');
-      } finally {
-        isSubscribing.value = false;
-      }
-    };
-
-    onMounted(() => {
-      fetchProducts();
-      fetchCategories();
-    });
-
-    return {
-      newsletterEmail,
-      isSubscribing,
-      featuredCategories,
-      featuredProducts,
-      testimonials,
-      subscribeNewsletter
-    };
+  {
+    name: 'Carlos Mendes',
+    avatar: '/images/avatar-2.jpg',
+    rating: 4,
+    text: 'Atendimento excepcional e preços justos. Recomendo para todos os donos de pets.',
+    location: 'Rio de Janeiro, RJ'
+  },
+  {
+    name: 'Mariana Costa',
+    avatar: '/images/avatar-3.jpg',
+    rating: 5,
+    text: 'Meus gatos ficaram apaixonados pelos brinquedos. Certamente voltarei a comprar mais vezes!',
+    location: 'Belo Horizonte, MG'
   }
-};
+])
+
+const fetchProducts = async () => {
+  try {
+    const response = await api.get('api/products/featured')
+    featuredProducts.value = response.data.data
+  } catch (error) {
+    console.error('Erro ao buscar produtos:', error)
+  }
+}
+
+const fetchCategories = async () => {
+  try {
+    const response = await api.get('api/categories/featured')
+    featuredCategories.value = response.data.data
+  } catch (error) {
+    console.error('Erro ao buscar categorias:', error)
+  }
+}
+
+const subscribeNewsletter = async () => {
+  if (!newsletterEmail.value) {
+    alert('Por favor, insira um e-mail válido.')
+    return
+  }
+  isSubscribing.value = true
+
+  try {
+    // Simulação de chamada de API
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    alert(`E-mail ${newsletterEmail.value} cadastrado com sucesso!`)
+    newsletterEmail.value = ''
+  } catch (error) {
+    console.error('Erro ao cadastrar e-mail:', error)
+    alert('Ocorreu um erro ao cadastrar seu e-mail. Por favor, tente novamente.')
+  } finally {
+    isSubscribing.value = false
+  }
+}
+
+onMounted(() => {
+  fetchProducts()
+  fetchCategories()
+})
 </script>
+
 
 <style scoped>
 .home-page {

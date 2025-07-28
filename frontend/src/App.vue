@@ -20,38 +20,31 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { onMounted, computed } from 'vue'
-import { useStore } from 'vuex'
 import HeaderComponent from './components/layout/HeaderComponent.vue'
 import FooterComponent from './components/layout/FooterComponent.vue'
-import NotificationsContainer from './components/ui/NotificationsContainer.vue'
+// import NotificationsContainer from './components/ui/NotificationsContainer.vue'
 import CartModal from './components/shop/CartModal.vue'
+import { useCartStore } from './store/modules/userCartStore'
+import { useCategoryStore } from './store/modules/useCategoryStore'
 
-export default {
-  name: 'App',
-  components: {
-    HeaderComponent,
-    FooterComponent,
-    NotificationsContainer,
-    CartModal
-  },
-  setup() {
-    const store = useStore()
-    const showCartModal = computed(() => store.state.cart.showModal)
+// Importa os stores
 
-    onMounted(() => {    
-      store.dispatch('categories/fetchCategories')
-      store.dispatch('cart/loadCart')
 
-    })
+// Instância dos stores
+const cartStore = useCartStore()
+const categoryStore = useCategoryStore()
 
-    return {
-      showCartModal
-    }
-  }
-}
+// Computed para controle do modal do carrinho
+const showCartModal = computed(() => cartStore.showModal)
+
+onMounted(() => {
+  categoryStore.fetchCategories()
+  cartStore.loadCart()
+})
 </script>
+
 
 <style>
 .fade-enter-active,

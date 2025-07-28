@@ -264,10 +264,10 @@
                             </div>
                             <div>
                                 <label for="tags" class="block text-sm font-medium text-gray-700">Tags</label>
-                                <multiselect v-model="product.tags" :options="tags"
-                                    :multiple="true" :close-on-select="false" placeholder="Selecione as tags"
-                                    label="name" track-by="id" />
-                            </div>                       
+                                <multiselect v-model="product.tags" :options="tags" :multiple="true"
+                                    :close-on-select="false" placeholder="Selecione as tags" label="name"
+                                    track-by="id" />
+                            </div>
                         </div>
                     </div>
 
@@ -333,114 +333,124 @@
     </div>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import Multiselect from 'vue-multiselect'
 import 'vue-multiselect/dist/vue-multiselect.min.css'
-import { mapState, mapActions } from 'vuex';
 
-export default {
-    name: 'AdminProductForm',
-    components: {
-        Multiselect
-    },
-    data() {
-        return {
-            product: {
-                name: '',
-                description: '',
-                sku: '',
-                barcode: '',
-                price: '',
-                compare_price: '',
-                cost: '',
-                tax_class: '',
-                track_inventory: true,
-                stock: 0,
-                low_stock_threshold: 5,
-                allow_backorders: false,
-                status: 'active',
-                featured: false,
-                category_id: '',
-                brand_id: '',
-                supplier_id: '',
-                tags: [],
-                weight: '',
-                length: '',
-                width: '',
-                height: '',
-                slug: '',
-                images: []
-            },
-            loading: false
-        };
-    },
-    computed: {
-        ...mapState({
-            categories: state => state.categories.categories ? state.categories.categories : [],
-            brands: state => state.brands.brands ? state.brands.brands : [],
-            tags: state => state.tags.tags ? state.tags.tags : [],
-            suppliers: state => state.suppliers.suppliers ? state.suppliers.suppliers : [],
-        }),
-        isEditing() {
-            return !!this.$route.params.id;
+// Importar suas stores Pinia, por exemplo:
+import { useCategoryStore } from '@/store/modules/useCategoryStore'
+import { useBrandStore } from '@/store/modules/useBrandStore'
+import { useTagStore } from '@/store/modules/useTagStores'
+import { useSupplierStore } from '@/store/modules/useSupplierStore'
+import { useProductStore } from '@/store/modules/useProductStore'
+import { useNotificationStore } from '@/store/modules/useNotificationStore'
+
+const route = useRoute()
+const router = useRouter()
+
+const categoriesStore = useCategoryStore()
+const brandsStore = useBrandStore()
+const tagsStore = useTagStore()
+const suppliersStore = useSupplierStore()
+const productsStore = useProductStore()
+const notificationsStore = useNotificationStore()
+
+const product = ref({
+    name: '',
+    description: '',
+    sku: '',
+    barcode: '',
+    price: '',
+    compare_price: '',
+    cost: '',
+    tax_class: '',
+    track_inventory: true,
+    stock: 0,
+    low_stock_threshold: 5,
+    allow_backorders: false,
+    status: 'active',
+    featured: false,
+    category_id: '',
+    brand_id: '',
+    supplier_id: '',
+    tags: [],
+    weight: '',
+    length: '',
+    width: '',
+    height: '',
+    slug: '',
+    images: []
+})
+
+const loading = ref(false)
+
+const isEditing = computed(() => !!route.params.id)
+
+async function saveProduct() {
+    loading.value = true
+    // Mapear tags para array de nomes (ajuste se necessário)
+    const payload = {
+        ...product.value,
+        tags: product.value.tags.map(tag => tag.name || tag)
+    }
+
+    try {
+        if (isEditing.value) {
+            await productsStore.updateProduct({
+                id: route.params.id,
+                data: product.value
+            })
+            notificationsStore.addNotification({
+                type: 'success',
+                message: 'Produto atualizado com sucesso!'
+            })
+        } else {
+            await productsStore.createProduct(payload)
+            notificationsStore.addNotification({
+                type: 'success',
+                message: 'Produto criado com sucesso!'
+            })
         }
-    },
-    methods: {
-        ...mapActions({
-            fetchCategories: 'categories/fetchCategories',
-            fetchBrands: 'brands/fetchBrands',
-            fetchTags: 'tags/fetchTags',
-            createProduct: 'products/createProduct',
-            updateProduct: 'products/updateProduct',
-            fetchSuppliers: 'suppliers/fetchSuppliers'
-        }),
-
-        async saveProduct() {
-            this.loading = true;
-            const payload = {
-                ...this.product,
-                tags: this.product.tags.map(tag => tag.name)
-            }
-            try {
-                if (this.isEditing) {
-                    await this.updateProduct({
-                        id: this.$route.params.id,
-                        data: this.product
-                    });
-                    this.$store.dispatch('notifications/addNotification', {
-                        type: 'success',
-                        message: 'Produto atualizado com sucesso!'
-                    });
-                } else {
-                    await this.createProduct(payload);
-                    this.$store.dispatch('notifications/addNotification', {
-                        type: 'success',
-                        message: 'Produto criado com sucesso!'
-                    });
-                }
-
-                this.$router.push('/painel-administrador/produtos');
-            } catch (error) {
-                this.$store.dispatch('notifications/addNotification', {
-                    type: 'error',
-                    message: `Erro ao salvar produto: ${error.message}`
-                });
-            } finally {
-                this.loading = false;
-            }
-        },
-        openFileInput() {
-            this.$refs.fileInput.click();
-        },
-        handleFileUpload() {
-            //
-        }
-    },
-    mounted() {
-        this.fetchCategories();
-        this.fetchBrands();
-        this.fetchTags();
-        this.fetchSuppliers();
-    },
+        router.push('/painel-administrador/produtos')
+    } catch (error) {
+        notificationsStore.addNotification({
+            type: 'error',
+            message: `Erro ao salvar produto: ${error.message}`
+        })
+    } finally {
+        loading.value = false
+    }
 }
+
+function openFileInput() {
+    // Supondo que você tenha uma referência ref="fileInput" no template
+    fileInputRef.value?.click()
+}
+
+function handleFileUpload() {
+    // Implementar lógica para upload
+}
+
+const categories = computed(() => categoriesStore.categories ?? [])
+const brands = computed(() => brandsStore.brands ?? [])
+const tags = computed(() => tagsStore.tags ?? [])
+const suppliers = computed(() => suppliersStore.suppliers ?? [])
+
+const fileInputRef = ref(null)
+
+onMounted(() => {
+    categoriesStore.fetchCategories()
+    brandsStore.fetchBrands()
+    tagsStore.fetchTags()
+    suppliersStore.fetchSuppliers()
+
+    // Se for edição, carregar dados do produto (implemente fetchProduct na store)
+    if (isEditing.value) {
+        productsStore.fetchProduct(route.params.id).then(data => {
+            Object.assign(product.value, data)
+        })
+    }
+})
 </script>

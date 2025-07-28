@@ -19,61 +19,43 @@
     </div>
 </template>
 
-<script>
-import AdminSidebar from '../../components/admin/AdminSidebar.vue';
-import AdminHeader from '../../components/admin/AdminHeader.vue';
-import NotificationsContainer from '../../components/ui/NotificationsContainer.vue';
-import { mapState } from 'vuex';
+<script setup>
+import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { useRouter } from 'vue-router'
 
-export default {
-    name: 'AdminLayout',
-    components: {
-        AdminSidebar,
-        AdminHeader,
-        NotificationsContainer
-    },
-    data() {
-        return {
-            sidebarOpen: true,
-            currentUser: {
-                name: 'admin@gmail.com',
-                role: 'admin'
-            }
-        };
-    },
-    computed: {
-        ...mapState({
-            currentUser: state => state.auth.user
-        })
-    },
-    methods: {
-        toggleSidebar() {
-            this.sidebarOpen = !this.sidebarOpen;
-        }
-    },
+import AdminSidebar from '../../components/admin/AdminSidebar.vue'
+import AdminHeader from '../../components/admin/AdminHeader.vue'
+import { useAuthStore } from '@/store/modules/useAuthStore'
 
-    // created() {
-    //   // Verificar se o usuário está autenticado e tem permissões de admin
-    //   if (!this.$store.getters['auth/isAuthenticated'] || !this.$store.getters['auth/isAdmin']) {
-    //     this.$router.push('/login');
-    //   }
+const sidebarOpen = ref(true)
+const router = useRouter()
+const authStore = useAuthStore()
 
-    //   // Ajustar sidebar para dispositivos móveis
-    //   const handleResize = () => {
-    //     if (window.innerWidth < 768) {
-    //       this.sidebarOpen = false;
-    //     } else {
-    //       this.sidebarOpen = true;
-    //     }
-    //   };
+// Computed do currentUser via store
+const currentUser = authStore.user
 
-    //   window.addEventListener('resize', handleResize);
-    //   handleResize();
+const toggleSidebar = () => {
+    sidebarOpen.value = !sidebarOpen.value
+}
 
-    //   // Remover event listener quando o componente for destruído
-    //   this.$once('hook:beforeDestroy', () => {
-    //     window.removeEventListener('resize', handleResize);
-    //   });
+const handleResize = () => {
+    sidebarOpen.value = window.innerWidth >= 768
+}
+
+onMounted(() => {
+    console.log('isAuthenticated do useAuth', authStore.isAuthenticated);
+    
+    // Verifica autenticação e permissão admin
+    // if (!authStore.isAuthenticated || !authStore.isAdmin) {
+    //     router.push('/login')
     // }
-};
+
+    // Ajusta sidebar e adiciona listener resize
+    handleResize()
+    window.addEventListener('resize', handleResize)
+})
+
+onBeforeUnmount(() => {
+    window.removeEventListener('resize', handleResize)
+})
 </script>

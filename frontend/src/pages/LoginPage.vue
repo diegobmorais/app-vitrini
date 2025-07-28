@@ -159,137 +159,117 @@
   </div>
 </template>
 
-<script>
-import store from '@/store'
-import { ref, reactive } from 'vue'
+<script setup>
+import { useAuthStore } from '@/store/modules/useAuthStore'
+import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 
-export default {
-  name: 'LoginPage',
-  metaInfo() {
-    return {
-      title: this.isRegisterMode ? 'Cadastro' : 'Login'
-    }
-  },
-  setup() {
-    const router = useRouter()
-    const isRegisterMode = ref(false)
-    const showPassword = ref(false)
-    const isLoading = ref(false)
+const router = useRouter()
+const isRegisterMode = ref(false)
+const showPassword = ref(false)
+const isLoading = ref(false)
+const authStore = useAuthStore()
 
-    const form = reactive({
-      name: '',
-      email: '',
-      password: '',
-      passwordConfirmation: '',
-      rememberMe: false
+const form = reactive({
+  name: '',
+  email: '',
+  password: '',
+  passwordConfirmation: '',
+  rememberMe: false
+})
+
+const errors = reactive({
+  name: '',
+  email: '',
+  password: '',
+  passwordConfirmation: ''
+})
+
+const pageTitle = computed(() => (isRegisterMode.value ? 'Cadastro' : 'Login'))
+
+function toggleMode() {
+  isRegisterMode.value = !isRegisterMode.value
+
+  // Limpar formulário e erros
+  Object.keys(form).forEach(key => {
+    form[key] = key === 'rememberMe' ? false : ''
+  })
+
+  Object.keys(errors).forEach(key => {
+    errors[key] = ''
+  })
+}
+
+function validateForm() {
+  let isValid = true
+
+  // Limpar erros anteriores
+  Object.keys(errors).forEach(key => {
+    errors[key] = ''
+  })
+
+  if (isRegisterMode.value && !form.name.trim()) {
+    errors.name = 'O nome é obrigatório'
+    isValid = false
+  }
+
+  if (!form.email.trim()) {
+    errors.email = 'O e-mail é obrigatório'
+    isValid = false
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+    errors.email = 'Digite um e-mail válido'
+    isValid = false
+  }
+
+  if (!form.password) {
+    errors.password = 'A senha é obrigatória'
+    isValid = false
+  } else if (isRegisterMode.value && form.password.length < 8) {
+    errors.password = 'A senha deve ter pelo menos 8 caracteres'
+    isValid = false
+  }
+
+  if (isRegisterMode.value && form.password !== form.passwordConfirmation) {
+    errors.passwordConfirmation = 'As senhas não coincidem'
+    isValid = false
+  }
+
+  return isValid
+}
+
+async function submitForm() {
+  if (!validateForm()) return
+
+  isLoading.value = true
+
+  try {
+    const url = isRegisterMode.value ? 'api/register' : 'api/login'
+    const credentials = isRegisterMode.value
+      ? {
+        name: form.name,
+        email: form.email,
+        password: form.password,
+        password_confirmation: form.passwordConfirmation
+      }
+      : {
+        email: form.email,
+        password: form.password
+      }
+
+    // Usa o método login da Pinia direto
+    await authStore.login({ url, credentials })
+
+    await router.push('/minha-conta')
+    window.location.reload()
+  } catch (error) {
+    console.error('Erro detalhado:', {
+      status: error.response?.status,
+      data: error.response?.data,
+      headers: error.response?.headers
     })
-
-    const errors = reactive({
-      name: '',
-      email: '',
-      password: '',
-      passwordConfirmation: ''
-    })
-
-    const toggleMode = () => {
-      isRegisterMode.value = !isRegisterMode.value
-
-      // Limpar formulário e erros
-      Object.keys(form).forEach(key => {
-        form[key] = key === 'rememberMe' ? false : ''
-      })
-
-      Object.keys(errors).forEach(key => {
-        errors[key] = ''
-      })
-    }
-
-    const validateForm = () => {
-      let isValid = true
-
-      // Limpar erros anteriores
-      Object.keys(errors).forEach(key => {
-        errors[key] = ''
-      })
-
-      // Validar nome (apenas no modo de registro)
-      if (isRegisterMode.value && !form.name.trim()) {
-        errors.name = 'O nome é obrigatório'
-        isValid = false
-      }
-
-      // Validar email
-      if (!form.email.trim()) {
-        errors.email = 'O e-mail é obrigatório'
-        isValid = false
-      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-        errors.email = 'Digite um e-mail válido'
-        isValid = false
-      }
-
-      // Validar senha
-      if (!form.password) {
-        errors.password = 'A senha é obrigatória'
-        isValid = false
-      } else if (isRegisterMode.value && form.password.length < 8) {
-        errors.password = 'A senha deve ter pelo menos 8 caracteres'
-        isValid = false
-      }
-
-      // Validar confirmação de senha (apenas no modo de registro)
-      if (isRegisterMode.value && form.password !== form.passwordConfirmation) {
-        errors.passwordConfirmation = 'As senhas não coincidem'
-        isValid = false
-      }
-
-      return isValid
-    }
-    const submitForm = async () => {
-      if (!validateForm()) return
-
-      isLoading.value = true
-
-      try {
-
-        const url = isRegisterMode.value ? 'api/register' : 'api/login'
-        const credentials = isRegisterMode.value
-          ? {
-            name: form.name,
-            email: form.email,
-            password: form.password,
-            password_confirmation: form.passwordConfirmation
-          }
-          : {
-            email: form.email,
-            password: form.password,
-          }
-
-        await store.dispatch('auth/login', { url, credentials })
-     
-        router.push('/minha-conta').then(() => {    
-          window.location.reload()
-        })
-      } catch (error) {
-        console.error('Erro detalhado:', {
-          status: error.response?.status,
-          data: error.response?.data,
-          headers: error.response?.headers
-        });
-      } finally {
-        isLoading.value = false
-      }
-    }
-
-    return {
-      isRegisterMode,
-      showPassword,
-      isLoading,
-      form,
-      errors,
-      toggleMode,
-      submitForm
-    }
+    // Exiba notificação ou mensagem de erro para usuário aqui
+  } finally {
+    isLoading.value = false
   }
 }
 </script>

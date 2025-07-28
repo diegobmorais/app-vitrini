@@ -112,20 +112,25 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'AdminSidebar',
-  props: {
-    isOpen: {
-      type: Boolean,
-      default: true
-    }
-  },
-  methods: {
-    logout() {
-      this.$store.dispatch('auth/logout');
-      this.$router.push('/login');
-    }
+<script setup>
+import { useAuthStore } from '@/store/modules/useAuthStore'
+import { useRouter } from 'vue-router'
+
+// Props
+const props = defineProps({
+  isOpen: {
+    type: Boolean,
+    default: true
   }
-};
+})
+
+// Store e router
+const authStore = useAuthStore()
+const router = useRouter()
+
+// Função de logout
+const logout = async () => {
+  await authStore.logout()
+  router.push('/login')
+}
 </script>

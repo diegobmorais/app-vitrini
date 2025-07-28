@@ -159,12 +159,12 @@
     </div>
   </template>
   
-  <script>
-  export default {
-    name: 'AboutPage',
-    metaInfo: {
-      title: 'Sobre Nós'
-    }
-  }
+  <script setup>
+  import { useHead } from '@vueuse/head'
+  
+  useHead({
+    title: 'Sobre Nós'
+  })
   </script>
+  
   
