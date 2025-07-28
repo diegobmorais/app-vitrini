@@ -34,8 +34,7 @@ return new class extends Migration
             $table->string('width')->nullable();
             $table->string('height')->nullable();
             $table->string('slug')->unique();
-            $table->json('tags')->nullable();
-            $table->json('images')->nullable();
+            $table->json('tags')->nullable();            
             $table->timestamps();
         });
     }

@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductImageController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\StockMovementController;
 use App\Http\Controllers\SupplierController;
@@ -37,6 +38,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('stock-movements', StockMovementController::class)->except(['update']);
     //address
     Route::apiResource('address', AddressController::class);
+    //imagens
+    Route::prefix('products/{product}')->group(function () {
+        Route::get('images', [ProductImageController::class, 'index']);
+        Route::post('images', [ProductImageController::class, 'store']);
+    });
+    Route::delete('images/{id}', [ProductImageController::class, 'destroy']);
+    Route::post('uploads/temp-images', [ProductImageController::class, 'uploadTempImages']);
+    Route::delete('/delete-temp-image', [ProductImageController::class, 'deleteTemp']);
 });
 
 // Routes public

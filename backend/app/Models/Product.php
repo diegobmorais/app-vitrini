@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
-{   
+{
     use HasFactory;
     protected $fillable = [
         'name',
@@ -31,14 +31,12 @@ class Product extends Model
         'length',
         'width',
         'height',
-        'slug',
-        'images'
+        'slug',        
     ];
     protected $casts = [
         'track_inventory' => 'boolean',
         'allow_backorders' => 'boolean',
-        'featured' => 'boolean',
-        'images' => 'array',
+        'featured' => 'boolean',       
         'tags' => 'array',
     ];
     public function category()
@@ -60,7 +58,12 @@ class Product extends Model
             ->selectRaw('product_id, SUM(CASE WHEN type = "in" THEN quantity ELSE -quantity END) as total')
             ->groupBy('product_id');
     }
-    public function tags(){
+    public function tags()
+    {
         return $this->belongsToMany(Tag::class);
+    }
+    public function images()
+    {
+        return $this->hasMany(ProductImage::class);
     }
 }

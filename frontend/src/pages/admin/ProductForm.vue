@@ -26,6 +26,10 @@
                                     *</label>
                                 <input type="text" id="name" v-model="product.name" required
                                     class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+                                <p v-if="formErrors.name"
+                                    class="mt-1 text-sm text-red-600 bg-red-100 border border-red-300 px-3 py-2 rounded-md shadow-sm">
+                                    <span class="font-semibold">Erro:</span> {{ formErrors.name[0] }}
+                                </p>
                             </div>
 
                             <div>
@@ -40,13 +44,20 @@
                                     <label for="sku" class="block text-sm font-medium text-gray-700">SKU *</label>
                                     <input type="text" id="sku" v-model="product.sku" required
                                         class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+                                    <p v-if="formErrors.sku"
+                                        class="mt-1 text-sm text-red-600 bg-red-100 border border-red-300 px-3 py-2 rounded-md shadow-sm">
+                                        <span class="font-semibold">Erro:</span> {{ formErrors.sku[0] }}
+                                    </p>
                                 </div>
-
                                 <div>
                                     <label for="barcode" class="block text-sm font-medium text-gray-700">Código de
                                         Barras</label>
                                     <input type="text" id="barcode" v-model="product.barcode"
                                         class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+                                    <p v-if="formErrors.barcode"
+                                        class="mt-1 text-sm text-red-600 bg-red-100 border border-red-300 px-3 py-2 rounded-md shadow-sm">
+                                        <span class="font-semibold">Erro:</span> {{ formErrors.barcode[0] }}
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -66,6 +77,10 @@
                                     </div>
                                     <input type="number" id="price" v-model="product.price" required min="0" step="0.01"
                                         class="block w-full pl-10 pr-12 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+                                    <p v-if="formErrors.price"
+                                        class="mt-1 text-sm text-red-600 bg-red-100 border border-red-300 px-3 py-2 rounded-md shadow-sm">
+                                        <span class="font-semibold">Erro:</span> {{ formErrors.price[0] }}
+                                    </p>
                                 </div>
                             </div>
 
@@ -159,12 +174,12 @@
 
                         <div class="space-y-4">
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <div v-for="(image, index) in product.images" :key="index"
+                                <div v-for="(image, index) in images" :key="image.id || images.tempId"
                                     class="relative group border rounded-lg overflow-hidden">
                                     <img :src="image.url" :alt="product.name" class="w-full h-32 object-cover">
                                     <div
                                         class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                        <button @click="removeImage(index)" type="button"
+                                        <button @click="removeImage(image.id, index)" type="button"
                                             class="p-1 bg-red-600 rounded-full text-white hover:bg-red-700 focus:outline-none">
                                             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -191,7 +206,7 @@
                                 </div>
                             </div>
 
-                            <input type="file" ref="fileInput" @change="handleFileUpload" accept="image/*" multiple
+                            <input type="file" ref="fileInputRef" @change="handleFileUpload" accept="image/*" multiple
                                 class="hidden" />
 
                             <p class="text-xs text-gray-500">
@@ -266,7 +281,7 @@
                                 <label for="tags" class="block text-sm font-medium text-gray-700">Tags</label>
                                 <multiselect v-model="product.tags" :options="tags" :multiple="true"
                                     :close-on-select="false" placeholder="Selecione as tags" label="name"
-                                    track-by="id" />
+                                    track-by="name" />
                             </div>
                         </div>
                     </div>
@@ -334,18 +349,19 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Multiselect from 'vue-multiselect'
 import 'vue-multiselect/dist/vue-multiselect.min.css'
+import api from '@/main'
+import { imageService } from '@/services/imageService'
 
-// Importar suas stores Pinia, por exemplo:
 import { useCategoryStore } from '@/store/modules/useCategoryStore'
 import { useBrandStore } from '@/store/modules/useBrandStore'
 import { useTagStore } from '@/store/modules/useTagStores'
 import { useSupplierStore } from '@/store/modules/useSupplierStore'
 import { useProductStore } from '@/store/modules/useProductStore'
-import { useNotificationStore } from '@/store/modules/useNotificationStore'
+import { useToast } from 'vue-toastification'
 
 const route = useRoute()
 const router = useRouter()
@@ -355,9 +371,20 @@ const brandsStore = useBrandStore()
 const tagsStore = useTagStore()
 const suppliersStore = useSupplierStore()
 const productsStore = useProductStore()
-const notificationsStore = useNotificationStore()
+const toast = useToast()
+const categories = computed(() => categoriesStore.categories ?? [])
+const brands = computed(() => brandsStore.brands ?? [])
+const tags = computed(() => tagsStore.tags ?? [])
+const suppliers = computed(() => suppliersStore.suppliers ?? [])
+const isEditing = computed(() => !!route.params.id)
 
-const product = ref({
+const loading = ref(false)
+const formErrors = ref({})
+const fileInputRef = ref(null)
+const uploadSessionId = ref(null)
+const images = ref([]);
+
+const product = reactive({
     name: '',
     description: '',
     sku: '',
@@ -380,77 +407,119 @@ const product = ref({
     length: '',
     width: '',
     height: '',
-    slug: '',
-    images: []
+    slug: '',    
 })
-
-const loading = ref(false)
-
-const isEditing = computed(() => !!route.params.id)
 
 async function saveProduct() {
     loading.value = true
-    // Mapear tags para array de nomes (ajuste se necessário)
+    formErrors.value = {}
+
     const payload = {
-        ...product.value,
-        tags: product.value.tags.map(tag => tag.name || tag)
+        ...product,
+        upload_session_id: uploadSessionId.value,
+        tags: product.tags.map(tag => tag.name)
     }
 
     try {
         if (isEditing.value) {
             await productsStore.updateProduct({
-                id: route.params.id,
-                data: product.value
+                id: product.id,
+                data: payload
             })
-            notificationsStore.addNotification({
-                type: 'success',
-                message: 'Produto atualizado com sucesso!'
-            })
+            toast.success(`Produto "${product.name}" atualizado com sucesso!`)
         } else {
             await productsStore.createProduct(payload)
-            notificationsStore.addNotification({
-                type: 'success',
-                message: 'Produto criado com sucesso!'
-            })
+            toast.success(`Produto "${product.name}" criado com sucesso!`)
         }
         router.push('/painel-administrador/produtos')
     } catch (error) {
-        notificationsStore.addNotification({
-            type: 'error',
-            message: `Erro ao salvar produto: ${error.message}`
-        })
+        console.error('Erro capturado:', error)
+        if (error.response?.status === 422) {
+            // Erros de validação
+            formErrors.value = error.response.data.errors
+            toast.error('Por favor, corrija os erros do formulário.')
+        } else {
+            // Outros erros
+            toast.error('Erro ao salvar produto!')
+        }
     } finally {
         loading.value = false
     }
 }
 
-function openFileInput() {
-    // Supondo que você tenha uma referência ref="fileInput" no template
+const openFileInput = () => {
     fileInputRef.value?.click()
 }
 
-function handleFileUpload() {
-    // Implementar lógica para upload
+async function handleFileUpload(event) {
+    const files = event.target.files
+
+    if (!files.length) return
+
+    const formData = new FormData()
+
+    formData.append('upload_session_id', uploadSessionId.value)
+
+    for (let file of files) {
+        formData.append('images[]', file)
+    }
+
+    try {
+        const response = await api.post('/api/uploads/temp-images', formData)
+
+        const newImages = response.data.images.map(img => ({
+            ...img,
+            isTemporary: true,
+            tempId: crypto.randomUUID()
+        }));
+
+        images.value.push(...newImages);
+    } catch (error) {
+        console.error('Erro no upload temporário', error)
+    }
 }
 
-const categories = computed(() => categoriesStore.categories ?? [])
-const brands = computed(() => brandsStore.brands ?? [])
-const tags = computed(() => tagsStore.tags ?? [])
-const suppliers = computed(() => suppliersStore.suppliers ?? [])
+const removeImage = async (id, index) => {
+    if (!images.value || !images.value[index]) return;
 
-const fileInputRef = ref(null)
+    const image = images.value[index];   
+    
+    if (image.isTemporary) {
+        await imageService.removeTempImage(image.path);
+        images.value = images.value.filter((_, i) => i !== index);
+    } else {
 
-onMounted(() => {
+        imageService.deleteProductImage(id).then(() => {
+            images.value = images.value.filter((_, i) => i !== index);
+        }).catch((err) => {
+            console.error('Erro ao excluir imagem:', err);
+        });
+    }
+}
+
+
+
+onMounted(async () => {
+    uploadSessionId.value = crypto.randomUUID()
+
     categoriesStore.fetchCategories()
     brandsStore.fetchBrands()
     tagsStore.fetchTags()
     suppliersStore.fetchSuppliers()
 
-    // Se for edição, carregar dados do produto (implemente fetchProduct na store)
     if (isEditing.value) {
-        productsStore.fetchProduct(route.params.id).then(data => {
-            Object.assign(product.value, data)
+        const data = await productsStore.fetchProduct(route.params.id)
+
+        const formattedTags = (data.tags || []).map(tag => ({ name: tag }))
+
+        Object.assign(product, {
+            ...data,
+            tags: formattedTags
         })
+        images.value = data.images.map(img => ({
+            ...img,
+            isTemporary: false
+        }))
     }
 })
 </script>

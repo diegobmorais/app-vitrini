@@ -57,7 +57,7 @@ export const useProductStore = defineStore('products', {
           perPage: response.data.per_page,
         };
         this.error = null;
-          
+
         return response.data.data;
       } catch (error) {
         this.error = error.response?.data?.message || 'Erro ao carregar produtos';
@@ -73,6 +73,7 @@ export const useProductStore = defineStore('products', {
         const response = await api.get(`api/product-detail/${slug}`);
         this.product = response.data;
         this.error = null;
+        return response.data
       } catch (error) {
         this.error = error.response?.data?.message || 'Erro ao carregar produto';
         console.error('Error fetching product:', error);
@@ -82,13 +83,27 @@ export const useProductStore = defineStore('products', {
     },
 
     async createProduct(payload) {
-      const response = await api.post('/api/product', payload);
-      return response.data;
+      try {
+        const response = await api.post('/api/product', payload);
+        return response.data;
+      } catch (error) {
+        console.error('Erro ao criar produto: ', error.response.data)
+        throw error
+      }
     },
 
     async updateProduct({ id, data }) {
-      const response = await api.put(`/api/product/${id}`, data);
-      return response.data;
+      try {
+        const response = await api.put(`/api/product/${id}`, data)
+        return response.data.data
+      } catch (error) {
+        console.error('Erro ao atualizar produto:', error.response.data)
+        throw error
+      }
+    },
+    async deleteProduct(id) {
+      const response = await api.delete(`/api/product/${id}`)
+      return response
     },
 
     updateFilters(filters) {

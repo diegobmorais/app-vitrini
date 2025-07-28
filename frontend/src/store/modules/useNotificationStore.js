@@ -15,7 +15,7 @@ export const useNotificationStore = defineStore('notifications', () => {
     const defaults = {
       type: 'info',
       read: false,
-      timeout: 5000, // 5s padrão para auto-dismiss
+      timeout: 5000,
       dismissible: true,
     }
 
@@ -73,7 +73,7 @@ export const useNotificationStore = defineStore('notifications', () => {
       type: 'error',
       message,
       icon: 'alert-circle',
-      timeout: 0, // não auto fecha erros
+      timeout: 0, 
     })
   }
 

@@ -127,7 +127,7 @@
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <router-link :to="`/produto/${product.id}/editar`" class="text-blue-600 hover:text-blue-900 mr-3">
+                <router-link :to="`/produto/${product.slug}/editar`" class="text-blue-600 hover:text-blue-900 mr-3">
                   Editar
                 </router-link>
                 <button @click="confirmDelete(product)" class="text-red-600 hover:text-red-900">
@@ -269,12 +269,11 @@
 import { useCategoryStore } from '@/store/modules/useCategoryStore';
 import { useProductStore } from '@/store/modules/useProductStore';
 import { ref, computed, onMounted, watch } from 'vue';
-
-import { useStore } from 'vuex';
+import { useToast } from 'vue-toastification';
 
 const productStore = useProductStore();
 const categoryStore = useCategoryStore();
-const vuex = useStore(); 
+const toast = useToast()
 
 const search = ref('');
 const categoryFilter = ref('');
@@ -286,8 +285,8 @@ const perPage = ref(10);
 const showDeleteModal = ref(false);
 const productToDelete = ref(null);
 
-const products = computed(() => productStore.items || []);
-const categories = computed(() => categoryStore.categories || []);
+const products = computed(() => productStore.getProducts);
+const categories = computed(() => categoryStore.categories);
 
 const filteredProducts = computed(() => {
   let filtered = [...products.value];
@@ -346,8 +345,6 @@ const filteredProducts = computed(() => {
 
   return filtered;
 });
-console.log('produtos filtrados', filteredProducts);
-
 
 const totalPages = computed(() => Math.ceil(filteredProducts.value.length / perPage.value));
 
@@ -401,16 +398,11 @@ const deleteProduct = async () => {
   if (!productToDelete.value) return;
 
   try {
-    await productStore.removeProduct(productToDelete.value.id);
-    vuex.dispatch('notifications/add', {
-      type: 'success',
-      message: `Produto "${productToDelete.value.name}" excluído com sucesso!`
-    });
+    await productStore.deleteProduct(productToDelete.value.id);
+    toast.success(`Produto "${productToDelete.value.name}" excluído com sucesso!`)
+    productStore.fetchProducts()
   } catch (error) {
-    vuex.dispatch('notifications/add', {
-      type: 'error',
-      message: `Erro ao excluir produto: ${error.message}`
-    });
+    toast.error(`Erro ao excluir produto: ${error.message}`)
   } finally {
     showDeleteModal.value = false;
     productToDelete.value = null;

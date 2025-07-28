@@ -3,11 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreProductRequest;
-use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Support\Facades\Storage;
 use Str;
 
 class ProductController extends Controller
@@ -74,7 +73,7 @@ class ProductController extends Controller
         }
         // Paginação
         $perPage = $request->input('per_page', 10);
-        $products = $query->with('category')
+        $products = $query->with(['category', 'images'])
             ->paginate($perPage);
 
         return response()->json($products);
@@ -93,7 +92,31 @@ class ProductController extends Controller
             }
             $data['tags'] = $request->tags;
 
+            $uploadSessionId = $request->input('upload_session_id');
+           
             $product = Product::create($data);
+
+            if ($uploadSessionId) {
+                $tempPath = "public/temp/$uploadSessionId";
+               
+                $files = Storage::disk('public')->files("temp/$uploadSessionId");
+
+                $imageRecords = [];
+
+                foreach ($files as $file) {                    
+                    $newPath = str_replace("temp/$uploadSessionId", "products/{$product->id}", $file);
+                    Storage::disk('public')->move($file, $newPath);
+
+                    $imageRecords[] = [
+                        'url' => Storage::url($newPath),
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }                
+                $product->images()->createMany($imageRecords);
+             
+                Storage::deleteDirectory($tempPath);
+            }
 
             return response()->json([
                 'message' => 'Product created sucessfully',
@@ -164,7 +187,7 @@ class ProductController extends Controller
     }
     public function showBySlug($slug)
     {
-        $product = Product::where('slug', $slug)->first();
+        $product = Product::with('images')->where('slug', $slug)->first();
 
         if (!$product) {
             return response()->json(['message' => 'Produto não encontrado.'], 404);
