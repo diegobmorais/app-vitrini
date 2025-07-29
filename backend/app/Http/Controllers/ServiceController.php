@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Service;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Str;
 
 class ServiceController extends Controller
@@ -26,14 +27,16 @@ class ServiceController extends Controller
                 'name' => 'required|max:150',
                 'description' => 'required|max:250',
                 'price' => 'required|numeric',
-                'category_id' => 'required|integer|exists:categories,id',
-                'images' => 'nullable|array',
+                'image' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
             ]);
 
             if (empty($data['slug'])) {
                 $data['slug'] = Str::slug($data['name']);
             }
-            $data['images'] = json_encode($data['images']);
+
+            if ($request->hasFile('image')) {
+                $data['image'] = $request->file('image')->store('services', 'public');
+            }
 
             $service = Service::create($data);
 
@@ -64,14 +67,20 @@ class ServiceController extends Controller
                 'name' => 'required|max:150',
                 'description' => 'required|max:250',
                 'price' => 'required|numeric',
-                'category_id' => 'required|integer|exists:categories,id',
-                'images' => 'nullable|array',
+                'image' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
             ]);
 
             if (empty($data['slug'])) {
                 $data['slug'] = Str::slug($data['name']);
             }
-            $data['images'] = json_encode($data['images']);
+
+            if ($request->hasFile('image')) {
+                if ($service->image && Storage::disk('public')->exists($service->image)) {
+                    Storage::disk('public')->delete($service->image);
+                }
+
+                $data['image'] = $request->file('image')->store('services', 'public');
+            }
 
             $service->update($data);
 

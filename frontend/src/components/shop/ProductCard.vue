@@ -15,7 +15,11 @@
       <!-- Imagem do produto -->
       <router-link :to="{ name: 'product-detail', params: { slug: product.slug } }">
         <div class="relative h-48 overflow-hidden bg-gray-100">
-          <img :src="product.image" :alt="product.name"
+          <img 
+              v-for="(image, index) in product.images"
+              :key="index"
+              :src="`${baseURL}${image.url}`"
+              :alt="product.name"
             class="w-full h-full object-contain object-center transition-transform duration-300 hover:scale-105">
         </div>
       </router-link>
@@ -87,6 +91,8 @@
 <script setup>
 import { useCartStore } from '@/store/modules/userCartStore'
 import { computed } from 'vue'
+
+const baseURL = import.meta.env.VITE_API_BASE_URL;
 
 const props = defineProps({
   product: {

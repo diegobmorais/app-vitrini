@@ -176,7 +176,7 @@
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 <div v-for="(image, index) in images" :key="image.id || images.tempId"
                                     class="relative group border rounded-lg overflow-hidden">
-                                    <img :src="image.url" :alt="product.name" class="w-full h-32 object-cover">
+                                    <img :src="`${baseURL}${product.images[0].url}`" :alt="product.name" class="w-full h-32 object-cover">
                                     <div
                                         class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                         <button @click="removeImage(image.id, index)" type="button"
@@ -362,6 +362,8 @@ import { useTagStore } from '@/store/modules/useTagStores'
 import { useSupplierStore } from '@/store/modules/useSupplierStore'
 import { useProductStore } from '@/store/modules/useProductStore'
 import { useToast } from 'vue-toastification'
+
+const baseURL = import.meta.env.VITE_API_BASE_URL;
 
 const route = useRoute()
 const router = useRouter()

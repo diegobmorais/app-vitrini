@@ -194,6 +194,7 @@ const subscribeNewsletter = async () => {
 }
 
 onMounted(() => {
+  console.log('featuredProducts:', featuredProducts);
   fetchProducts()
   fetchCategories()
 })

@@ -11,10 +11,10 @@ class Service extends Model
     protected $fillable = [
         'name',
         'description',        
-        'price',        
-        'category_id',        
+        'price',
         'slug',
-        'images'
+        'image',
+        'status'
     ];
     public function category()
     {

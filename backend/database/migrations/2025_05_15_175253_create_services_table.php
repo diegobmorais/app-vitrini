@@ -17,7 +17,7 @@ return new class extends Migration
             $table->text('description')->nullable();           
             $table->decimal('price', 10, 2)->default(0);
             $table->string('slug')->unique();         
-            $table->json('images')->nullable();
+            $table->string('image')->nullable();
             $table->timestamps();
         });
     }

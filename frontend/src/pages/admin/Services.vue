@@ -21,7 +21,7 @@
           <input type="text" id="search" v-model="filters.search" placeholder="Nome do serviço"
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
         </div>
-        <div class="w-full md:w-48">
+        <!-- <div class="w-full md:w-48">
           <label for="category" class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
           <select id="category" v-model="filters.categoryId"
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
@@ -30,7 +30,7 @@
               {{ category.name }}
             </option>
           </select>
-        </div>
+        </div> -->
         <div class="w-full md:w-48">
           <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
           <select id="status" v-model="filters.status"
@@ -59,13 +59,7 @@
                 Serviço
               </th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Categoria
-              </th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Preço
-              </th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Duração
               </th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Status
@@ -90,10 +84,7 @@
                 </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">{{ getCategoryName(service.categoryId) }}</div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">R$ {{ service.price.toFixed(2) }}</div>
+                <div class="text-sm text-gray-900">R$ {{ Number(service.price).toFixed(2) }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm text-gray-900">{{ service.duration }} min</div>
@@ -125,84 +116,89 @@
 
     <!-- Service Modal -->
     <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[95vh] overflow-y-auto">
         <div class="p-6">
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-medium text-gray-900">
+          <!-- Título e Fechar -->
+          <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-semibold text-gray-800">
               {{ editingService ? 'Editar Serviço' : 'Novo Serviço' }}
             </h3>
-            <button @click="showModal = false" class="text-gray-400 hover:text-gray-500">
+            <button @click="showModal = false" class="text-gray-400 hover:text-gray-600">
               <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
+
           <form @submit.prevent="saveService">
-            <div class="mb-4">
-              <label for="name" class="block text-sm font-medium text-gray-700">Nome</label>
-              <input type="text" id="name" v-model="serviceForm.name"
-                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                required>
+            <!-- Nome e Imagem lado a lado -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+              <!-- Nome -->
+              <div>
+                <label for="name" class="block text-sm font-medium text-gray-700">Nome</label>
+                <input type="text" id="name" v-model="serviceForm.name"
+                  class="mt-1 w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring focus:ring-blue-500"
+                  required>
+              </div>
+
+              <!-- Upload de Imagem com Preview -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Foto da Capa</label>
+                <div class="mt-1 flex items-center space-x-4">
+                  <div class="w-24 h-24 rounded-md border overflow-hidden bg-gray-100 flex items-center justify-center">
+                    <img v-if="previewImage" :src="previewImage" alt="Prévia" class="w-full h-full object-cover">
+                    <span v-else class="text-gray-400 text-sm">Sem imagem</span>
+                  </div>
+                  <div>
+                    <input type="file" ref="fileInputRef" @change="handleFileUpload" accept="image/*" class="hidden">
+                    <button type="button" @click="openFileInput"
+                      class="px-3 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">Escolher
+                      Imagem</button>
+                    <p class="mt-1 text-xs text-gray-500">Formatos: JPG, PNG. Máx: 5MB</p>
+                  </div>
+                </div>
+              </div>
             </div>
+
+            <!-- Descrição -->
             <div class="mb-4">
               <label for="description" class="block text-sm font-medium text-gray-700">Descrição</label>
-              <textarea id="description" v-model="serviceForm.description" rows="3"
-                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"></textarea>
+              <textarea id="description" v-model="serviceForm.description" rows="4"
+                class="mt-1 w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring focus:ring-blue-500"></textarea>
             </div>
-            <div class="mb-4">
-              <label for="category" class="block text-sm font-medium text-gray-700">Categoria</label>
-              <select id="category" v-model="serviceForm.categoryId"
-                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                required>
-                <option value="" disabled>Selecione uma categoria</option>
-                <option v-for="category in categories" :key="category.id" :value="category.id">
-                  {{ category.name }}
-                </option>
-              </select>
-            </div>
-            <div class="grid grid-cols-2 gap-4 mb-4">
+
+            <!-- Preço e Status -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
               <div>
                 <label for="price" class="block text-sm font-medium text-gray-700">Preço (R$)</label>
                 <input type="number" id="price" v-model="serviceForm.price" min="0" step="0.01"
-                  class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  class="mt-1 w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring focus:ring-blue-500"
                   required>
               </div>
+
               <div>
-                <label for="duration" class="block text-sm font-medium text-gray-700">Duração (min)</label>
-                <input type="number" id="duration" v-model="serviceForm.duration" min="1"
-                  class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  required>
+                <label class="block text-sm font-medium text-gray-700">Status</label>
+                <div class="mt-2 space-x-6">
+                  <label class="inline-flex items-center">
+                    <input type="radio" v-model="serviceForm.status" value="active"
+                      class="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                    <span class="ml-2 text-sm">Ativo</span>
+                  </label>
+                  <label class="inline-flex items-center">
+                    <input type="radio" v-model="serviceForm.status" value="inactive"
+                      class="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                    <span class="ml-2 text-sm">Inativo</span>
+                  </label>
+                </div>
               </div>
             </div>
-            <div class="mb-4">
-              <label for="image" class="block text-sm font-medium text-gray-700">URL da Imagem</label>
-              <input type="text" id="image" v-model="serviceForm.image"
-                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="https://exemplo.com/imagem.jpg">
-            </div>
-            <div class="mb-4">
-              <label class="block text-sm font-medium text-gray-700">Status</label>
-              <div class="mt-2">
-                <label class="inline-flex items-center">
-                  <input type="radio" v-model="serviceForm.status" value="active"
-                    class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300">
-                  <span class="ml-2 text-sm text-gray-700">Ativo</span>
-                </label>
-                <label class="inline-flex items-center ml-6">
-                  <input type="radio" v-model="serviceForm.status" value="inactive"
-                    class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300">
-                  <span class="ml-2 text-sm text-gray-700">Inativo</span>
-                </label>
-              </div>
-            </div>
-            <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+
+            <!-- Ações -->
+            <div class="flex justify-end gap-3 mt-6">
               <button type="button" @click="showModal = false"
-                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:col-start-1 sm:text-sm">
-                Cancelar
-              </button>
-              <button type="submit"
-                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:col-start-2 sm:text-sm"
-                :disabled="isSubmitting">
+                class="px-4 py-2 rounded border border-gray-300 bg-white text-gray-700 hover:bg-gray-50">Cancelar</button>
+              <button type="submit" :disabled="isSubmitting"
+                class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">
                 {{ isSubmitting ? 'Salvando...' : 'Salvar' }}
               </button>
             </div>
@@ -210,7 +206,6 @@
         </div>
       </div>
     </div>
-
     <!-- Delete Confirmation Modal -->
     <div v-if="showDeleteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
@@ -250,23 +245,25 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
-import { useNotificationStore } from '@/store/modules/useNotificationStore'
+import { useServiceStore } from '@/store/modules/useServiceStore'
+import { ref, reactive, computed, onMounted } from 'vue'
+import { useToast } from 'vue-toastification'
 
-const notificationsStore = useNotificationStore()
+const serviceStore = useServiceStore();
+const toast = useToast()
 
 const showModal = ref(false)
 const showDeleteModal = ref(false)
 const isSubmitting = ref(false)
 const editingService = ref(null)
 const serviceToDelete = ref(null)
+const previewImage = ref(null)
+const fileInputRef = ref([])
 
 const serviceForm = reactive({
   name: '',
   description: '',
   price: 0,
-  duration: 30,
-  categoryId: '',
   image: '',
   status: 'active'
 })
@@ -276,68 +273,7 @@ const filters = reactive({
   categoryId: '',
   status: ''
 })
-
-// Dados mockados (pode substituir por fetch real se quiser)
-const categories = ref([
-  { id: 1, name: 'Banho & Tosa' },
-  { id: 2, name: 'Veterinário' },
-  { id: 3, name: 'Adestramento' },
-  { id: 4, name: 'Hospedagem' },
-  { id: 5, name: 'Day Care' }
-])
-
-const services = ref([
-  {
-    id: 1,
-    name: 'Banho Completo',
-    description: 'Banho com shampoo especial, secagem, escovação e perfume.',
-    price: 50.0,
-    duration: 60,
-    categoryId: 1,
-    image: '/placeholder.svg?height=300&width=500',
-    status: 'active'
-  },
-  {
-    id: 2,
-    name: 'Tosa Higiênica',
-    description: 'Tosa nas áreas íntimas, patas e face do pet.',
-    price: 35.0,
-    duration: 30,
-    categoryId: 1,
-    image: '/placeholder.svg?height=300&width=500',
-    status: 'active'
-  },
-  {
-    id: 3,
-    name: 'Tosa Completa',
-    description: 'Tosa completa do pelo do pet conforme o estilo desejado.',
-    price: 70.0,
-    duration: 90,
-    categoryId: 1,
-    image: '/placeholder.svg?height=300&width=500',
-    status: 'active'
-  },
-  {
-    id: 4,
-    name: 'Consulta Veterinária',
-    description: 'Avaliação completa da saúde do seu pet com um veterinário especializado.',
-    price: 120.0,
-    duration: 45,
-    categoryId: 2,
-    image: '/placeholder.svg?height=300&width=500',
-    status: 'active'
-  },
-  {
-    id: 5,
-    name: 'Vacinação',
-    description: 'Aplicação de vacinas essenciais para a saúde do seu pet.',
-    price: 90.0,
-    duration: 20,
-    categoryId: 2,
-    image: '/placeholder.svg?height=300&width=500',
-    status: 'inactive'
-  }
-])
+const services = computed(() => serviceStore.services)
 
 const filteredServices = computed(() =>
   services.value.filter(service => {
@@ -353,11 +289,6 @@ const filteredServices = computed(() =>
     return matchesSearch && matchesCategory && matchesStatus
   })
 )
-
-const getCategoryName = categoryId => {
-  const category = categories.value.find(cat => cat.id === categoryId)
-  return category ? category.name : ''
-}
 
 const resetFilters = () => {
   filters.search = ''
@@ -375,55 +306,51 @@ const openModal = service => {
       name: '',
       description: '',
       price: 0,
-      duration: 30,
-      categoryId: '',
       image: '',
       status: 'active'
     })
   }
   showModal.value = true
 }
+function openFileInput() {
+  fileInputRef.value?.click()
+}
+
+function handleFileUpload(event) {
+  const file = event.target.files[0]
+  if (!file) return
+
+  previewImage.value = URL.createObjectURL(file)
+
+  serviceForm.image = file
+}
 
 const saveService = async () => {
   try {
     isSubmitting.value = true
-    // Simula API delay
-    await new Promise(resolve => setTimeout(resolve, 1000))
 
-    if (editingService.value) {
-      const index = services.value.findIndex(s => s.id === editingService.value.id)
-      if (index !== -1) {
-        services.value[index] = {
-          ...services.value[index],
-          ...serviceForm,
-          price: parseFloat(serviceForm.price),
-          duration: parseInt(serviceForm.duration),
-          categoryId: parseInt(serviceForm.categoryId)
-        }
-      }
-    } else {
-      services.value.push({
-        id: services.value.length + 1,
-        ...serviceForm,
-        price: parseFloat(serviceForm.price),
-        duration: parseInt(serviceForm.duration),
-        categoryId: parseInt(serviceForm.categoryId)
-      })
+    const payload = new FormData()
+
+    payload.append('name', serviceForm.name.toString())
+    payload.append('description', serviceForm.description.toString())
+    payload.append('price', parseFloat(serviceForm.price.toString()))
+    payload.append('status', serviceForm.status.toString())
+
+    if (serviceForm.image) {
+      payload.append('image', serviceForm.image)
     }
 
-    notificationsStore.add({
-      type: 'success',
-      message: `Serviço ${editingService.value ? 'atualizado' : 'criado'} com sucesso!`,
-      timeout: 5000
-    })
+    if (editingService.value) {
+      await serviceStore.updateService(editingService.value.id, payload)
+      toast.success('Serviço atualizado com sucesso!')
+    } else {
+      await serviceStore.createService(payload)
+      toast.success('Serviço criado com sucesso!')
+    }
 
     showModal.value = false
   } catch (error) {
-    notificationsStore.add({
-      type: 'error',
-      message: `Erro ao ${editingService.value ? 'atualizar' : 'criar'} serviço. Tente novamente.`,
-      timeout: 5000
-    })
+    toast.error('Erro ao salvar serviço. Verifique os dados e tente novamente.')
   } finally {
     isSubmitting.value = false
   }
@@ -437,24 +364,19 @@ const confirmDelete = service => {
 const deleteService = async () => {
   try {
     isSubmitting.value = true
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    services.value = services.value.filter(s => s.id !== serviceToDelete.value.id)
 
-    notificationsStore.add({
-      type: 'success',
-      message: 'Serviço excluído com sucesso!',
-      timeout: 5000
-    })
+    await serviceStore.deleteService(serviceToDelete.value.id)
+
+    toast.success("Serviço excluído com sucesso!")
 
     showDeleteModal.value = false
   } catch {
-    notificationsStore.add({
-      type: 'error',
-      message: 'Erro ao excluir serviço. Tente novamente.',
-      timeout: 5000
-    })
+    toast.error("Erro ao excluir serviço. Tente novamente.")
   } finally {
     isSubmitting.value = false
   }
 }
+onMounted( ()=> {
+  serviceStore.fetchServices()
+})
 </script>

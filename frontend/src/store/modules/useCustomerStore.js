@@ -41,49 +41,10 @@ export const useCustomerStore = defineStore("customer", () => {
 
   // Actions (operações assíncronas)
   async function fetchCustomers() {
-    try {
-      setLoading(true);
-      // Simulação de chamada à API
-      const response = await new Promise((resolve) => {
-        setTimeout(() => {
-          resolve({
-            data: [
-              {
-                id: 1,
-                name: "Ana Silva",
-                document: "123.456.789-00",
-                email: "ana.silva@email.com",
-                phone: "(11) 98765-4321",
-                orders_count: 5,
-                active: true,
-                avatar: null,
-              },
-              {
-                id: 2,
-                name: "Carlos Oliveira",
-                document: "987.654.321-00",
-                email: "carlos.oliveira@email.com",
-                phone: "(11) 91234-5678",
-                orders_count: 3,
-                active: true,
-                avatar: null,
-              },
-              {
-                id: 3,
-                name: "Mariana Santos",
-                document: "456.789.123-00",
-                email: "mariana.santos@email.com",
-                phone: "(11) 94567-8901",
-                orders_count: 0,
-                active: false,
-                avatar: null,
-              },
-            ],
-          });
-        }, 500);
-      });
+    try {     
+     
 
-      setCustomers(response.data);
+      // setCustomers(response.data);
       setError(null);
     } catch (err) {
       setError(err.message);

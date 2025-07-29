@@ -188,7 +188,9 @@
             <div v-for="product in paginatedProducts" :key="product.id"
               class="bg-white rounded-lg shadow-md overflow-hidden flex flex-col sm:flex-row">
               <div class="sm:w-1/3 relative">
-                <img :src="product.image" :alt="product.name" class="w-full h-full object-cover" />
+                <img :src="product.images?.length ? `${baseURL}${product.images[0].url}` : '#'"
+                :alt="product.name" 
+                class="w-full h-full object-cover" />
                 <div v-if="product.discount > 0"
                   class="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
                   -{{ product.discount }}%
@@ -197,7 +199,7 @@
                   class="absolute top-2 right-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded">
                   Novo
                 </div>
-              </div>
+              </div>          
               <div class="p-4 flex-grow flex flex-col">
                 <div class="flex-grow">
                   <h3 class="text-lg font-semibold mb-2">{{ product.name }}</h3>
@@ -277,7 +279,7 @@ import ProductCard from '@/components/shop/ProductCard.vue'
 import { useProductStore } from '@/store/modules/useProductStore'
 import { useCategoryStore } from '@/store/modules/useCategoryStore'
 
-
+const baseURL = import.meta.env.VITE_API_BASE_URL;
 // Pinia stores
 const productStore = useProductStore()
 const categoryStore = useCategoryStore()
@@ -430,7 +432,7 @@ const addToCart = (product) => {
 }
 
 // Carregar dados na montagem
-onMounted(() => {
+onMounted(() => {  
   productStore.fetchProducts()
   categoryStore.fetchCategories()
 

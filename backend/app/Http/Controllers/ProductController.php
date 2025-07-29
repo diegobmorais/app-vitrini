@@ -178,7 +178,7 @@ class ProductController extends Controller
     }
     public function productsFeatured()
     {
-        $products = Product::where('featured', true)->get();
+        $products = Product::with('images')->where('featured', true)->get();
 
         return response()->json([
             'success' => true,

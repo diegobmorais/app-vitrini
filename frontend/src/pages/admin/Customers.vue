@@ -5,10 +5,10 @@
         <h1 class="text-2xl font-bold text-gray-900">Clientes</h1>
         <p class="text-gray-600">Gerencie os clientes do sistema</p>
       </div>
-      <router-link to="/painel-administrador/cliente/create"
+      <!-- <router-link to="/painel-administrador/cliente/create"
         class="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500">
         Novo Cliente
-      </router-link>
+      </router-link> -->
     </div>
 
     <div class="bg-white rounded-lg shadow overflow-hidden">
@@ -146,42 +146,7 @@ const filteredCustomers = computed(() => {
 
 const fetchCustomers = () => {
   loading.value = true
-  // Simulação de chamada à API
-  setTimeout(() => {
-    customers.value = [
-      {
-        id: 1,
-        name: 'Ana Silva',
-        document: '123.456.789-00',
-        email: 'ana.silva@email.com',
-        phone: '(11) 98765-4321',
-        orders_count: 5,
-        active: true,
-        avatar: null
-      },
-      {
-        id: 2,
-        name: 'Carlos Oliveira',
-        document: '987.654.321-00',
-        email: 'carlos.oliveira@email.com',
-        phone: '(11) 91234-5678',
-        orders_count: 3,
-        active: true,
-        avatar: null
-      },
-      {
-        id: 3,
-        name: 'Mariana Santos',
-        document: '456.789.123-00',
-        email: 'mariana.santos@email.com',
-        phone: '(11) 94567-8901',
-        orders_count: 0,
-        active: false,
-        avatar: null
-      }
-    ]
-    loading.value = false
-  }, 500)
+ 
 }
 
 const getInitials = (name) => {
