@@ -246,7 +246,7 @@
 
 <script setup>
 import { useServiceStore } from '@/store/modules/useServiceStore'
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useToast } from 'vue-toastification'
 
 const serviceStore = useServiceStore();
@@ -290,6 +290,30 @@ const filteredServices = computed(() =>
   })
 )
 
+watch(showModal, (isOpen) => {
+  if (!isOpen) {
+    resetForm()
+  }
+})
+
+function resetForm() {
+  Object.assign(serviceForm, {
+    name: '',
+    description: '',
+    price: 0,
+    image: '',
+    status: 'active'
+  })
+
+  previewImage.value = null
+
+  if (fileInputRef.value) {
+    fileInputRef.value.value = ''
+  }
+
+  editingService.value = null
+}
+
 const resetFilters = () => {
   filters.search = ''
   filters.categoryId = ''
@@ -300,6 +324,7 @@ const openModal = service => {
   if (service) {
     editingService.value = service
     Object.assign(serviceForm, { ...service })
+    previewImage.value = serviceStore.getImageUrl(service.image)
   } else {
     editingService.value = null
     Object.assign(serviceForm, {
@@ -376,7 +401,7 @@ const deleteService = async () => {
     isSubmitting.value = false
   }
 }
-onMounted( ()=> {
+onMounted(() => {
   serviceStore.fetchServices()
 })
 </script>

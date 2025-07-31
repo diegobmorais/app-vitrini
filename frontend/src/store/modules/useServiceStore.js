@@ -5,9 +5,14 @@ import api from '@/main'
 
 
 export const useServiceStore = defineStore('service', () => {
+  const baseURL = import.meta.env.VITE_API_BASE_URL;
   const services = ref([])
   const loading = ref(false)
   const error = ref(null)
+
+  function getImageUrl(path) {
+    return path ? `${baseURL}/storage/${path}` : null
+  }
 
   async function fetchServices() {
     loading.value = true
@@ -79,6 +84,7 @@ export const useServiceStore = defineStore('service', () => {
     createService,
     updateService,
     deleteService,
-    fetchServices
+    fetchServices,
+    getImageUrl
   }
 })
