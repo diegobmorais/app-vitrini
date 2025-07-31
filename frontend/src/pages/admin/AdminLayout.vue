@@ -42,9 +42,7 @@ const handleResize = () => {
     sidebarOpen.value = window.innerWidth >= 768
 }
 
-onMounted(() => {
-    console.log('isAuthenticated do useAuth', authStore.isAuthenticated);
-    
+onMounted(() => {     
     // Verifica autenticação e permissão admin
     // if (!authStore.isAuthenticated || !authStore.isAdmin) {
     //     router.push('/login')

@@ -97,7 +97,7 @@
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center">
                   <div class="flex-shrink-0 h-10 w-10">
-                    <img class="h-10 w-10 rounded-md object-cover" :src="product.image" :alt="product.name">
+                    <img v-if="product.main_image" class="h-10 w-10 rounded-md object-cover" :src="`${baseURL}${product.main_image.url}`" :alt="product.name">
                   </div>
                   <div class="ml-4">
                     <div class="text-sm font-medium text-gray-900">{{ product.name }}</div>
@@ -271,6 +271,8 @@ import { useProductStore } from '@/store/modules/useProductStore';
 import { ref, computed, onMounted, watch } from 'vue';
 import { useToast } from 'vue-toastification';
 
+const baseURL = import.meta.env.VITE_API_BASE_URL;
+
 const productStore = useProductStore();
 const categoryStore = useCategoryStore();
 const toast = useToast()
@@ -413,7 +415,7 @@ watch([search, categoryFilter, stockFilter, sortBy], () => {
   currentPage.value = 1;
 });
 
-onMounted(() => {
+onMounted(() => {  
   productStore.fetchProducts();
   categoryStore.fetchCategories();
 });

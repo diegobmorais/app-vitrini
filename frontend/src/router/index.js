@@ -141,14 +141,7 @@ const routes = [
         name: "admin-customers",
         component: Customers,
         meta: { title: 'Clientes' }
-      },
-      {
-        path: "/painel-administrador/cliente/:id/edit",
-        name: "admin-customer-edit",
-        component: CustomerForm,
-        meta: { title: 'Editar Cliente' },
-        props: true,
-      },
+      },    
       {
         path: "/painel-administrador/fornecedores",
         name: "admin-suppliers",

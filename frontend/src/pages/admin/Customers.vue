@@ -50,13 +50,13 @@
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center">
                   <div class="flex-shrink-0 h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center">
-                    <span v-if="!customer.avatar" class="text-gray-500 font-medium">{{ getInitials(customer.name)
+                    <!-- <span v-if="!customer.avatar" class="text-gray-500 font-medium">{{ getInitials(customer.name)
                       }}</span>
-                    <img v-else :src="customer.avatar" alt="" class="h-10 w-10 rounded-full">
+                    <img v-else :src="customer.avatar" alt="" class="h-10 w-10 rounded-full"> -->
                   </div>
                   <div class="ml-4">
                     <div class="text-sm font-medium text-gray-900">{{ customer.name }}</div>
-                    <div class="text-sm text-gray-500">{{ customer.document }}</div>
+                    <!-- <div class="text-sm text-gray-500">{{ customer.document }}</div> -->
                   </div>
                 </div>
               </td>
@@ -65,12 +65,12 @@
                 <div class="text-sm text-gray-500">{{ customer.phone }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {{ customer.orders_count }} pedidos
+                <!-- {{ customer.orders_count }} pedidos --> ORD1520
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
                   :class="customer.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
-                  {{ customer.active ? 'Ativo' : 'Inativo' }}
+                  <!-- {{ customer.active ? 'Ativo' : 'Inativo' }} --> Ativado
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -110,32 +110,31 @@
 </template>
 
 <script setup>
-import { useNotificationStore } from '@/store/modules/useNotificationStore'
+import { useCustomerStore } from '@/store/modules/useCustomerStore'
 import { ref, computed, onMounted } from 'vue'
 
-const notificationsStore = useNotificationStore()
-
-const customers = ref([])
 const search = ref('')
 const filter = ref('all')
-const loading = ref(false)
+const customerStore = useCustomerStore();
+
+const customers = computed(() => customerStore.customers)
 
 const filteredCustomers = computed(() => {
   let result = customers.value
 
   // Filtrar por status
-  if (filter.value === 'active') {
-    result = result.filter(customer => customer.active)
-  } else if (filter.value === 'inactive') {
-    result = result.filter(customer => !customer.active)
-  }
+  // if (filter.value === 'active') {
+  //   result = result.filter(customer => customer.active)
+  // } else if (filter.value === 'inactive') {
+  //   result = result.filter(customer => !customer.active)
+  // }
 
   // Filtrar por termo de busca
   if (search.value) {
     const searchLower = search.value.toLowerCase()
     result = result.filter(customer =>
       customer.name.toLowerCase().includes(searchLower) ||
-      customer.document.toLowerCase().includes(searchLower) ||
+      // customer.document.toLowerCase().includes(searchLower) ||
       customer.email.toLowerCase().includes(searchLower) ||
       customer.phone.toLowerCase().includes(searchLower)
     )
@@ -144,32 +143,25 @@ const filteredCustomers = computed(() => {
   return result
 })
 
-const fetchCustomers = () => {
-  loading.value = true
- 
-}
-
-const getInitials = (name) => {
-  return name
-    .split(' ')
-    .map(word => word[0])
-    .join('')
-    .toUpperCase()
-    .substring(0, 2)
-}
+// const getInitials = (name) => {
+//   return name
+//     .split('')
+//     .map(word => word[0])
+//     .join('')
+//     .toUpperCase()
+//     .substring(0, 2)
+// }
 
 const deleteCustomer = (id) => {
-  if (confirm('Tem certeza que deseja excluir este cliente?')) {
-    // Simulação de exclusão
+  if (confirm('Tem certeza que deseja excluir este cliente?')) {   
     customers.value = customers.value.filter(c => c.id !== id)
-    notificationsStore.add({
-      type: 'success',
-      message: 'Cliente excluído com sucesso!'
-    })
+    //add toast
   }
 }
 
 onMounted(() => {
-  fetchCustomers()
+  console.log('clientes', filteredCustomers);
+  
+  customerStore.fetchCustomers()
 })
 </script>

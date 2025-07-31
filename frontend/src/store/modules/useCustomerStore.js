@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
+import api from '@/main';
 
 export const useCustomerStore = defineStore("customer", () => {
   // States
@@ -16,72 +17,40 @@ export const useCustomerStore = defineStore("customer", () => {
   const isLoading = computed(() => loading.value);
   const hasError = computed(() => error.value !== null);
 
-  // Mutations (funções que alteram o estado)
-  function setCustomers(data) {
-    customers.value = data;
-  }
-  function addCustomer(customer) {
-    customers.value.push(customer);
-  }
-  function updateCustomer(updatedCustomer) {
-    const index = customers.value.findIndex((c) => c.id === updatedCustomer.id);
-    if (index !== -1) {
-      customers.value.splice(index, 1, updatedCustomer);
-    }
-  }
   function removeCustomer(id) {
     customers.value = customers.value.filter((c) => c.id !== id);
   }
+
   function setLoading(status) {
     loading.value = status;
   }
+
   function setError(err) {
     error.value = err;
   }
 
-  // Actions (operações assíncronas)
   async function fetchCustomers() {
-    try {     
-     
-
-      // setCustomers(response.data);
+    try {          
+      setLoading(true)
       setError(null);
+      const response = await api.get("/api/customer");
+      customers.value = response.data.customer;
+
+      return response.data.customer
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message);
     } finally {
       setLoading(false);
     }
   }
-
-  async function saveCustomer(customer) {
-    try {
-      setLoading(true);
-      // Simulação de chamada à API
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      if (customer.id) {
-        updateCustomer(customer);
-      } else {
-        const newId = Date.now();
-        addCustomer({ ...customer, id: newId });
-      }
-      setError(null);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }
-
   async function deleteCustomer(id) {
     try {
       setLoading(true);
-      // Simulação de chamada à API
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await api.delete(`/api/customer/${id}`);
       removeCustomer(id);
       setError(null);
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message);
     } finally {
       setLoading(false);
     }
@@ -100,7 +69,6 @@ export const useCustomerStore = defineStore("customer", () => {
     hasError,
 
     fetchCustomers,
-    saveCustomer,
     deleteCustomer,
   };
 });

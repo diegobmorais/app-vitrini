@@ -42,7 +42,7 @@ class ServiceController extends Controller
 
             return response()->json([
                 'message' => 'Service created successfully',
-                'service' => $service
+                'service' => $service->fresh()->append('image_url')
             ], 200);
         } else {
             return response()->json(['message' => 'server error'], 500);

@@ -174,26 +174,39 @@
 
                         <div class="space-y-4">
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <div v-for="(image, index) in images" :key="image.id || images.tempId"
-                                    class="relative group border rounded-lg overflow-hidden">
-                                    <img :src="`${baseURL}${product.images[0].url}`" :alt="product.name" class="w-full h-32 object-cover">
+                                <div v-for="(image, index) in allImages" :key="image.id || image.tempId"
+                                    class="relative group border rounded-lg overflow-hidden shadow hover:shadow-lg transition-shadow duration-300">
+                                    <img :src="`${baseURL}${image.url}`" :alt="product.name"
+                                        class="w-full h-32 object-cover rounded" />
+
+                                    <!-- Tag "Principal" só aparece na imagem principal -->
+                                    <div v-if="isMainImage(image)"
+                                        class="absolute top-2 left-2 bg-blue-600 text-white text-xs font-semibold px-3 py-1 rounded-lg shadow-lg select-none z-10">
+                                        Principal
+                                    </div>
+
+                                    <!-- Botões aparecem com hover -->
                                     <div
-                                        class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        class="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
                                         <button @click="removeImage(image.id, index)" type="button"
-                                            class="p-1 bg-red-600 rounded-full text-white hover:bg-red-700 focus:outline-none">
-                                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            class="p-2 bg-red-600 rounded-full text-white hover:bg-red-700 focus:outline-none"
+                                            title="Excluir imagem">
+                                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                             </svg>
                                         </button>
-                                    </div>
-                                    <div v-if="index === 0"
-                                        class="absolute top-0 left-0 bg-blue-600 text-white text-xs px-2 py-1">
-                                        Principal
+
+                                        <button type="button" v-if="!isMainImage(image)" @click.prevent="setAsMainImage(image.id)"
+                                            class="bg-white text-[10px] px-2 py-0.5 rounded shadow hover:bg-gray-100"
+                                            title="Definir como principal">
+                                            Definir como principal
+                                        </button>
                                     </div>
                                 </div>
 
-                                <div class="border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center h-32 cursor-pointer hover:border-blue-500"
+                                <!-- Card para adicionar nova imagem -->
+                                <div class="border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center h-32 cursor-pointer hover:border-blue-500 transition-colors duration-300"
                                     @click="openFileInput">
                                     <div class="text-center p-4">
                                         <svg class="mx-auto h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24"
@@ -409,7 +422,7 @@ const product = reactive({
     length: '',
     width: '',
     height: '',
-    slug: '',    
+    slug: '',
 })
 
 async function saveProduct() {
@@ -476,30 +489,60 @@ async function handleFileUpload(event) {
         }));
 
         images.value.push(...newImages);
+
+        fileInputRef.value.value = ''
     } catch (error) {
         console.error('Erro no upload temporário', error)
     }
 }
 
 const removeImage = async (id, index) => {
-    if (!images.value || !images.value[index]) return;
+    const image = allImages.value[index];
+    if (!image) return;
 
-    const image = images.value[index];   
-    
     if (image.isTemporary) {
-        await imageService.removeTempImage(image.path);
-        images.value = images.value.filter((_, i) => i !== index);
+        try {
+            await imageService.removeTempImage(image.path)
+            images.value = images.value.filter((_, i) => i !== index)
+        } catch (err) {
+            console.error('Erro ao excluir imagem temporária:', err)
+        }
     } else {
+        try {
+            await imageService.deleteProductImage(id)
 
-        imageService.deleteProductImage(id).then(() => {
-            images.value = images.value.filter((_, i) => i !== index);
-        }).catch((err) => {
-            console.error('Erro ao excluir imagem:', err);
-        });
+            product.images = product.images.filter(img => img.id !== id)
+        } catch (err) {
+            console.error('Erro ao excluir imagem do produto:', err)
+        }
     }
 }
 
+const allImages = computed(() => {
+    const existing = product.images?.map(img => ({
+        id: img.id,
+        url: img.url,
+        isTemporary: false,
+        tempId: null,
+    })) || []
 
+    return [...existing, ...images.value]
+})
+
+const isMainImage = (img) => {
+    return product.main_image_id === img.id;
+};
+
+const setAsMainImage = async (imageId) => {
+    try {
+        await api.put(`/api/image/${product.id}/main-image`, {
+            image_id: imageId
+        });
+        product.main_image_id = imageId;
+    } catch (err) {
+        console.error('Erro ao definir imagem principal:', err);
+    }
+};
 
 onMounted(async () => {
     uploadSessionId.value = crypto.randomUUID()
@@ -518,10 +561,6 @@ onMounted(async () => {
             ...data,
             tags: formattedTags
         })
-        images.value = data.images.map(img => ({
-            ...img,
-            isTemporary: false
-        }))
     }
 })
 </script>

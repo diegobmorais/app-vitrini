@@ -9,6 +9,7 @@ class Product extends Model
 {
     use HasFactory;
     protected $fillable = [
+        'main_image_id',
         'name',
         'description',
         'sku',
@@ -66,4 +67,9 @@ class Product extends Model
     {
         return $this->hasMany(ProductImage::class);
     }
+    public function mainImage()
+    {
+        return $this->belongsTo(ProductImage::class,"main_image_id");
+    }
+    
 }

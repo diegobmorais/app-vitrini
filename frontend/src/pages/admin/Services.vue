@@ -74,8 +74,8 @@
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center">
                   <div class="h-10 w-10 flex-shrink-0">
-                    <img class="h-10 w-10 rounded-full object-cover"
-                      :src="service.image || '/placeholder.svg?height=100&width=100'" :alt="service.name">
+                    <img v-if="service.image_url" class="h-10 w-10 rounded-full object-cover"
+                    :src="`${baseURL}${service.image_url}` || '/placeholder.svg?height=100&width=100'" :alt="service.name">
                   </div>
                   <div class="ml-4">
                     <div class="text-sm font-medium text-gray-900">{{ service.name }}</div>
@@ -248,6 +248,8 @@
 import { useServiceStore } from '@/store/modules/useServiceStore'
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useToast } from 'vue-toastification'
+
+const baseURL = import.meta.env.VITE_API_BASE_URL;
 
 const serviceStore = useServiceStore();
 const toast = useToast()

@@ -14,6 +14,7 @@ export const useProductStore = defineStore('products', {
       minPrice: null,
       maxPrice: null,
       sort: "featured",
+
     },
     pagination: {
       currentPage: 1,
@@ -21,6 +22,8 @@ export const useProductStore = defineStore('products', {
       totalItems: 0,
       perPage: 12,
     },
+    uploadSessionId: null,
+    uploadedImages: [],
   }),
 
   getters: {
@@ -127,6 +130,31 @@ export const useProductStore = defineStore('products', {
       };
       this.pagination.currentPage = 1;
       this.fetchProducts();
-    }
+    },
+
+    async uploadTempImages(files) {
+      if (!this.uploadSessionId) {
+        this.uploadSessionId = crypto.randomUUID();
+      }
+
+      const formData = new FormData();
+      formData.append('upload_session_id', this.uploadSessionId);
+
+      for (const file of files) {
+        formData.append('images[]', file);
+      }
+
+      try {
+        const response = await api.post('/api/uploads/temp-images', formData);
+        this.uploadedImages.push(...response.data.images);
+      } catch (err) {
+        console.error('Erro ao enviar imagens:', err);
+      }
+    },
+
+    resetUploadSession() {
+      this.uploadSessionId = null;
+      this.uploadedImages = [];
+    },
   }
 });

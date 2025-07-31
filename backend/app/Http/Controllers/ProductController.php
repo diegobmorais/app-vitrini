@@ -6,7 +6,6 @@ use App\Http\Requests\StoreProductRequest;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Str;
 
 class ProductController extends Controller
@@ -73,7 +72,7 @@ class ProductController extends Controller
         }
         // Paginação
         $perPage = $request->input('per_page', 10);
-        $products = $query->with(['category', 'images'])
+        $products = $query->with(['category', 'images', 'mainImage'])
             ->paginate($perPage);
 
         return response()->json($products);
@@ -90,33 +89,11 @@ class ProductController extends Controller
             if (empty($data['slug'])) {
                 $data['slug'] = Str::slug($data['name']);
             }
-            $data['tags'] = $request->tags;
-
-            $uploadSessionId = $request->input('upload_session_id');
+            $data['tags'] = $request->tags;      
            
             $product = Product::create($data);
 
-            if ($uploadSessionId) {
-                $tempPath = "public/temp/$uploadSessionId";
-               
-                $files = Storage::disk('public')->files("temp/$uploadSessionId");
-
-                $imageRecords = [];
-
-                foreach ($files as $file) {                    
-                    $newPath = str_replace("temp/$uploadSessionId", "products/{$product->id}", $file);
-                    Storage::disk('public')->move($file, $newPath);
-
-                    $imageRecords[] = [
-                        'url' => Storage::url($newPath),
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ];
-                }                
-                $product->images()->createMany($imageRecords);
-             
-                Storage::deleteDirectory($tempPath);
-            }
+            app(ProductImageController::class)->moveImagesFromTemp($request->input('upload_session_id'), $product);
 
             return response()->json([
                 'message' => 'Product created sucessfully',
@@ -147,6 +124,8 @@ class ProductController extends Controller
             }
 
             $product->update($data);
+            
+            app(ProductImageController::class)->moveImagesFromTemp($request->input('upload_session_id'), $product);
 
             return response()->json([
                 'message' => 'Product updated sucessfully',

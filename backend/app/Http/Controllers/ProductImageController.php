@@ -11,7 +11,7 @@ class ProductImageController extends Controller
 {
     // Listar imagens de um produto
     public function index($productId)
-    {
+    {   
         $product = Product::with('images')->findOrFail($productId);
         return response()->json($product->images);
     }
@@ -70,7 +70,7 @@ class ProductImageController extends Controller
 
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $file) {
-                $path = $file->store("public/temp/{$sessionId}", 'public');
+                $path = $file->store("temp/{$sessionId}", 'public');
 
                 $uploadedImages[] = [
                     'url' => Storage::url($path),
@@ -86,9 +86,9 @@ class ProductImageController extends Controller
         ], 201);
     }
     public function deleteTemp(Request $request)
-    {   
+    {
         $tempPath = $request->query('temp_path');
-   
+
         if (!$tempPath) {
             return response()->json(['message' => 'temp_path é obrigatório'], 422);
         }
@@ -99,5 +99,46 @@ class ProductImageController extends Controller
         }
 
         return response()->json(['message' => 'Arquivo não encontrado'], 404);
+    }       
+    public function moveImagesFromTemp($uploadSessionId, Product $product)
+    {          
+        if (!$uploadSessionId) return;
+    
+        $tempPath = "temp/$uploadSessionId";
+        $files = Storage::disk('public')->files($tempPath);
+        $imageRecords = [];
+     
+        foreach ($files as $file) {
+            $newPath = str_replace($tempPath, "products/{$product->id}", $file);
+            Storage::disk('public')->move($file, $newPath);
+    
+            $imageRecords[] = [
+                'url' => Storage::url($newPath),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+        }
+    
+        if (!empty($imageRecords)) {
+            $product->images()->createMany($imageRecords);
+        }
+    
+        Storage::disk('public')->deleteDirectory("temp/{$uploadSessionId}");
     }
+    public function setMainImage(Request $request, $id)
+    {
+        $request->validate([
+            'image_id' => 'required|exists:product_images,id',
+        ]);
+
+        $product = Product::findOrFail($id);
+
+        $image = ProductImage::where('id', $request->image_id)->where('product_id', $id)->firstOrFail();
+
+        $product->main_image_id = $image->id;
+        $product->save();
+
+        return response()->json(['message' => 'Imagem principal definida com sucesso.']);
+    }
+    
 }
