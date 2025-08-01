@@ -28,13 +28,13 @@
                     d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
-              <input v-model="search" type="text" placeholder="Buscar produtos..."
+              <input v-model="filters.search" type="text" placeholder="Buscar produtos..."
                 class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
             </div>
           </div>
 
           <div class="flex flex-col sm:flex-row gap-4">
-            <select v-model="categoryFilter"
+            <select v-model="filters.category"
               class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
               <option value="">Todas as categorias</option>
               <option v-for="category in categories" :key="category.id" :value="category.id">
@@ -42,7 +42,7 @@
               </option>
             </select>
 
-            <select v-model="stockFilter"
+            <select v-model="filters.stock"
               class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
               <option value="">Todos os estoques</option>
               <option value="in_stock">Em estoque</option>
@@ -50,8 +50,9 @@
               <option value="out_of_stock">Sem estoque</option>
             </select>
 
-            <select v-model="sortBy"
+            <select v-model="filters.sort"
               class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+              <option value="featured">Todos os Filtros</option>
               <option value="name_asc">Nome (A-Z)</option>
               <option value="name_desc">Nome (Z-A)</option>
               <option value="price_asc">Preço (menor-maior)</option>
@@ -93,11 +94,12 @@
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="product in filteredProducts" :key="product.id">
+            <tr v-for="product in getProducts" :key="product.id">
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center">
                   <div class="flex-shrink-0 h-10 w-10">
-                    <img v-if="product.main_image" class="h-10 w-10 rounded-md object-cover" :src="`${baseURL}${product.main_image.url}`" :alt="product.name">
+                    <img v-if="product.main_image" class="h-10 w-10 rounded-md object-cover"
+                      :src="`${baseURL}${product.main_image.url}`" :alt="product.name">
                   </div>
                   <div class="ml-4">
                     <div class="text-sm font-medium text-gray-900">{{ product.name }}</div>
@@ -109,9 +111,9 @@
                 <div class="text-sm text-gray-900">{{ product.category.name }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">R$ {{ formatNumber(product.price) }}</div>
+                <div class="text-sm text-gray-900">R$ {{ Number(product.price) }}</div>
                 <div v-if="product.compare_price" class="text-xs text-gray-500 line-through">
-                  R$ {{ formatNumber(product.compare_price) }}
+                  R$ {{ Number(product.compare_price) }}
                 </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
@@ -137,7 +139,7 @@
             </tr>
 
             <!-- Estado vazio -->
-            <tr v-if="filteredProducts.length === 0">
+            <tr v-if="getProducts.length === 0">
               <td colspan="6" class="px-6 py-10 text-center">
                 <div class="text-gray-500">
                   <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -266,157 +268,118 @@
 </template>
 
 <script setup>
-import { useCategoryStore } from '@/store/modules/useCategoryStore';
-import { useProductStore } from '@/store/modules/useProductStore';
-import { ref, computed, onMounted, watch } from 'vue';
-import { useToast } from 'vue-toastification';
+import { useProductStore } from '@/store/modules/useProductStore'
+import { useCategoryStore } from '@/store/modules/useCategoryStore'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useToast } from 'vue-toastification'
+import { storeToRefs } from 'pinia'
 
 const baseURL = import.meta.env.VITE_API_BASE_URL;
 
-const productStore = useProductStore();
-const categoryStore = useCategoryStore();
+const productStore = useProductStore()
+const categoryStore = useCategoryStore()
 const toast = useToast()
 
-const search = ref('');
-const categoryFilter = ref('');
-const stockFilter = ref('');
-const sortBy = ref('name_asc');
-const currentPage = ref(1);
-const perPage = ref(10);
+const { filters, pagination, getProducts, totalPages } = storeToRefs(productStore);
 
-const showDeleteModal = ref(false);
-const productToDelete = ref(null);
+const showDeleteModal = ref(false)
+const productToDelete = ref(null)
 
-const products = computed(() => productStore.getProducts);
+const paginationStart = computed(() => productStore.pagination.from || 0)
+const paginationEnd = computed(() => productStore.pagination.to || 0)
+const totalProducts = computed(() => productStore.pagination.totalItems || 1)
+const currentPage = computed(() => productStore.pagination.currentPage || 1)
+
 const categories = computed(() => categoryStore.categories);
 
-const filteredProducts = computed(() => {
-  let filtered = [...products.value];
-
-  if (categoryFilter.value) {
-    filtered = filtered.filter(p => p.category_id === categoryFilter.value);
-  }
-
-  if (search.value) {
-    const s = search.value.toLowerCase();
-    filtered = filtered.filter(p =>
-      p.name.toLowerCase().includes(s) || p.sku.toLowerCase().includes(s)
-    );
-  }
-
-  if (stockFilter.value) {
-    switch (stockFilter.value) {
-      case 'in_stock':
-        filtered = filtered.filter(p => p.stock > 0);
-        break;
-      case 'low_stock':
-        filtered = filtered.filter(p => p.stock > 0 && p.stock <= 5);
-        break;
-      case 'out_of_stock':
-        filtered = filtered.filter(p => p.stock === 0);
-        break;
-    }
-  }
-
-  switch (sortBy.value) {
-    case 'name_asc':
-      filtered.sort((a, b) => a.name.localeCompare(b.name));
-      break;
-    case 'name_desc':
-      filtered.sort((a, b) => b.name.localeCompare(a.name));
-      break;
-    case 'price_asc':
-      filtered.sort((a, b) => a.price - b.price);
-      break;
-    case 'price_desc':
-      filtered.sort((a, b) => b.price - a.price);
-      break;
-    case 'stock_asc':
-      filtered.sort((a, b) => a.stock - b.stock);
-      break;
-    case 'stock_desc':
-      filtered.sort((a, b) => b.stock - a.stock);
-      break;
-    case 'created_at_desc':
-      filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-      break;
-    case 'created_at_asc':
-      filtered.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-      break;
-  }
-
-  return filtered;
-});
-
-const totalPages = computed(() => Math.ceil(filteredProducts.value.length / perPage.value));
-
-const paginatedProducts = computed(() => {
-  const start = (currentPage.value - 1) * perPage.value;
-  return filteredProducts.value.slice(start, start + perPage.value);
-});
-
-const paginationStart = computed(() => (currentPage.value - 1) * perPage.value + 1);
-const paginationEnd = computed(() => {
-  const end = currentPage.value * perPage.value;
-  return end > filteredProducts.value.length ? filteredProducts.value.length : end;
-});
-
 const displayedPages = computed(() => {
-  const pages = [];
-  const max = 5;
-  const total = totalPages.value;
+  const pages = []
+  const total = totalPages.value
+  const current = pagination.currentPage
+  const max = 5
 
   if (total <= max) {
-    for (let i = 1; i <= total; i++) pages.push(i);
-  } else if (currentPage.value <= 3) {
-    for (let i = 1; i <= 5; i++) pages.push(i);
-  } else if (currentPage.value >= total - 2) {
-    for (let i = total - 4; i <= total; i++) pages.push(i);
+    for (let i = 1; i <= total; i++) pages.push(i)
+  } else if (current <= 3) {
+    for (let i = 1; i <= 5; i++) pages.push(i)
+  } else if (current >= total - 2) {
+    for (let i = total - 4; i <= total; i++) pages.push(i)
   } else {
-    for (let i = currentPage.value - 2; i <= currentPage.value + 2; i++) pages.push(i);
+    for (let i = current - 2; i <= current + 2; i++) pages.push(i)
   }
 
-  return pages;
-});
+  return pages
+})
 
-const prevPage = () => { if (currentPage.value > 1) currentPage.value--; };
-const nextPage = () => { if (currentPage.value < totalPages.value) currentPage.value++; };
-const goToPage = (page) => { currentPage.value = page; };
+const prevPage = () => {
+  if (pagination.value.currentPage > 1) {
+    productStore.changePage(pagination.value.currentPage - 1)
+  }
+}
 
-const formatNumber = value => value.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-const getStatusText = status => ({ active: 'Ativo', draft: 'Rascunho', inactive: 'Inativo' }[status] || status);
+const nextPage = () => {
+  if (pagination.value.currentPage < totalPages.value) {
+    productStore.changePage(pagination.value.currentPage + 1)
+  }
+}
 
-const confirmDelete = product => {
-  productToDelete.value = product;
-  showDeleteModal.value = true;
-};
+const goToPage = (page) => {
+  productStore.changePage(page)
+}
+
+const confirmDelete = (product) => {
+  productToDelete.value = product
+  showDeleteModal.value = true
+}
 
 const cancelDelete = () => {
-  productToDelete.value = null;
-  showDeleteModal.value = false;
-};
+  productToDelete.value = null
+  showDeleteModal.value = false
+}
 
 const deleteProduct = async () => {
-  if (!productToDelete.value) return;
-
+  if (!productToDelete.value) return
   try {
-    await productStore.deleteProduct(productToDelete.value.id);
+    await productStore.deleteProduct(productToDelete.value.id)
     toast.success(`Produto "${productToDelete.value.name}" excluído com sucesso!`)
     productStore.fetchProducts()
   } catch (error) {
     toast.error(`Erro ao excluir produto: ${error.message}`)
   } finally {
-    showDeleteModal.value = false;
-    productToDelete.value = null;
+    showDeleteModal.value = false
+    productToDelete.value = null
   }
-};
+}
+function getStatusText(status) {
+  switch (status) {
+    case 'active':
+      return 'Ativo';
+    case 'inactive':
+      return 'Inativo';
+    case 'draft':
+      return 'Rascunho';
+    default:
+      return 'Desconhecido';
+  }
+}
 
-watch([search, categoryFilter, stockFilter, sortBy], () => {
-  currentPage.value = 1;
-});
+watch(
+  () => ({
+    search: filters.value.search,
+    category: filters.value.category,
+    stock: filters.value.stock,
+    sort: filters.value.sort
+  }),
+  () => {
+    productStore.changePage(1)
+    productStore.fetchProducts()
+  }
+)
 
-onMounted(() => {  
-  productStore.fetchProducts();
-  categoryStore.fetchCategories();
-});
+
+onMounted(async () => {
+  await productStore.fetchProducts()
+  await categoryStore.fetchCategories()
+
+})
 </script>

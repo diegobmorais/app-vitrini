@@ -31,9 +31,6 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     //Brands
     Route::apiResource('brands', BrandController::class);
-    //category
-    Route::apiResource('category', CategoryController::class);
-    Route::get('categories/featured', [CategoryController::class, 'categoriesFeatured']);
     //tags
     Route::apiResource('tags', TagController::class);
     //supplier
@@ -46,20 +43,24 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('address', AddressController::class);
     //customers
     Route::apiResource('customer', CustomerController::class);
-    //imagens
-    Route::prefix('products/{product}')->group(function () {
-        Route::get('images', [ProductImageController::class, 'index']);
-        Route::post('images', [ProductImageController::class, 'store']);
-    });
+    //image
     Route::delete('images/{id}', [ProductImageController::class, 'destroy']);
     Route::post('uploads/temp-images', [ProductImageController::class, 'uploadTempImages']);
     Route::delete('delete-temp-image', [ProductImageController::class, 'deleteTemp']);
     Route::put('/image/{id}/main-image', [ProductImageController::class, 'setMainImage']);
-    //service
-    Route::apiResource('service', ServiceController::class);
-    // product
-    Route::apiResource('product', ProductController::class);
-    Route::get('products/featured', [ProductController::class, 'productsFeatured']);
-    Route::get('product-detail/{slug}', [ProductController::class, 'showBySlug']);
 });
+//category
+Route::apiResource('category', CategoryController::class);
+Route::get('categories/featured', [CategoryController::class, 'categoriesFeatured']);
+//service
+Route::apiResource('service', ServiceController::class);
+// product
+Route::apiResource('product', ProductController::class);
+Route::get('products/featured', [ProductController::class, 'productsFeatured']);
+Route::get('product-detail/{slug}', [ProductController::class, 'showBySlug']);
 
+//imagens
+Route::prefix('products/{product}')->group(function () {
+    Route::get('images', [ProductImageController::class, 'index']);
+    Route::post('images', [ProductImageController::class, 'store']);
+});

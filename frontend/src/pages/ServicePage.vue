@@ -28,7 +28,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           <div v-for="service in filteredServices" :key="service.id"
             class="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:transform hover:scale-105">
-            <img :src="service.image" :alt="service.name" class="w-full h-48 object-cover">
+            <img :src="`${baseURL}${service.image_url}`" :alt="service.name" class="w-full h-48 object-cover">
             <div class="p-6">
               <div class="flex justify-between items-start mb-4">
                 <h3 class="text-xl font-bold text-gray-800">{{ service.name }}</h3>
@@ -212,6 +212,7 @@ import { useNotificationStore } from '@/store/modules/useNotificationStore'
 import { useCategoryStore } from '@/store/modules/useCategoryStore'
 import { useServiceStore } from '@/store/modules/useServiceStore'
 
+const baseURL = import.meta.env.VITE_API_BASE_URL;
 
 // Stores Pinia
 const notificationStore = useNotificationStore()
@@ -321,7 +322,7 @@ const bookService = async () => {
 }
 
 // Carregar dados na montagem
-onMounted(() => {
+onMounted(() => {   
   serviceStore.fetchServices()
   categoryStore.fetchCategories()
 })

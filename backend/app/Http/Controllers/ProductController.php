@@ -39,6 +39,20 @@ class ProductController extends Controller
             $query->where('price', '<=', $request->max_price);
         }
 
+        //filtro por estoque
+        if ($request->filled('stock')) {
+            switch ($request->stock) {
+                case 'in_stock':
+                    $query->where('stock', '>', 0);
+                    break;
+                case 'low_stock':
+                    $query->whereBetween('stock', [1, 5]);
+                    break;
+                case 'out_of_stock':
+                    $query->where('stock', '=', 0);
+                    break;
+            }
+        }
         // Ordenação
         if ($request->filled('sort')) {
             switch ($request->sort) {
