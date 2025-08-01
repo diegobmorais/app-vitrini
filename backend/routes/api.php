@@ -32,9 +32,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //Brands
     Route::apiResource('brands', BrandController::class);
     //tags
-    Route::apiResource('tags', TagController::class);
-    //supplier
-    Route::apiResource('suppliers', SupplierController::class);
+    Route::apiResource('tags', TagController::class);    
     //warehouse stock
     Route::apiResource('warehouses', WarehouseController::class);
     //stock movements
@@ -64,3 +62,7 @@ Route::prefix('products/{product}')->group(function () {
     Route::get('images', [ProductImageController::class, 'index']);
     Route::post('images', [ProductImageController::class, 'store']);
 });
+
+
+ //supplier
+ Route::apiResource('suppliers', SupplierController::class);

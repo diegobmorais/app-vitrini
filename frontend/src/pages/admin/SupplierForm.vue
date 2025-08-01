@@ -1,8 +1,14 @@
 <template>
   <div>
-    <div class="mb-6">
+    <div class="flex items-center justify-between mb-6">
       <h1 class="text-2xl font-bold text-gray-900">{{ isEditing ? 'Editar Fornecedor' : 'Novo Fornecedor' }}</h1>
-      <p class="text-gray-600">{{ isEditing ? 'Atualize as informações do fornecedor' : 'Cadastre um novo fornecedor no sistema' }}</p>
+      <router-link to="/painel-administrador/fornecedores"
+        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+        <svg class="-ml-1 mr-2 h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        Voltar
+      </router-link>
     </div>
 
     <form @submit.prevent="saveSupplier" class="bg-white rounded-lg shadow overflow-hidden">
@@ -10,15 +16,22 @@
         <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
           <div class="sm:col-span-3">
             <label for="name" class="block text-sm font-medium text-gray-700">Nome da Empresa</label>
-            <input id="name" v-model="supplier.name" type="text" required
+            <input id="name" v-model="supplier.company_name" type="text" required
               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" />
           </div>
-
+          <p v-if="formErrors.company_name"
+            class="mt-1 text-sm text-red-600 bg-red-100 border border-red-300 px-3 py-2 rounded-md shadow-sm">
+            <span class="font-semibold">Erro:</span> {{ formErrors.company_name[0] }}
+          </p>
           <div class="sm:col-span-3">
             <label for="cnpj" class="block text-sm font-medium text-gray-700">CNPJ</label>
             <input id="cnpj" v-model="supplier.cnpj" type="text" required
               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" />
           </div>
+          <p v-if="formErrors.cnpj"
+            class="mt-1 text-sm text-red-600 bg-red-100 border border-red-300 px-3 py-2 rounded-md shadow-sm">
+            <span class="font-semibold">Erro:</span> {{ formErrors.cnpj[0] }}
+          </p>
 
           <div class="sm:col-span-3">
             <label for="contact_name" class="block text-sm font-medium text-gray-700">Nome do Contato</label>
@@ -37,7 +50,10 @@
             <input id="phone" v-model="supplier.phone" type="text" required
               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" />
           </div>
-
+          <p v-if="formErrors.phone"
+            class="mt-1 text-sm text-red-600 bg-red-100 border border-red-300 px-3 py-2 rounded-md shadow-sm">
+            <span class="font-semibold">Erro:</span> {{ formErrors.phone[0] }}
+          </p>
           <div class="sm:col-span-3">
             <label for="website" class="block text-sm font-medium text-gray-700">Website</label>
             <input id="website" v-model="supplier.website" type="url"
@@ -63,8 +79,8 @@
           </div>
 
           <div class="sm:col-span-2">
-            <label for="zip" class="block text-sm font-medium text-gray-700">CEP</label>
-            <input id="zip" v-model="supplier.zip" type="text" required
+            <label for="zipcode" class="block text-sm font-medium text-gray-700">CEP</label>
+            <input id="zipcode" v-model="supplier.zipcode" type="text" required
               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" />
           </div>
 
@@ -74,7 +90,7 @@
               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"></textarea>
           </div>
 
-          <div class="sm:col-span-6">
+          <!-- <div class="sm:col-span-6">
             <label class="block text-sm font-medium text-gray-700">Logo</label>
             <div class="mt-1 flex items-center">
               <div v-if="supplier.logo" class="flex-shrink-0 h-12 w-12 mr-3">
@@ -89,18 +105,22 @@
                 Alterar
               </button>
             </div>
-          </div>
+          </div> -->
 
           <div class="sm:col-span-6">
             <div class="flex items-start">
               <div class="flex items-center h-5">
-                <input id="active" v-model="supplier.active" type="checkbox"
+                <input id="status" v-model="supplier.status" type="checkbox"
                   class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded" />
               </div>
               <div class="ml-3 text-sm">
-                <label for="active" class="font-medium text-gray-700">Ativo</label>
+                <label for="status" class="font-medium text-gray-700">Ativo</label>
                 <p class="text-gray-500">Fornecedores inativos não aparecerão nas listagens de compra.</p>
               </div>
+              <p v-if="formErrors.status"
+                class="mt-1 text-sm text-red-600 bg-red-100 border border-red-300 px-3 py-2 rounded-md shadow-sm">
+                <span class="font-semibold">Erro:</span> {{ formErrors.status[0] }}
+              </p>
             </div>
           </div>
         </div>
@@ -121,18 +141,19 @@
 </template>
 
 <script setup>
-import { useNotificationStore } from '@/store/modules/useNotificationStore'
+import { useSupplierStore } from '@/store/modules/useSupplierStore'
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useToast } from 'vue-toastification'
 
-
+const toast = useToast()
 const route = useRoute()
 const router = useRouter()
-const notificationsStore = useNotificationStore()
-
+const suppliersStore = useSupplierStore()
+const formErrors = ref({})
 const supplier = ref({
   id: null,
-  name: '',
+  company_name: '',
   cnpj: '',
   contact_name: '',
   email: '',
@@ -141,65 +162,52 @@ const supplier = ref({
   address: '',
   city: '',
   state: '',
-  zip: '',
+  zipcode: '',
   notes: '',
-  logo: null,
   active: true
 })
-
-const loading = ref(false)
-
 const isEditing = computed(() => !!route.params.id)
+const supplierStore = useSupplierStore()
 
-const fetchSupplier = (id) => {
-  loading.value = true
-  // Simulação de chamada à API
-  setTimeout(() => {
-    supplier.value = {
-      id: 1,
-      name: 'PetFood Distribuidora',
-      cnpj: '12.345.678/0001-90',
-      contact_name: 'João Silva',
-      email: 'joao@petfood.com',
-      phone: '(11) 98765-4321',
-      website: 'https://www.petfood.com',
-      address: 'Rua das Flores, 123',
-      city: 'São Paulo',
-      state: 'SP',
-      zip: '01234-567',
-      notes: 'Fornecedor principal de ração para cães e gatos.',
-      logo: null,
-      active: true
+async function saveSupplier() {
+  formErrors.value = {}
+
+  const payload = {
+    ...supplier,
+  }
+  try {
+    if (isEditing.value) {
+      await supplierStore.updateSupplier({
+        id: supplier.value.id,
+        data: payload
+      })
+      toast.success(`Produto "${supplier.value.company_name}" atualizado com sucesso!`)
+    } else {
+      await supplierStore.createSupplier(payload)
+      toast.success(`Produto "${supplier.value.company_name}" criado com sucesso!`)
     }
-    loading.value = false
-  }, 500)
+    router.push('/painel-administrador/fornecedores')
+  } catch (error) {
+    console.error('Erro capturado:', error)
+    if (error.response?.status === 422) {
+      formErrors.value = error.response.data.errors
+      toast.error('Por favor, corrija os erros do formulário.')
+    } else {
+      toast.error('Erro ao salvar produto!')
+    }
+  }
 }
 
-const getInitials = (name) => {
-  return name
-    .split(' ')
-    .map(word => word[0])
-    .join('')
-    .toUpperCase()
-    .substring(0, 2)
-}
+onMounted(async () => {
+  suppliersStore.fetchSuppliers()
 
-const saveSupplier = () => {
-  loading.value = true
-  // Simulação de chamada à API
-  setTimeout(() => {
-    loading.value = false
-    notificationsStore.add({
-      type: 'success',
-      message: `Fornecedor ${isEditing.value ? 'atualizado' : 'cadastrado'} com sucesso!`
-    })
-    router.push('/admin/suppliers')
-  }, 500)
-}
-
-onMounted(() => {
-  if (isEditing.value) {
-    fetchSupplier(route.params.id)
+  if (route.params.id) {
+    isEditing.value = true
+    const data = await suppliersStore.fetchSupplier(route.params.id)
+    if (data) {
+      supplier.value = { ...data }
+    }
   }
 })
+
 </script>

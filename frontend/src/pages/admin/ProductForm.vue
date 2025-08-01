@@ -449,12 +449,10 @@ async function saveProduct() {
         router.push('/painel-administrador/produtos')
     } catch (error) {
         console.error('Erro capturado:', error)
-        if (error.response?.status === 422) {
-            // Erros de validação
+        if (error.response?.status === 422) {          
             formErrors.value = error.response.data.errors
             toast.error('Por favor, corrija os erros do formulário.')
-        } else {
-            // Outros erros
+        } else {           
             toast.error('Erro ao salvar produto!')
         }
     } finally {

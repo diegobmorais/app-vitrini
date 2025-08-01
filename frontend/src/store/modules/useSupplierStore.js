@@ -1,57 +1,83 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, reactive } from 'vue'
 import api from '@/main'
 
 export const useSupplierStore = defineStore('suppliers', () => {
   // State
   const suppliers = ref([])
+  const supplier = ref()
   const loading = ref(false)
   const error = ref(null)
 
   // Getters (computed)
-  const allSuppliers = computed(() => suppliers.value)
+  const getSupplier = computed(() => supplier.value)
+  const getSuppliers = computed(() => suppliers.value)
   const activeSuppliers = computed(() => suppliers.value.filter(supplier => supplier.active))
   const isLoading = computed(() => loading.value)
   const hasError = computed(() => error.value !== null)
+  const getFilters = computed(() => filters)
+  const filters = reactive({   
+    search: "",  
+    status: "all",
+  })
+  const pagination = ref({
+    currentPage: 1,
+    perPage: 10,
+    total: 0,
+    lastPage: 1,
+  })
+
+  const filteredSuppliers = computed(() => {
+    let result = suppliers.value
+
+    if (status.value === 'active') {
+      result = result.filter(supplier => supplier.active)
+    } else if (status.value === 'inactive') {
+      result = result.filter(supplier => !supplier.active)
+    }
+
+    if (filters.value) {
+      const searchLower = filters.value.toLowerCase()
+      result = result.filter(supplier =>
+        supplier.name.toLowerCase().includes(searchLower) ||
+        supplier.cnpj.toLowerCase().includes(searchLower) ||
+        supplier.contact_name.toLowerCase().includes(searchLower) ||
+        supplier.email.toLowerCase().includes(searchLower)
+      )
+    }
+
+    return result
+  })
 
   // Getter com parâmetro: buscar supplier por id
   function supplierById(id) {
-    return suppliers.value.find(supplier => supplier.id === id)
+    return supplier.value.find(supplier => supplier.id === id)
   }
 
   // Actions
+  async function fetchSupplier(id) {
+    try {
+      const response = await api.get(`api/suppliers/${id}`)
+      supplier.value = response.data
+      return response.data
+    } catch (error) {
+      console.error('Error fetching product:', error.response?.data)
+    }
+  }
   async function fetchSuppliers() {
     loading.value = true
     try {
-      const response = await api.get('api/suppliers')
-      suppliers.value = response.data
-      error.value = null
-      return response.data
-    } catch (err) {
-      error.value = err.message
-    } finally {
-      loading.value = false
-    }
-  }
-
-  async function saveSupplier(supplier) {
-    loading.value = true
-    try {
-      // Simulação delay para API
-      await new Promise(resolve => setTimeout(resolve, 500))
-
-      if (supplier.id) {
-        // Atualizar fornecedor existente
-        const index = suppliers.value.findIndex(s => s.id === supplier.id)
-        if (index !== -1) {
-          suppliers.value.splice(index, 1, supplier)
+      const response = await api.get('api/suppliers', {
+        params: {
+          ...filters,
+          page: pagination.value.currentPage,
+          per_page: pagination.value.perPage,         
         }
-      } else {
-        // Criar novo fornecedor
-        const newId = Date.now()
-        suppliers.value.push({ ...supplier, id: newId })
-      }
-      error.value = null
+      })
+      suppliers.value = response.data.data
+      pagination.value.total = response.total
+      pagination.value.lastPage = response.last_page
+      pagination.value.currentPage = response.current_page
     } catch (err) {
       error.value = err.message
     } finally {
@@ -59,37 +85,62 @@ export const useSupplierStore = defineStore('suppliers', () => {
     }
   }
 
+  async function createSupplier(payload) {
+    try {
+      const response = await api.post("api/suppliers", payload)
+      return response.data
+    } catch (error) {
+      console.error('Erro ao cria fornecedor', error.response?.data)
+    }
+  }
+
+  async function updateSupplier({ id, payload }) {
+    try {
+      const response = await api.put(`api/suppliers/${id}`, payload)
+      return response.data
+    } catch (error) {
+      console.error('Erro ao atualizar fornecedor', error.response?.data)
+    }
+  }
   async function deleteSupplier(id) {
     loading.value = true
-    try {
-      // Simulação delay para API
-      await new Promise(resolve => setTimeout(resolve, 500))
+    const response = await api.delete(`api/suppliers/${id}`)
 
-      suppliers.value = suppliers.value.filter(s => s.id !== id)
-      error.value = null
-    } catch (err) {
-      error.value = err.message
-    } finally {
-      loading.value = false
+    return response
+  }
+
+  function changePage(page) {
+    if (page >= 1 && page <= pagination.value.lastPage) {
+      pagination.value.currentPage = page
+      fetchSuppliers()
     }
   }
+
 
   return {
     // state
     suppliers,
     loading,
     error,
+    pagination,
+    filters,
 
     // getters
-    allSuppliers,
+    getFilters,
+    getSupplier,
+    filteredSuppliers,
+    getSuppliers,
     activeSuppliers,
     isLoading,
     hasError,
-    supplierById,
 
     // actions
     fetchSuppliers,
-    saveSupplier,
+    fetchSupplier,
+    createSupplier,
     deleteSupplier,
+    updateSupplier,
+    supplierById,
+    changePage,
   }
 })

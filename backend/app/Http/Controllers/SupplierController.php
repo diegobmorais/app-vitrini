@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreSupplierRequest;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class SupplierController extends Controller
@@ -11,22 +13,41 @@ class SupplierController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $suppliers = Supplier::all();
+        $query = Supplier::query();
 
-        return response()->json($suppliers);
+        if ($request->filled('status') && $request->status !== 'all') {
+            $status = $request->status === 'active' ? 1 : 0;
+            $query->where('status', $status);
+        }
+
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('company_name', 'like', '%' . $request->search . '%')
+                    ->orWhere('cnpj', 'like', '%' . $request->search . '%')
+                    ->orWhere('contact_name', 'like', '%' . $request->search . '%')
+                    ->orWhere('email', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        $perPage = $request->input('per_page', 10);
+
+        return response()->json(
+            $query->paginate($perPage)
+        );
     }
+
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreSupplierRequest $request)
     {
-        $data = $request->validated();
-
-        if ($request->hasFile('logo')) {
-            $data['logo'] = $request->file('logo')->store('suppliers/logos', 'public');
+        if (Auth::user()->role_id !== 1) {
+            return response()->json(['message' => 'Access Danied'], 403);
         }
+
+        $data = $request->validated();
 
         $supplier = Supplier::create($data);
 
@@ -46,17 +67,13 @@ class SupplierController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Supplier $supplier)
-    {
-        $data = $request->validated();
-
-        if ($request->hasFile('logo')) {
-            if ($supplier->logo && Storage::disk('public')->exists($supplier->logo)) {
-                Storage::disk('public')->delete($supplier->logo);
-            }
-
-            $data['logo'] = $request->file('logo')->store('suppliers/logos', 'public');
+    public function update(StoreSupplierRequest $request, Supplier $supplier)
+    {   dd(Auth::user());
+        if (Auth::user()->role_id !== 1) {
+            return response()->json(['message' => 'Access Danied'], 403);
         }
+
+        $data = $request->validated();
 
         $supplier->update($data);
 
