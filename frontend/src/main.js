@@ -10,7 +10,7 @@ import 'vue-toastification/dist/index.css'
 
 // Configuração global do Axios
 axios.defaults.withCredentials = true
-axios.defaults.baseURL = "http://localhost:8000/"
+axios.defaults.baseURL = "http://localhost/"
 let isLoggingOut = false
 // Interceptor para tratamento de erros
 axios.interceptors.response.use(

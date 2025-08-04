@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: laravel-app
+    container_name: petshop-backend
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./backend:/var/www/html
+    depends_on:
+      - mysql
+
+  vue:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: vue-frontend
+    container_name: petshop-frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run dev
+
+  nginx:
+    image: nginx:alpine
+    container_name: petshop-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./backend:/var/www/html
+    depends_on:
+      - app
+
+  mysql:
+    image: mysql:8
+    container_name: petshop-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: db_vitrine_petshop
+      MYSQL_ROOT_PASSWORD: root     
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:
