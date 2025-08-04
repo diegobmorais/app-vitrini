@@ -21,8 +21,7 @@ return new class extends Migration
             $table->decimal('compare_price', 10, 2)->nullable();
             $table->decimal('cost', 10, 2)->nullable();
             $table->string('tax_class')->nullable();
-            $table->boolean('track_inventory')->default(true);
-            $table->integer('stock')->default(0);
+            $table->boolean('track_inventory')->default(true);          
             $table->integer('low_stock_threshold')->default(5);
             $table->boolean('allow_backorders')->default(false);
             $table->enum('status', ['active', 'inactive'])->default('active');

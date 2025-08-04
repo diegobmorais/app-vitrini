@@ -40,7 +40,7 @@ class StoreProductRequest extends FormRequest
             'cost' => 'nullable|numeric|min:0',
             'tax_class' => 'nullable|string|in:default,standard,reduced,zero',
             'track_inventory' => 'required|boolean',
-            'stock' => 'required_if:track_inventory,true|integer|min:0',
+            'stock' => 'required_if:track_inventory,true|integer|min:1',
             'supplier_id' => 'nullable|integer|exists:suppliers,id',
             'low_stock_threshold' => 'nullable|integer|min:0',
             'allow_backorders' => 'nullable|boolean',

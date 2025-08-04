@@ -7,20 +7,15 @@ use Illuminate\Database\Eloquent\Model;
 class StockMovement extends Model
 {
     protected $fillable = [
-        'product_id',
-        'warehouse_id',
+        'product_id',       
         'type',
         'quantity',
         'description'
     ];
+    const STOCK_INITIAL = "Estoque inicial";
 
     public function product()
     {
         return $this->belongsTo(Product::class);
-    }
-
-    public function warehouse()
-    {
-        return $this->belongsTo(Warehouse::class);
     }
 }

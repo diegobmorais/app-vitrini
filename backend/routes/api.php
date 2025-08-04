@@ -12,7 +12,6 @@ use App\Http\Controllers\StockMovementController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\WarehouseController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -32,11 +31,12 @@ Route::middleware('auth:sanctum')->group(function () {
     //Brands
     Route::apiResource('brands', BrandController::class);
     //tags
-    Route::apiResource('tags', TagController::class);    
-    //warehouse stock
-    Route::apiResource('warehouses', WarehouseController::class);
+    Route::apiResource('tags', TagController::class);
     //stock movements
-    Route::apiResource('stock-movements', StockMovementController::class)->except(['update']);
+    Route::apiResource('stock', StockMovementController::class);
+    Route::get('/stock/{id}/movements', [StockMovementController::class, 'movements']);
+    //products
+    Route::apiResource('product', ProductController::class)->except(['index']);
     //address
     Route::apiResource('address', AddressController::class);
     //customers
@@ -53,7 +53,7 @@ Route::get('categories/featured', [CategoryController::class, 'categoriesFeature
 //service
 Route::apiResource('service', ServiceController::class);
 // product
-Route::apiResource('product', ProductController::class);
+Route::get('product', [ProductController::class, 'index']);
 Route::get('products/featured', [ProductController::class, 'productsFeatured']);
 Route::get('product-detail/{slug}', [ProductController::class, 'showBySlug']);
 
@@ -64,5 +64,5 @@ Route::prefix('products/{product}')->group(function () {
 });
 
 
- //supplier
- Route::apiResource('suppliers', SupplierController::class);
+//supplier
+Route::apiResource('suppliers', SupplierController::class);

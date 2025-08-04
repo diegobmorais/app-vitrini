@@ -10,6 +10,98 @@
         Ajustar Estoque
       </button>
     </div>
+    <!-- Resumo do Estoque -->
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="bg-white overflow-hidden shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+          <div class="flex items-center">
+            <div class="flex-shrink-0 bg-primary-100 rounded-md p-3">
+              <svg class="h-6 w-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
+            </div>
+            <div class="ml-5 w-0 flex-1">
+              <dt class="text-sm font-medium text-gray-500 truncate">
+                Total de Produtos
+              </dt>
+              <dd class="flex items-baseline">
+                <div class="text-2xl font-semibold text-gray-900">
+                  {{ products.length }}
+                </div>
+              </dd>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white overflow-hidden shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+          <div class="flex items-center">
+            <div class="flex-shrink-0 bg-green-100 rounded-md p-3">
+              <svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <div class="ml-5 w-0 flex-1">
+              <dt class="text-sm font-medium text-gray-500 truncate">
+                Produtos em Estoque
+              </dt>
+              <dd class="flex items-baseline">
+                <div class="text-2xl font-semibold text-gray-900">
+                  {{ inStockCount }}
+                </div>
+              </dd>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white overflow-hidden shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+          <div class="flex items-center">
+            <div class="flex-shrink-0 bg-yellow-100 rounded-md p-3">
+              <svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <div class="ml-5 w-0 flex-1">
+              <dt class="text-sm font-medium text-gray-500 truncate">
+                Estoque Baixo
+              </dt>
+              <dd class="flex items-baseline">
+                <div class="text-2xl font-semibold text-gray-900">
+                  {{ lowStockCount }}
+                </div>
+              </dd>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white overflow-hidden shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+          <div class="flex items-center">
+            <div class="flex-shrink-0 bg-red-100 rounded-md p-3">
+              <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </div>
+            <div class="ml-5 w-0 flex-1">
+              <dt class="text-sm font-medium text-gray-500 truncate">
+                Sem Estoque
+              </dt>
+              <dd class="flex items-baseline">
+                <div class="text-2xl font-semibold text-gray-900">
+                  {{ outOfStockCount }}
+                </div>
+              </dd>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <div class="bg-white rounded-lg shadow overflow-hidden mb-6">
       <div class="p-4 border-b border-gray-200">
@@ -125,222 +217,29 @@
         </div>
       </div>
     </div>
-
-    <!-- Resumo do Estoque -->
-    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-      <div class="bg-white overflow-hidden shadow rounded-lg">
-        <div class="px-4 py-5 sm:p-6">
-          <div class="flex items-center">
-            <div class="flex-shrink-0 bg-primary-100 rounded-md p-3">
-              <svg class="h-6 w-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-              </svg>
-            </div>
-            <div class="ml-5 w-0 flex-1">
-              <dt class="text-sm font-medium text-gray-500 truncate">
-                Total de Produtos
-              </dt>
-              <dd class="flex items-baseline">
-                <div class="text-2xl font-semibold text-gray-900">
-                  {{ products.length }}
-                </div>
-              </dd>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-white overflow-hidden shadow rounded-lg">
-        <div class="px-4 py-5 sm:p-6">
-          <div class="flex items-center">
-            <div class="flex-shrink-0 bg-green-100 rounded-md p-3">
-              <svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <div class="ml-5 w-0 flex-1">
-              <dt class="text-sm font-medium text-gray-500 truncate">
-                Produtos em Estoque
-              </dt>
-              <dd class="flex items-baseline">
-                <div class="text-2xl font-semibold text-gray-900">
-                  {{ inStockCount }}
-                </div>
-              </dd>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-white overflow-hidden shadow rounded-lg">
-        <div class="px-4 py-5 sm:p-6">
-          <div class="flex items-center">
-            <div class="flex-shrink-0 bg-yellow-100 rounded-md p-3">
-              <svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-            </div>
-            <div class="ml-5 w-0 flex-1">
-              <dt class="text-sm font-medium text-gray-500 truncate">
-                Estoque Baixo
-              </dt>
-              <dd class="flex items-baseline">
-                <div class="text-2xl font-semibold text-gray-900">
-                  {{ lowStockCount }}
-                </div>
-              </dd>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-white overflow-hidden shadow rounded-lg">
-        <div class="px-4 py-5 sm:p-6">
-          <div class="flex items-center">
-            <div class="flex-shrink-0 bg-red-100 rounded-md p-3">
-              <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </div>
-            <div class="ml-5 w-0 flex-1">
-              <dt class="text-sm font-medium text-gray-500 truncate">
-                Sem Estoque
-              </dt>
-              <dd class="flex items-baseline">
-                <div class="text-2xl font-semibold text-gray-900">
-                  {{ outOfStockCount }}
-                </div>
-              </dd>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Modal de Ajuste de Estoque -->
-    <div v-if="showAdjustmentModal" class="fixed inset-0 z-10 overflow-y-auto">
-      <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-          <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-        </div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div
-          class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-          <form @submit.prevent="saveStockAdjustment">
-            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-              <div class="mb-4">
-                <h3 class="text-lg leading-6 font-medium text-gray-900">
-                  Ajuste de Estoque
-                </h3>
-                <p v-if="selectedProduct" class="mt-1 text-sm text-gray-500">
-                  {{ selectedProduct.name }} (SKU: {{ selectedProduct.sku }})
-                </p>
-              </div>
-              <div class="space-y-4">
-                <div v-if="!selectedProduct">
-                  <label for="product" class="block text-sm font-medium text-gray-700">Produto</label>
-                  <select id="product" v-model="adjustmentForm.product_id" required
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
-                    <option value="">Selecione um produto</option>
-                    <option v-for="product in products" :key="product.id" :value="product.id">
-                      {{ product.name }} ({{ product.sku }})
-                    </option>
-                  </select>
-                </div>
-
-                <div>
-                  <label for="current_stock" class="block text-sm font-medium text-gray-700">Estoque Atual</label>
-                  <input id="current_stock" :value="currentStock" type="number" disabled
-                    class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm" />
-                </div>
-
-                <div>
-                  <label for="adjustment_type" class="block text-sm font-medium text-gray-700">Tipo de Ajuste</label>
-                  <select id="adjustment_type" v-model="adjustmentForm.type" required
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
-                    <option value="add">Adicionar</option>
-                    <option value="remove">Remover</option>
-                    <option value="set">Definir Valor</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label for="quantity" class="block text-sm font-medium text-gray-700">Quantidade</label>
-                  <input id="quantity" v-model.number="adjustmentForm.quantity" type="number" min="1" required
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" />
-                </div>
-
-                <div>
-                  <label for="reason" class="block text-sm font-medium text-gray-700">Motivo</label>
-                  <select id="reason" v-model="adjustmentForm.reason" required
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
-                    <option value="">Selecione um motivo</option>
-                    <option value="purchase">Compra</option>
-                    <option value="sale">Venda</option>
-                    <option value="return">Devolução</option>
-                    <option value="loss">Perda/Dano</option>
-                    <option value="correction">Correção de Inventário</option>
-                    <option value="other">Outro</option>
-                  </select>
-                </div>
-
-                <div v-if="adjustmentForm.reason === 'other'">
-                  <label for="notes" class="block text-sm font-medium text-gray-700">Observações</label>
-                  <textarea id="notes" v-model="adjustmentForm.notes" rows="2"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"></textarea>
-                </div>
-
-                <div>
-                  <label for="new_stock" class="block text-sm font-medium text-gray-700">Novo Estoque</label>
-                  <input id="new_stock" :value="newStockPreview" type="number" disabled
-                    class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm" />
-                </div>
-              </div>
-            </div>
-            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-              <button type="submit"
-                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary-600 text-base font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:ml-3 sm:w-auto sm:text-sm">
-                Salvar
-              </button>
-              <button type="button" @click="showAdjustmentModal = false"
-                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                Cancelar
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-
-    <!-- Modal de Histórico de Estoque -->
-    <div v-if="showHistoryModal" class="fixed inset-0 z-10 overflow-y-auto">
-      <!-- Conteúdo do modal de histórico -->
-    </div>
+    <!-- Modal de ajuste -->
+    <AjustmentStockModal v-if="showAdjustmentModal" :show-adjustment-modal="showAdjustmentModal" :selected-product="selectedProduct"
+      @close="closeAdjustmentModal" @saved="onAdjustmentSaved" />   
   </div>
 </template>
 
 <script setup>
+import AjustmentStockModal from '@/components/modals/AjustmentStockModal.vue'
+import { useCategoryStore } from '@/store/modules/useCategoryStore'
+import { useInventoryStore } from '@/store/modules/useInventoryStore'
+import { useProductStore } from '@/store/modules/useProductStore'
 import { ref, computed, onMounted } from 'vue'
+
+const productStore = useProductStore()
+const categoryStore = useCategoryStore()
 
 const products = ref([])
 const categories = ref([])
 const search = ref('')
 const categoryFilter = ref('')
 const stockFilter = ref('all')
-const loading = ref(false)
 const showAdjustmentModal = ref(false)
-const showHistoryModal = ref(false)
 const selectedProduct = ref(null)
-const adjustmentForm = ref({
-  product_id: '',
-  type: 'add',
-  quantity: 1,
-  reason: '',
-  notes: ''
-})
-const stockHistory = ref([])
 
 const filteredProducts = computed(() => {
   let result = products.value
@@ -371,88 +270,19 @@ const inStockCount = computed(() => products.value.filter(product => product.sto
 const lowStockCount = computed(() => products.value.filter(product => product.stock > 0 && product.stock <= product.min_stock).length)
 const outOfStockCount = computed(() => products.value.filter(product => product.stock === 0).length)
 
-const currentStock = computed(() => {
-  if (!selectedProduct.value && !adjustmentForm.value.product_id) return 0
-  const productId = selectedProduct.value ? selectedProduct.value.id : adjustmentForm.value.product_id
-  const product = products.value.find(p => p.id === productId)
-  return product ? product.stock : 0
-})
 
-const newStockPreview = computed(() => {
-  const current = currentStock.value
-  const quantity = adjustmentForm.value.quantity || 0
-
-  if (adjustmentForm.value.type === 'add') {
-    return current + quantity
-  } else if (adjustmentForm.value.type === 'remove') {
-    return Math.max(0, current - quantity)
-  } else if (adjustmentForm.value.type === 'set') {
-    return quantity
-  }
-  return current
-})
-
-function fetchProducts() {
-  loading.value = true
-  setTimeout(() => {
-    products.value = [
-      {
-        id: 1,
-        name: 'Ração Premium para Cães',
-        sku: 'RAC-001',
-        category_id: '1',
-        brand: 'PetFood',
-        stock: 45,
-        min_stock: 10,
-        last_updated: '2023-06-15T10:30:00',
-        image: null
-      },
-      {
-        id: 2,
-        name: 'Ração Premium para Gatos',
-        sku: 'RAC-002',
-        category_id: '1',
-        brand: 'PetFood',
-        stock: 8,
-        min_stock: 10,
-        last_updated: '2023-06-14T14:20:00',
-        image: null
-      },
-      {
-        id: 3,
-        name: 'Brinquedo Interativo para Cães',
-        sku: 'BRI-001',
-        category_id: '2',
-        brand: 'PetToys',
-        stock: 0,
-        min_stock: 5,
-        last_updated: '2023-06-10T09:15:00',
-        image: null
-      },
-      {
-        id: 4,
-        name: 'Coleira Ajustável',
-        sku: 'ACE-001',
-        category_id: '3',
-        brand: 'PetCare',
-        stock: 25,
-        min_stock: 8,
-        last_updated: '2023-06-12T16:45:00',
-        image: null
-      }
-    ]
-    loading.value = false
-  }, 500)
+// Abre o modal
+const openAdjustmentModal = (filteredProducts) => {  
+  selectedProduct.value = filteredProducts
+  showAdjustmentModal.value = true
 }
-
-function fetchCategories() {
-  setTimeout(() => {
-    categories.value = [
-      { id: '1', name: 'Alimentos' },
-      { id: '2', name: 'Brinquedos' },
-      { id: '3', name: 'Acessórios' }
-    ]
-  }, 500)
+const closeAdjustmentModal = () => {
+  showAdjustmentModal.value = false
+  selectedProduct.value = null
+}
+// Recarrega o estoque
+const onAdjustmentSaved = () => {  
+  useInventoryStore.fetchStock()
 }
 
 function getCategoryName(categoryId) {
@@ -481,95 +311,10 @@ function formatDate(dateString) {
   }).format(date)
 }
 
-function openAdjustmentModal(product = null) {
-  selectedProduct.value = product
-  adjustmentForm.value = {
-    product_id: product ? product.id : '',
-    type: 'add',
-    quantity: 1,
-    reason: '',
-    notes: ''
-  }
-  showAdjustmentModal.value = true
-}
 
-function viewHistory(productId) {
-  fetchStockHistory(productId)
-  showHistoryModal.value = true
-}
-
-function fetchStockHistory(productId) {
-  setTimeout(() => {
-    stockHistory.value = [
-      {
-        id: 1,
-        product_id: productId,
-        type: 'add',
-        quantity: 10,
-        reason: 'purchase',
-        notes: '',
-        previous_stock: 35,
-        new_stock: 45,
-        created_at: '2023-06-15T10:30:00',
-        user: 'Admin'
-      },
-      {
-        id: 2,
-        product_id: productId,
-        type: 'remove',
-        quantity: 5,
-        reason: 'sale',
-        notes: '',
-        previous_stock: 40,
-        new_stock: 35,
-        created_at: '2023-06-14T14:20:00',
-        user: 'Admin'
-      }
-    ]
-  }, 500)
-}
-
-function saveStockAdjustment() {
-  const productId = selectedProduct.value ? selectedProduct.value.id : adjustmentForm.value.product_id
-  const product = products.value.find(p => p.id === productId)
-  if (!product) return
-
-  const previousStock = product.stock
-  let newStock = previousStock
-
-  if (adjustmentForm.value.type === 'add') {
-    newStock = previousStock + adjustmentForm.value.quantity
-  } else if (adjustmentForm.value.type === 'remove') {
-    newStock = Math.max(0, previousStock - adjustmentForm.value.quantity)
-  } else if (adjustmentForm.value.type === 'set') {
-    newStock = adjustmentForm.value.quantity
-  }
-
-  product.stock = newStock
-  product.last_updated = new Date().toISOString()
-
-  stockHistory.value.unshift({
-    id: Date.now(),
-    product_id: productId,
-    type: adjustmentForm.value.type,
-    quantity: adjustmentForm.value.quantity,
-    reason: adjustmentForm.value.reason,
-    notes: adjustmentForm.value.notes,
-    previous_stock: previousStock,
-    new_stock: newStock,
-    created_at: new Date().toISOString(),
-    user: 'Admin'
-  })
-
-  showAdjustmentModal.value = false
-
-  // Substitua essa linha pela notificação usando Pinia ou outra forma
-  // Exemplo: notificationsStore.add({ type: 'success', message: 'Estoque ajustado com sucesso!' })
-  alert('Estoque ajustado com sucesso!')
-}
-
-onMounted(() => {
-  fetchProducts()
-  fetchCategories()
+onMounted(() => { 
+  productStore.fetchProducts()
+  categoryStore.fetchCategories()
 })
+
 </script>

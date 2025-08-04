@@ -19,7 +19,6 @@ class Product extends Model
         'cost',
         'tax_class',
         'track_inventory',
-        'stock',
         'supplier_id',
         'low_stock_threshold',
         'allow_backorders',
@@ -32,14 +31,15 @@ class Product extends Model
         'length',
         'width',
         'height',
-        'slug',        
+        'slug',
     ];
     protected $casts = [
         'track_inventory' => 'boolean',
         'allow_backorders' => 'boolean',
-        'featured' => 'boolean',       
+        'featured' => 'boolean',
         'tags' => 'array',
     ];
+    protected $appends = ['stock'];
     public function category()
     {
         return $this->belongsTo(Category::class);
@@ -50,14 +50,20 @@ class Product extends Model
     }
     public function stockMovements()
     {
-        return $this->hasMany(StockMovement::class);
+        return $this->hasMany(StockMovement::class, 'product_id');
     }
 
-    public function currentStock()
+    public function getStockAttribute()
     {
-        return $this->stockMovements()
-            ->selectRaw('product_id, SUM(CASE WHEN type = "in" THEN quantity ELSE -quantity END) as total')
-            ->groupBy('product_id');
+        $movements = $this->stockMovements()->get();
+
+        return $movements->sum(function ($movement) {
+            return match ($movement->type) {
+                'in', 'adjustment' => $movement->quantity,
+                'out' => -$movement->quantity,
+                default => 0
+            };
+        });
     }
     public function tags()
     {
@@ -69,7 +75,6 @@ class Product extends Model
     }
     public function mainImage()
     {
-        return $this->belongsTo(ProductImage::class,"main_image_id");
+        return $this->belongsTo(ProductImage::class, "main_image_id");
     }
-    
 }

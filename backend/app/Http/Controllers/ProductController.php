@@ -4,19 +4,25 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreProductRequest;
 use App\Models\Product;
+use App\Services\StockMovementService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Str;
+use Illuminate\Support\Str;
 
 class ProductController extends Controller
-{
+{   
+    protected $stockMovementService;
+    public function __construct(StockMovementService $stockMovementService)
+    {
+        $this->stockMovementService = $stockMovementService;
+    }
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
         $query = Product::query();
-
+       
         // Filtro por categoria
         if ($request->filled('category_id')) {
             $query->where('category_id', $request->category_id);
@@ -97,15 +103,22 @@ class ProductController extends Controller
      */
     public function store(StoreProductRequest $request)
     {
-        if (Auth::user()) {
+        if (Auth::user()) {            
             $data = $request->validated();
 
             if (empty($data['slug'])) {
                 $data['slug'] = Str::slug($data['name']);
             }
-            $data['tags'] = $request->tags;      
-           
+            $data['tags'] = $request->tags;
+
+            $initialStock = $data['stock'] ?? 1;
+            unset($data['stock']);
+
+            $data['low_stock_threshold'] = $request->low_stock_threshold ?? 1;
+
             $product = Product::create($data);
+
+            $this->stockMovementService->createInitialStock($product->id, $initialStock);
 
             app(ProductImageController::class)->moveImagesFromTemp($request->input('upload_session_id'), $product);
 
@@ -113,6 +126,8 @@ class ProductController extends Controller
                 'message' => 'Product created sucessfully',
                 'data' => $product
             ], 201);
+        } else {
+            return response()->json(['Unauthorized'], 404);
         }
     }
 
@@ -138,7 +153,7 @@ class ProductController extends Controller
             }
 
             $product->update($data);
-            
+
             app(ProductImageController::class)->moveImagesFromTemp($request->input('upload_session_id'), $product);
 
             return response()->json([
