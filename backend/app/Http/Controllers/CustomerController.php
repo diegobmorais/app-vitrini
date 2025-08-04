@@ -13,7 +13,7 @@ class CustomerController extends Controller
      */
     public function index()
     {
-        $customers = User::where('role_id', 2)->get(['id', 'name', 'email', 'phone', 'birth_day', 'created_at']);
+        $customers = User::where('role_id', 2)->get(['id', 'name', 'email', 'phone', 'birth_day', 'status', 'created_at']);
 
         return response()->json([
             'customer' => $customers
@@ -33,7 +33,9 @@ class CustomerController extends Controller
      */
     public function show(Customer $customer)
     {
-        //
+        // $customer = Customer::find($customer->id);
+
+        return response()->json($customer, 201);
     }
 
     /**

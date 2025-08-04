@@ -5,15 +5,16 @@ import api from '@/main';
 export const useCustomerStore = defineStore("customer", () => {
   // States
   const customers = ref([]);
+  const customer = ref(null);
   const loading = ref(false);
   const error = ref(null);
 
   // Getters
+  const currentCustomer = computed(() => customer.value)  
   const allCustomers = computed(() => customers.value);
   const activeCustomers = computed(() =>
-    customers.value.filter((customer) => customer.active)
+    customers.value.filter((customer) => customer.status)
   );
-  const customerById = (id) => customers.value.find((c) => c.id === id);
   const isLoading = computed(() => loading.value);
   const hasError = computed(() => error.value !== null);
 
@@ -43,6 +44,22 @@ export const useCustomerStore = defineStore("customer", () => {
       setLoading(false);
     }
   }
+
+  async function fetchCustomerById(id) {
+    try {          
+      setLoading(true)
+      setError(null);
+      const response = await api.get(`/api/customer/${id}`);
+      customer.value = response.data
+      
+      return response.data
+    } catch (err) {
+      setError(err.response?.data?.message || err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function deleteCustomer(id) {
     try {
       setLoading(true);
@@ -63,12 +80,13 @@ export const useCustomerStore = defineStore("customer", () => {
     error,
 
     allCustomers,
-    activeCustomers,
-    customerById,
+    currentCustomer,
+    activeCustomers,   
     isLoading,
     hasError,
 
     fetchCustomers,
+    fetchCustomerById,
     deleteCustomer,
   };
 });

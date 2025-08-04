@@ -69,18 +69,15 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
-                  :class="customer.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
-                  <!-- {{ customer.active ? 'Ativo' : 'Inativo' }} --> Ativado
+                  :class="customer.status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
+                  {{ customer.status ? 'Ativo' : 'Inativo' }}
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                <router-link :to="`/painel-administrador/clientes/${customer.id}/edit`"
+                <router-link :to="`/painel-administrador/clientes/${customer.id}/detalhes`"
                   class="text-primary-600 hover:text-primary-900 mr-3">
-                  Editar
-                </router-link>
-                <button @click="deleteCustomer(customer.id)" class="text-red-600 hover:text-red-900">
-                  Excluir
-                </button>
+                  Detalhes
+                </router-link>              
               </td>
             </tr>
             <tr v-if="filteredCustomers.length === 0">
@@ -123,20 +120,17 @@ const filteredCustomers = computed(() => {
   let result = customers.value
 
   // Filtrar por status
-  // if (filter.value === 'active') {
-  //   result = result.filter(customer => customer.active)
-  // } else if (filter.value === 'inactive') {
-  //   result = result.filter(customer => !customer.active)
-  // }
+  if (filter.value === 'active') {
+    result = result.filter(customer => customer.status)
+  } else if (filter.value === 'inactive') {
+    result = result.filter(customer => !customer.status)
+  }
 
   // Filtrar por termo de busca
   if (search.value) {
     const searchLower = search.value.toLowerCase()
     result = result.filter(customer =>
-      customer.name.toLowerCase().includes(searchLower) ||
-      // customer.document.toLowerCase().includes(searchLower) ||
-      customer.email.toLowerCase().includes(searchLower) ||
-      customer.phone.toLowerCase().includes(searchLower)
+      customer.name.toLowerCase().includes(searchLower)     
     )
   }
 
@@ -152,16 +146,7 @@ const filteredCustomers = computed(() => {
 //     .substring(0, 2)
 // }
 
-const deleteCustomer = (id) => {
-  if (confirm('Tem certeza que deseja excluir este cliente?')) {   
-    customers.value = customers.value.filter(c => c.id !== id)
-    //add toast
-  }
-}
-
-onMounted(() => {
-  console.log('clientes', filteredCustomers);
-  
+onMounted(() => {  
   customerStore.fetchCustomers()
 })
 </script>

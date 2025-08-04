@@ -23,7 +23,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'diego@teste.com',
             'password' => bcrypt('teste123'),
             'role_id' => 1,
-            'address_id' => 1
+            'status' => 1
         ]);
         Brand::factory(10)->create();
         Category::factory(10)->create();

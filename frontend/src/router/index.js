@@ -18,13 +18,14 @@ import Dashboard from "../pages/admin/Dashboard.vue"
 import Customers from "../pages/admin/Customers.vue"
 import Suppliers from "../pages/admin/Suppliers.vue"
 import Settings from "../pages/admin/Settings.vue"
-import CustomerForm from "../pages/admin/CustomerForm.vue"
+import CustomerForm from "../pages/admin/CustomerDetails.vue"
 import SupplierForm from "../pages/admin/SupplierForm.vue"
 import Inventory from "../pages/admin/Inventory.vue"
 import Orders from "../pages/admin/Orders.vue"
 import Services from "../pages/admin/Services.vue"
 import ServicePage from "../pages/ServicePage.vue"
 import { useAuthStore } from "@/store/modules/useAuthStore"
+import CustomerDetails from "../pages/admin/CustomerDetails.vue"
 
 const routes = [
   {
@@ -141,7 +142,13 @@ const routes = [
         name: "admin-customers",
         component: Customers,
         meta: { title: 'Clientes' }
-      },    
+      },
+      {
+        path: "/painel-administrador/clientes/:id/detalhes",
+        name: "admin-customers-details",
+        component: CustomerDetails,
+        meta: { title: 'Clientes' }
+      },   
       {
         path: "/painel-administrador/fornecedores",
         name: "admin-suppliers",

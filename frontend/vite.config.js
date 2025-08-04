@@ -4,6 +4,9 @@ import path from 'path'
 
 export default defineConfig({
   server: {
+    host: '0.0.0.0',
+    port: 5173,
+    strictPort: true,
     proxy: {
       '/api': {
         target: 'http://localhost:9000',
@@ -14,6 +17,10 @@ export default defineConfig({
         target: 'http://localhost:9000',
         changeOrigin: true,
       },
+    },
+    watch: {
+      usePolling: true,
+      interval: 1000,
     },
   },
   plugins: [
