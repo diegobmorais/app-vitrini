@@ -27,7 +27,7 @@
               </dt>
               <dd class="flex items-baseline">
                 <div class="text-2xl font-semibold text-gray-900">
-                  {{ products.length }}
+                  {{ inventoryStore.metrics.total }}
                 </div>
               </dd>
             </div>
@@ -94,7 +94,7 @@
               </dt>
               <dd class="flex items-baseline">
                 <div class="text-2xl font-semibold text-gray-900">
-                  {{ outOfStockCount }}
+                  {{ outOfStockCount}}
                 </div>
               </dd>
             </div>
@@ -107,8 +107,8 @@
       <div class="p-4 border-b border-gray-200">
         <div class="flex flex-col md:flex-row md:items-center md:space-x-4">
           <div class="flex-1 mb-4 md:mb-0">
-            <input v-model="search" type="text" placeholder="Buscar produtos..."
-              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500" />
+            <input v-model="search" @input="handleSearch($event.target.value)" placeholder="Buscar Produtos..." class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none
+            focus:ring-primary-500 focus:border-primary-500" />
           </div>
           <div class="flex space-x-4">
             <select v-model="categoryFilter"
@@ -152,7 +152,7 @@
             <tr v-for="product in filteredProducts" :key="product.id">
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center">
-                  <div class="flex-shrink-0 h-10 w-10">
+                  <!-- <div class="flex-shrink-0 h-10 w-10">
                     <img v-if="product.image" :src="product.image" alt="" class="h-10 w-10 rounded-md object-cover">
                     <div v-else class="h-10 w-10 bg-gray-200 rounded-md flex items-center justify-center">
                       <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -160,7 +160,7 @@
                           d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                     </div>
-                  </div>
+                  </div> -->
                   <div class="ml-4">
                     <div class="text-sm font-medium text-gray-900">{{ product.name }}</div>
                     <div class="text-sm text-gray-500">{{ product.brand }}</div>
@@ -180,7 +180,7 @@
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {{ product.min_stock }}
+                {{ product.low_stock_threshold }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {{ formatDate(product.stock_movements.at(-1)?.updated_at) }}
@@ -202,16 +202,61 @@
           </tbody>
         </table>
       </div>
-
       <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
         <div class="flex justify-between items-center">
           <div class="text-sm text-gray-700">
             Mostrando <span class="font-medium">{{ filteredProducts.length }}</span> de <span class="font-medium">{{
-              products.length }}</span> produtos
+              inventoryStore.products.length }}</span> produtos
           </div>
           <div class="flex-1 flex justify-end">
             <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-              <!-- Paginação aqui se necessário -->
+              <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
+                <div class="flex items-center justify-between">
+                  <div class="flex-1 flex justify-between sm:hidden">
+                    <button @click="inventoryStore.prevPage" :disabled="inventoryStore.pagination.current_page === 1"
+                      class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                      Anterior
+                    </button>
+                    <button @click="inventoryStore.nextPage"
+                      :disabled="inventoryStore.pagination.current_page === inventoryStore.pagination.last_page"
+                      class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                      Próximo
+                    </button>
+                  </div>
+                  <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                      <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                        <button @click="inventoryStore.prevPage"
+                          :disabled="inventoryStore.pagination.current_page === 1"
+                          class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                          <span class="sr-only">Anterior</span>
+                          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                          </svg>
+                        </button>
+                        <button
+                          v-for="page in Array.from({ length: inventoryStore.pagination.last_page }, (_, i) => i + 1)"
+                          :key="page" @click="inventoryStore.goToPage(page)" :class="[
+                            inventoryStore.pagination.current_page === page
+                              ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                              : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50',
+                            'relative inline-flex items-center px-4 py-2 border text-sm font-medium'
+                          ]">
+                          {{ page }}
+                        </button>
+                        <button @click="inventoryStore.nextPage"
+                          :disabled="inventoryStore.pagination.current_page === inventoryStore.pagination.last_page"
+                          class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                          <span class="sr-only">Próximo</span>
+                          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                          </svg>
+                        </button>
+                      </nav>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </nav>
           </div>
         </div>
@@ -227,78 +272,82 @@
 import AjustmentStockModal from '@/components/modals/AjustmentStockModal.vue'
 import { useCategoryStore } from '@/store/modules/useCategoryStore'
 import { useInventoryStore } from '@/store/modules/useInventoryStore'
-import { ref, computed, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 
 const inventoryStore = useInventoryStore()
 const categoryStore = useCategoryStore()
 
-const categories = ref([])
-const search = ref('')
-const categoryFilter = ref('')
-const stockFilter = ref('all')
+// Modal de ajuste de estoque
 const showAdjustmentModal = ref(false)
 const selectedProduct = ref(null)
 
-const products = computed(() => inventoryStore.products)
-const inStockCount = computed(() => inventoryStore.inStockProducts)
-const lowStockCount = computed(() => inventoryStore.lowStockProducts)
-const outOfStockCount = computed(() => inventoryStore.outOfStockProducts)
+const inStockCount = computed(() => inventoryStore.metrics.in_stock)
+const lowStockCount = computed(() => inventoryStore.metrics.low_stock)
+const outOfStockCount = computed(() => inventoryStore.metrics.out_of_stock)
 
-const filteredProducts = computed(() => {
-  let result = products.value
-
-  if (categoryFilter.value) {
-    result = result.filter(product => product.category_id === categoryFilter.value)
-  }
-
-  if (stockFilter.value === 'low') {
-    result = result.filter(product => product.stock > 0 && product.stock <= product.min_stock)
-  } else if (stockFilter.value === 'out') {
-    result = result.filter(product => product.stock === 0)
-  }
-
-  if (search.value) {
-    const searchLower = search.value.toLowerCase()
-    result = result.filter(product =>
-      product.name.toLowerCase().includes(searchLower) ||
-      product.sku.toLowerCase().includes(searchLower) ||
-      product.brand.toLowerCase().includes(searchLower)
-    )
-  }
-  return result
+// Filtros
+const categoryFilter = computed({
+  get: () => inventoryStore.categoryFilter,
+  set: (value) => inventoryStore.setCategoryFilter(value)
 })
 
+const stockFilter = computed({
+  get: () => inventoryStore.stockFilter,
+  set: (value) => inventoryStore.setStockFilter(value)
+})
 
-// Abre o modal
-const openAdjustmentModal = (filteredProducts) => {
-  selectedProduct.value = filteredProducts
+const search = computed({
+  get: () => inventoryStore.search,
+  set: (value) => inventoryStore.setSearch(value)
+})
+
+// Busca com debounce
+let debounceTimer = null
+const handleSearch = (value) => {
+  clearTimeout(debounceTimer)
+  debounceTimer = setTimeout(() => {
+    inventoryStore.setSearch(value)
+    inventoryStore.goToPage(1)
+  }, 500)
+}
+
+const categories = computed(() => categoryStore.categories)
+const filteredProducts = computed(() => {
+  return inventoryStore.products
+})
+
+const openAdjustmentModal = (product) => {
+  selectedProduct.value = product
   showAdjustmentModal.value = true
 }
+
 const closeAdjustmentModal = () => {
   showAdjustmentModal.value = false
   selectedProduct.value = null
 }
-// Recarrega o estoque
+
 const onAdjustmentSaved = () => {
-  useInventoryStore.fetchStock()
+  inventoryStore.fetchStock()
+  closeAdjustmentModal()
 }
 
-function getCategoryName(categoryId) {
-  const category = categories.value.find(c => c.id === categoryId)
+const getCategoryName = (categoryId) => {
+  const category = categoryStore.categories.find(c => c.id === categoryId)
   return category ? category.name : 'Sem categoria'
 }
 
-function getStockStatusClass(product) {
+const getStockStatusClass = (product) => {
   if (product.stock === 0) {
     return 'bg-red-100 text-red-800'
-  } else if (product.stock <= product.min_stock) {
+  } else if (product.stock <= product.low_stock_threshold) {
     return 'bg-yellow-100 text-yellow-800'
   } else {
     return 'bg-green-100 text-green-800'
   }
 }
 
-function formatDate(dateString) {
+const formatDate = (dateString) => {
+  if (!dateString) return '–'
   const date = new Date(dateString)
   return date.toLocaleString('pt-BR', {
     day: '2-digit',
@@ -309,10 +358,7 @@ function formatDate(dateString) {
   })
 }
 
-
-onMounted(() => {  
-  inventoryStore.fetchStock()
-  categoryStore.fetchCategories()
+onMounted(async () => {
+  await inventoryStore.fetchStock() 
 })
-
 </script>
