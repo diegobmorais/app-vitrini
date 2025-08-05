@@ -28,7 +28,7 @@ export const useInventoryStore = defineStore('inventory', {
   }),
 
   getters: {
-   //
+    //
   },
 
   actions: {
@@ -56,8 +56,13 @@ export const useInventoryStore = defineStore('inventory', {
     },
 
     async addMovement(movement) {
-      await api.post('/api/stock', movement)
-      await fetchStock()
+      try {
+        await api.post('/api/stock', movement)
+      } catch (error) {
+        this.error = 'erro ao carregar estoque'
+      } finally {
+        this.loading = false
+      }
     },
 
     // Atualiza busca e recarrega

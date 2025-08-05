@@ -40,7 +40,7 @@ class StockMovementController extends Controller
             $query->where('category_id', $request->category_id);
         }
 
-        $products = $query->paginate(10);
+        $products = $query->paginate(8);
 
         $products->getCollection()->transform(function ($product) {
             //  `getStockAttribute` já calcula 

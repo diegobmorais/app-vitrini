@@ -185,10 +185,7 @@
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {{ formatDate(product.stock_movements.at(-1)?.updated_at) }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                <button @click="openAdjustmentModal(product)" class="text-primary-600 hover:text-primary-900">
-                  Ajustar
-                </button>
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">                
                 <button @click="viewHistory(product.id)" class="ml-3 text-gray-600 hover:text-gray-900">
                   Histórico
                 </button>
@@ -272,6 +269,7 @@
 import AjustmentStockModal from '@/components/modals/AjustmentStockModal.vue'
 import { useCategoryStore } from '@/store/modules/useCategoryStore'
 import { useInventoryStore } from '@/store/modules/useInventoryStore'
+import { useProductStore } from '@/store/modules/useProductStore'
 import { computed, ref, onMounted } from 'vue'
 
 const inventoryStore = useInventoryStore()
@@ -284,7 +282,10 @@ const selectedProduct = ref(null)
 const inStockCount = computed(() => inventoryStore.metrics.in_stock)
 const lowStockCount = computed(() => inventoryStore.metrics.low_stock)
 const outOfStockCount = computed(() => inventoryStore.metrics.out_of_stock)
-
+const categories = computed(() => categoryStore.categories)
+const filteredProducts = computed(() => {  
+  return inventoryStore.products
+})
 // Filtros
 const categoryFilter = computed({
   get: () => inventoryStore.categoryFilter,
@@ -311,13 +312,7 @@ const handleSearch = (value) => {
   }, 500)
 }
 
-const categories = computed(() => categoryStore.categories)
-const filteredProducts = computed(() => {
-  return inventoryStore.products
-})
-
-const openAdjustmentModal = (product) => {
-  selectedProduct.value = product
+const openAdjustmentModal = () => {  
   showAdjustmentModal.value = true
 }
 
@@ -326,8 +321,8 @@ const closeAdjustmentModal = () => {
   selectedProduct.value = null
 }
 
-const onAdjustmentSaved = () => {
-  inventoryStore.fetchStock()
+const onAdjustmentSaved = async () => {
+  await inventoryStore.fetchStock()
   closeAdjustmentModal()
 }
 
