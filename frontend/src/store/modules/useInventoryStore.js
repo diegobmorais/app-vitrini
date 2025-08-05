@@ -14,29 +14,25 @@ export const useInventoryStore = defineStore('inventory', () => {
   const loading = ref(false)
   const error = ref(null)
 
-  // Getters
-  const allProducts = computed(() => products.value)
+  // Getters 
   const productById = (id) => products.value.find(product => product.id === id)
-  const inStockProducts = computed(() => products.value.filter(p => p.stock > 0))
+  const inStockProducts = computed(() => products.value.filter(p => p.stock > 0).length)
   const lowStockProducts = computed(() =>
-    products.value.filter(p => p.stock > 0 && p.stock <= p.min_stock)
+    products.value.filter(p => p.stock > 0 && p.stock <= p.low_stock_threshold).length
   )
-  const outOfStockProducts = computed(() => products.value.filter(p => p.stock === 0))
+  const outOfStockProducts = computed(() => products.value.filter(p => p.stock === 0).length)
   const isLoading = computed(() => loading.value)
   const hasError = computed(() => error.value !== null)
 
   // Actions
-  async function fetchProducts() {
-    loading.value = true
-
-  }
-
   const fetchStock = async () => {
     try {
       loading.value = true
       const response = await api.get('/api/stock')
       products.value = response.data.products
-      metrics.value = response.data.metrics
+      metrics.value = response.data.metrics      
+      
+      return response.data
     } catch (err) {
       console.error('error', err)
     } finally {
@@ -55,15 +51,13 @@ export const useInventoryStore = defineStore('inventory', () => {
     loading,
     error,
 
-    allProducts,
     productById,
     inStockProducts,
     lowStockProducts,
     outOfStockProducts,
     isLoading,
     hasError,
-
-    fetchProducts,
+   
     fetchStock,
     addMovement,
   }

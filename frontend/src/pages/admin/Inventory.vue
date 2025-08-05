@@ -183,7 +183,7 @@
                 {{ product.min_stock }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {{ formatDate(product.last_updated) }}
+                {{ formatDate(product.stock_movements.at(-1)?.updated_at) }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                 <button @click="openAdjustmentModal(product)" class="text-primary-600 hover:text-primary-900">
@@ -218,8 +218,8 @@
       </div>
     </div>
     <!-- Modal de ajuste -->
-    <AjustmentStockModal v-if="showAdjustmentModal" :show-adjustment-modal="showAdjustmentModal" :selected-product="selectedProduct"
-      @close="closeAdjustmentModal" @saved="onAdjustmentSaved" />   
+    <AjustmentStockModal v-if="showAdjustmentModal" :show-adjustment-modal="showAdjustmentModal"
+      :selected-product="selectedProduct" @close="closeAdjustmentModal" @saved="onAdjustmentSaved" />
   </div>
 </template>
 
@@ -227,19 +227,22 @@
 import AjustmentStockModal from '@/components/modals/AjustmentStockModal.vue'
 import { useCategoryStore } from '@/store/modules/useCategoryStore'
 import { useInventoryStore } from '@/store/modules/useInventoryStore'
-import { useProductStore } from '@/store/modules/useProductStore'
 import { ref, computed, onMounted } from 'vue'
 
-const productStore = useProductStore()
+const inventoryStore = useInventoryStore()
 const categoryStore = useCategoryStore()
 
-const products = ref([])
 const categories = ref([])
 const search = ref('')
 const categoryFilter = ref('')
 const stockFilter = ref('all')
 const showAdjustmentModal = ref(false)
 const selectedProduct = ref(null)
+
+const products = computed(() => inventoryStore.products)
+const inStockCount = computed(() => inventoryStore.inStockProducts)
+const lowStockCount = computed(() => inventoryStore.lowStockProducts)
+const outOfStockCount = computed(() => inventoryStore.outOfStockProducts)
 
 const filteredProducts = computed(() => {
   let result = products.value
@@ -262,17 +265,12 @@ const filteredProducts = computed(() => {
       product.brand.toLowerCase().includes(searchLower)
     )
   }
-
   return result
 })
 
-const inStockCount = computed(() => products.value.filter(product => product.stock > product.min_stock).length)
-const lowStockCount = computed(() => products.value.filter(product => product.stock > 0 && product.stock <= product.min_stock).length)
-const outOfStockCount = computed(() => products.value.filter(product => product.stock === 0).length)
-
 
 // Abre o modal
-const openAdjustmentModal = (filteredProducts) => {  
+const openAdjustmentModal = (filteredProducts) => {
   selectedProduct.value = filteredProducts
   showAdjustmentModal.value = true
 }
@@ -281,7 +279,7 @@ const closeAdjustmentModal = () => {
   selectedProduct.value = null
 }
 // Recarrega o estoque
-const onAdjustmentSaved = () => {  
+const onAdjustmentSaved = () => {
   useInventoryStore.fetchStock()
 }
 
@@ -302,18 +300,18 @@ function getStockStatusClass(product) {
 
 function formatDate(dateString) {
   const date = new Date(dateString)
-  return new Intl.DateTimeFormat('pt-BR', {
+  return date.toLocaleString('pt-BR', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit'
-  }).format(date)
+  })
 }
 
 
-onMounted(() => { 
-  productStore.fetchProducts()
+onMounted(() => {  
+  inventoryStore.fetchStock()
   categoryStore.fetchCategories()
 })
 
