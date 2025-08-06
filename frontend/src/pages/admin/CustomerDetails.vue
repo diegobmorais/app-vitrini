@@ -27,9 +27,17 @@
             </div>
           </div>
         </div>
+        <div class="flex justify-end mb-4">
+          <router-link to="/painel-administrador/clientes"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            <svg class="-ml-1 mr-2 h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Voltar
+          </router-link>
+        </div>
       </div>
     </div>
-
     <!-- Abas -->
     <div class="bg-white rounded-lg shadow overflow-hidden">
       <div class="border-b border-gray-200">
@@ -254,10 +262,10 @@ const fetchNotes = async () => {
 
 // Carregar dados
 onMounted(async () => {
-  if (customerId.value){
-    await customerStore.fetchCustomerById(customerId.value)   
+  if (customerId.value) {
+    await customerStore.fetchCustomerById(customerId.value)
   }
-  
+
 
   await Promise.all([
     fetchPets(),
