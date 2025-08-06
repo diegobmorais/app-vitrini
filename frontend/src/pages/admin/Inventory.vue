@@ -94,7 +94,7 @@
               </dt>
               <dd class="flex items-baseline">
                 <div class="text-2xl font-semibold text-gray-900">
-                  {{ outOfStockCount}}
+                  {{ outOfStockCount }}
                 </div>
               </dd>
             </div>
@@ -185,8 +185,8 @@
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {{ formatDate(product.stock_movements.at(-1)?.updated_at) }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">                
-                <button @click="viewHistory(product.id)" class="ml-3 text-gray-600 hover:text-gray-900">
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <button @click="openHistoryModal(product.id)" class="ml-3 text-gray-600 hover:text-gray-900">
                   Histórico
                 </button>
               </td>
@@ -262,18 +262,23 @@
     <!-- Modal de ajuste -->
     <AjustmentStockModal v-if="showAdjustmentModal" :show-adjustment-modal="showAdjustmentModal"
       :selected-product="selectedProduct" @close="closeAdjustmentModal" @saved="onAdjustmentSaved" />
+    <!-- Modal Histórico -->
+    <StockHistoryModal :show="showHistoryModal" :product="selectedProductHistory" :movements="movementHistory"
+      @close="closeHistoryModal" />
   </div>
 </template>
 
 <script setup>
+import StockHistoryModal from '@/components/modals/StockHistoryModal.vue'
 import AjustmentStockModal from '@/components/modals/AjustmentStockModal.vue'
 import { useCategoryStore } from '@/store/modules/useCategoryStore'
 import { useInventoryStore } from '@/store/modules/useInventoryStore'
-import { useProductStore } from '@/store/modules/useProductStore'
 import { computed, ref, onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
 
 const inventoryStore = useInventoryStore()
 const categoryStore = useCategoryStore()
+const { showHistoryModal, selectedProductHistory, movementHistory } = storeToRefs(inventoryStore)
 
 // Modal de ajuste de estoque
 const showAdjustmentModal = ref(false)
@@ -283,7 +288,7 @@ const inStockCount = computed(() => inventoryStore.metrics.in_stock)
 const lowStockCount = computed(() => inventoryStore.metrics.low_stock)
 const outOfStockCount = computed(() => inventoryStore.metrics.out_of_stock)
 const categories = computed(() => categoryStore.categories)
-const filteredProducts = computed(() => {  
+const filteredProducts = computed(() => {
   return inventoryStore.products
 })
 // Filtros
@@ -312,8 +317,15 @@ const handleSearch = (value) => {
   }, 500)
 }
 
-const openAdjustmentModal = () => {  
+const openAdjustmentModal = () => {
   showAdjustmentModal.value = true
+}
+
+const openHistoryModal = async (historyId) => {
+  await inventoryStore.fetchHistoryInventory(historyId)
+}
+const closeHistoryModal = () => {
+  inventoryStore.showHistoryModal = false
 }
 
 const closeAdjustmentModal = () => {
@@ -354,6 +366,6 @@ const formatDate = (dateString) => {
 }
 
 onMounted(async () => {
-  await inventoryStore.fetchStock() 
+  await inventoryStore.fetchStock()
 })
 </script>

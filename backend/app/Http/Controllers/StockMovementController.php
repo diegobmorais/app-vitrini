@@ -51,7 +51,7 @@ class StockMovementController extends Controller
 
             return $product;
         });
-       
+
         // Filtro por tipo de estoque (pós-cálculo)
         if ($request->filled('stock')) {
             $stockFilter = $request->stock;
@@ -137,5 +137,38 @@ class StockMovementController extends Controller
         $stockMovement->delete();
 
         return response()->json(['message' => 'Stock movement deleted']);
+    }
+    public function movementsByType($id)
+    {       
+        $movements = StockMovement::with('product')
+            ->where('product_id', $id)
+            ->orderBy('created_at', 'asc') 
+            ->get();
+     
+        $running_stock = 0;
+        $movements = $movements->map(function ($movement) use (&$running_stock) {            
+            $movement->previous_stock = $running_stock;
+          
+            if ($movement->type === 'in') {
+                $running_stock += $movement->quantity;
+            } elseif ($movement->type === 'out') {
+                $running_stock -= $movement->quantity;
+            }
+         
+            $movement->new_stock = $running_stock;
+         
+            if ($movement->description) {
+                $parts = explode(' - ', $movement->description, 2); 
+                $movement->reason = $parts[0] ?? 'Sem motivo';
+                $movement->notes = $parts[1] ?? null;
+            } else {
+                $movement->reason = 'Sem motivo';
+                $movement->notes = null;
+            }
+
+            return $movement;
+        });
+    
+        return response()->json($movements->sortByDesc('created_at')->values());
     }
 }

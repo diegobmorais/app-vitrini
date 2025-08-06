@@ -35,6 +35,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //stock movements
     Route::apiResource('stock', StockMovementController::class);
     Route::get('/stock/{id}/movements', [StockMovementController::class, 'movements']);
+    Route::get('/stock-movements/product/{id}', [StockMovementController::class, 'movementsByType']);
     //products
     Route::apiResource('product', ProductController::class)->except(['index']);
     //address

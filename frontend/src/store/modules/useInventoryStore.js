@@ -1,11 +1,13 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
 import api from '@/main';
 
 // stores/inventory.js
 export const useInventoryStore = defineStore('inventory', {
   state: () => ({
     products: [],
+    selectedProductHistory: null,
+    movementHistory: [],
+    showHistoryModal: false,
     pagination: {
       current_page: 1,
       last_page: 1,
@@ -62,6 +64,16 @@ export const useInventoryStore = defineStore('inventory', {
         this.error = 'erro ao carregar estoque'
       } finally {
         this.loading = false
+      }
+    },
+    async fetchHistoryInventory(productId){
+      try {
+        const response = await api.get(`/api/stock-movements/product/${productId}`)
+        this.movementHistory = response.data
+        this.selectedProductHistory = this.products.find(p => p.id === productId)
+        this.showHistoryModal= true
+      } catch (err) {       
+        alert('Erro ao carregar histórico')
       }
     },
 

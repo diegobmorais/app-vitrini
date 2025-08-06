@@ -75,12 +75,12 @@
                                 <select id="reason" v-model="adjustmentForm.reason" required
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
                                     <option value="">Selecione um motivo</option>
-                                    <option value="purchase">Compra</option>
-                                    <option value="sale">Venda</option>
-                                    <option value="return">Devolução</option>
-                                    <option value="loss">Perda/Dano</option>
-                                    <option value="correction">Correção de Inventário</option>
-                                    <option value="other">Outro</option>
+                                    <option value="Compra">Compra</option>
+                                    <option value="Venda">Venda</option>
+                                    <option value="Devolução">Devolução</option>
+                                    <option value="Perda/Dano">Perda/Dano</option>
+                                    <option value="Correção de Inventário">Correção de Inventário</option>
+                                    <option value="Outros">Outro</option>
                                 </select>
                             </div>
 
