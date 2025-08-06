@@ -27,12 +27,14 @@ return new class extends Migration
             $table->enum('status', ['active', 'inactive'])->default('active');
             $table->boolean('featured')->default(false);
             $table->foreignId('category_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('supplier_id')->nullable()->constrained()->nullOnDelete();
             $table->foreignId('brand_id')->nullable()->constrained()->nullOnDelete();
             $table->string('weight')->nullable();
             $table->string('length')->nullable();
             $table->string('width')->nullable();
             $table->string('height')->nullable();
             $table->string('slug')->unique();
+            $table->unsignedBigInteger('main_image_id')->nullable()->constrained()->nullOnDelete();
             $table->json('tags')->nullable();            
             $table->timestamps();
         });

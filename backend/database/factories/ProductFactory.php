@@ -29,8 +29,7 @@ class ProductFactory extends Factory
             'compare_price' => $this->faker->randomFloat(2, 1000, 1500),
             'cost' => $this->faker->randomFloat(2, 5, 500),
             'tax_class' => $this->faker->randomElement(['standard', 'reduced', 'none']),
-            'track_inventory' => $this->faker->boolean(),
-            'stock' => $this->faker->numberBetween(0, 200),
+            'track_inventory' => $this->faker->boolean(),          
             'low_stock_threshold' => $this->faker->numberBetween(0, 10),
             'allow_backorders' => $this->faker->boolean(),
             'status' => $this->faker->randomElement(['active', 'inactive']),
@@ -42,8 +41,7 @@ class ProductFactory extends Factory
             'length' => $this->faker->randomFloat(2, 1, 100),
             'width' => $this->faker->randomFloat(2, 1, 100),
             'height' => $this->faker->randomFloat(2, 1, 100),
-            'slug' => \Str::slug($name . '-' . $sku),
-            'images' => json_encode([$this->faker->imageUrl(640, 480, 'product', true)]),
+            'slug' => \Str::slug($name . '-' . $sku),         
         ];
     }
 }

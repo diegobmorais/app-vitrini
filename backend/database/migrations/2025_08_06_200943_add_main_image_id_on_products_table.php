@@ -6,25 +6,17 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
+    public function up()
     {
         Schema::table('products', function (Blueprint $table) {
-            $table->unsignedBigInteger('main_image_id')->nullable()->after('id');
-            $table->foreign('main_image_id')->references('id')->on('product_images')->onDelete('set null');
+            $table->foreign('main_image_id')->references('id')->on('product_images')->nullOnDelete();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
+    public function down()
     {
         Schema::table('products', function (Blueprint $table) {
             $table->dropForeign(['main_image_id']);
-            $table->dropColumn('main_image_id');
         });
     }
 };
