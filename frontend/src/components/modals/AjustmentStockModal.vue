@@ -143,7 +143,7 @@ const props = defineProps({
 })
 
 // --- Emit ---
-const emit = defineEmits(['close', 'saved'])
+const emit = defineEmits(['close'])
 
 // --- Stores ---
 const inventoryStore = useInventoryStore()
@@ -285,8 +285,7 @@ const saveStockAdjustment = async () => {
             description: adjustmentForm.value.reason,
             observation: adjustmentForm.value.notes
         }
-        await inventoryStore.addMovement(payload)
-        emit('saved')
+        await inventoryStore.addMovement(payload)      
 
         adjustmentForm.value = {
             product_id: '',

@@ -1,3 +1,205 @@
+<script setup>
+import { useBrandStore } from '@/store/modules/useBrandStore'
+import { useCategoryStore } from '@/store/modules/useCategoryStore'
+import { useTagStore } from '@/store/modules/useTagStores'
+import { useToast } from 'vue-toastification'
+import { ref, reactive, onMounted } from 'vue'
+import { useNotificationStore } from '@/store/modules/useNotificationStore'
+import SettingCategoryModal from '@/components/modals/settings-modals/SettingCategoryModal.vue'
+import SettingBrandModal from '@/components/modals/settings-modals/SettingBrandModal.vue'
+import SettingTagsModal from '@/components/modals/settings-modals/SettingTagsModal.vue'
+import ConfirmDeleteModal from '@/components/ui/ConfirmDeleteModal.vue'
+
+const toast = useToast()
+const categoryStore = useCategoryStore()
+const brandStore = useBrandStore()
+const tagStore = useTagStore()
+const notificationStore = useNotificationStore()
+
+const activeTab = ref('categories')
+const tabs = [
+  { id: 'categories', name: 'Categorias' },
+  { id: 'brands', name: 'Marcas' },
+  { id: 'tags', name: 'Tags' },
+  { id: 'notifications', name: 'Notificações' }
+]
+
+const categories = ref([])
+const brands = ref([])
+const tags = ref([])
+const notificationSettings = ref({})
+const categoryNameToDelete = ref('')
+const categoryIdToDelete = ref(null)
+const showConfirmModal = ref(false)
+const showCategoryModal = ref(false)
+const showBrandModal = ref(false)
+const showTagModal = ref(false)
+
+const editingCategory = reactive({
+  id: null,
+  name: '',
+  description: '',
+  featured: true
+})
+
+const editingBrand = reactive({
+  id: null,
+  name: '',
+  description: ''
+})
+
+const editingTag = reactive({
+  id: null,
+  name: ''
+})
+
+const fetchNotifications = async () => {
+  notificationSettings.value = await notificationStore.addNotification()
+}
+const fetchCategories = async () => {
+  categories.value = await categoryStore.fetchCategories()
+}
+
+const fetchBrands = async () => {
+  brands.value = await brandStore.fetchBrands()
+}
+
+const fetchTags = async () => {
+  tags.value = await tagStore.fetchTags()
+}
+
+const openCategoryModal = (category = null) => {
+  if (category) {
+    Object.assign(editingCategory, {
+      id: category.id,
+      name: category.name,
+      description: category.description,
+      featured: category.featured
+    })
+
+  } else {
+    Object.assign(editingCategory, {
+      id: null,
+      name: '',
+      description: '',
+      featured: true
+    })
+  }
+
+  showCategoryModal.value = true
+}
+
+const openBrandModal = (brand = null) => {
+  if (brand) {
+    Object.assign(editingBrand, {
+      id: brand,
+      name: brand,
+      description: brand.description
+    })
+  } else {
+    Object.assign(editingBrand, {
+      id: null,
+      name: '',
+      description: ''
+    })
+  }
+  showBrandModal.value = true
+}
+
+const openTagModal = (tag = null) => {
+  if (tag) {
+    Object.assign(editingTag, {
+      id: tag.id,
+      name: tag.name
+    })
+  } else {
+    Object.assign(editingTag, {
+      id: null,
+      name: ''
+    })
+  }
+  showTagModal.value = true
+}
+
+const handleSaveCategory = async (savedCategory) => {
+  try {
+    const categoryId = savedCategory.id ? Number(savedCategory.id) : null
+
+    if (categoryId) {
+      const response = await categoryStore.updateCategory(categoryId, {
+        ...savedCategory,
+      })
+      const updatedCategory = response.category
+
+      if (updatedCategory) {
+        const index = categories.value.findIndex(c => c.id === categoryId)
+        if (index !== -1) {
+          categories.value.splice(index, 1, { ...updatedCategory })
+        }
+        categories.value = [...categories.value]
+        toast.success(`Categoria "${updatedCategory.name}" atualizada!`)
+      }
+    } else {
+      const response = await categoryStore.createCategory(savedCategory)
+      const newCategory = response.category
+
+      categories.value.push(newCategory)
+      categories.value = [...categories.value]
+
+      toast.success(`Categoria "${newCategory.name}" criada!`)
+    }
+  } catch (error) {
+    const action = savedCategory.id ? 'atualizar' : 'criar'
+    toast.error(`Erro ao ${action} categoria: ${error.message || 'Tente novamente'}`)
+    console.error(error)
+  }
+}
+
+const confirmDelete = (category) => {
+  categoryIdToDelete.value = category.id
+  categoryNameToDelete.value = category.name
+  showConfirmModal.value = true
+}
+
+const deleteCategoryFromDB = async () => {
+  try {
+    await categoryStore.deleteCategoryById(categoryIdToDelete.value)
+
+    categories.value = categories.value.filter(c => c.id !== categoryIdToDelete.value)
+
+    toast.success(`Categoria "${categoryNameToDelete.value}" excluída com sucesso!`)
+  } catch (error) {
+    toast.error('Erro ao excluir categoria. Tente novamente.')
+    console.error(error)
+  } finally {
+    showConfirmModal.value = false
+    categoryIdToDelete.value = null
+  }
+}
+
+const deleteBrand = id => {
+
+}
+
+const deleteTag = id => {
+  if (confirm('Tem certeza que deseja excluir esta tag?')) {
+    tags.value = tags.value.filter(t => t.id !== id)
+    toast.success('Tag excluida com sucesso!')
+  }
+}
+
+const saveNotificationSettings = () => {
+  toast.success('Configurações salvas com sucesso!')
+}
+
+onMounted(async () => {
+  await fetchCategories()
+  await fetchBrands()
+  await fetchTags()
+  await fetchNotifications()
+})
+
+</script>
 <template>
   <div>
     <div class="mb-6">
@@ -52,15 +254,15 @@
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
-                      :class="category.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
-                      {{ category.active ? 'Ativo' : 'Inativo' }}
+                      :class="category.featured ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
+                      {{ category.featured ? 'Ativo' : 'Inativo' }}
                     </span>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button @click="openCategoryModal(category)" class="text-primary-600 hover:text-primary-900 mr-3">
                       Editar
                     </button>
-                    <button @click="deleteCategory(category.id)" class="text-red-600 hover:text-red-900">
+                    <button @click="confirmDelete(category)" class="text-red-600 hover:text-red-900">
                       Excluir
                     </button>
                   </td>
@@ -92,8 +294,6 @@
                   <th scope="col"
                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
                   <th scope="col"
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Logo</th>
-                  <th scope="col"
                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                   <th scope="col"
                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
@@ -105,20 +305,16 @@
                     <div class="text-sm font-medium text-gray-900">{{ brand.name }}</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <img v-if="brand.logo" :src="brand.logo" alt="Logo" class="h-10 w-10 object-contain" />
-                    <span v-else class="text-sm text-gray-500">Sem logo</span>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
                       :class="brand.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
-                      {{ brand.active ? 'Ativo' : 'Inativo' }}
+                      {{ brand.active ? 'Ativo' : 'Ativo' }}
                     </span>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button @click="openBrandModal(brand)" class="text-primary-600 hover:text-primary-900 mr-3">
                       Editar
                     </button>
-                    <button @click="deleteBrand(brand.id)" class="text-red-600 hover:text-red-900">
+                    <button @click="confirmDelete(category.id)" class="text-red-600 hover:text-red-900">
                       Excluir
                     </button>
                   </td>
@@ -223,193 +419,22 @@
         </div>
       </div>
     </div>
-
     <!-- Modal de Categoria -->
-    <div v-if="showCategoryModal" class="fixed inset-0 z-10 overflow-y-auto">
-      <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-          <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-        </div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div
-          class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-          <form @submit.prevent="saveCategory">
-            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-              <div class="mb-4">
-                <h3 class="text-lg leading-6 font-medium text-gray-900">
-                  {{ editingCategory.id ? 'Editar Categoria' : 'Nova Categoria' }}
-                </h3>
-              </div>
-              <div class="space-y-4">
-                <div>
-                  <label for="categoryName" class="block text-sm font-medium text-gray-700">Nome</label>
-                  <input id="categoryName" v-model="editingCategory.name" type="text" required
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" />
-                </div>
-                <div>
-                  <label for="categoryDescription" class="block text-sm font-medium text-gray-700">Descrição</label>
-                  <textarea id="categoryDescription" v-model="editingCategory.description" rows="3"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"></textarea>
-                </div>
-                <div class="flex items-center">
-                  <input id="categoryActive" v-model="editingCategory.active" type="checkbox"
-                    class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded" />
-                  <label for="categoryActive" class="ml-2 block text-sm text-gray-900">
-                    Ativo
-                  </label>
-                </div>
-              </div>
-            </div>
-            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-              <button type="submit"
-                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary-600 text-base font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:ml-3 sm:w-auto sm:text-sm">
-                Salvar
-              </button>
-              <button type="button" @click="showCategoryModal = false"
-                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                Cancelar
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
+    <div v-if="showCategoryModal" class="fixed inset-0 overflow-y-auto">
+      <SettingCategoryModal @close="showCategoryModal = false" @save="handleSaveCategory" :category="editingCategory" />
     </div>
 
     <!-- Modal de Marca -->
-    <div v-if="showBrandModal" class="fixed inset-0 z-10 overflow-y-auto">
-      <!-- Conteúdo do modal de marca (similar ao de categoria) -->
+    <div v-if="showBrandModal" class="fixed inset-0 overflow-y-auto">
+      <SettingBrandModal @close="showBrandModal = false" :brand="editingBrand" />
     </div>
 
     <!-- Modal de Tag -->
-    <div v-if="showTagModal" class="fixed inset-0 z-10 overflow-y-auto">
-      <!-- Conteúdo do modal de tag (similar ao de categoria) -->
+    <div v-if="showTagModal" class="fixed inset-0 overflow-y-auto">
+      <SettingTagsModal @close="showTagModal = false" :tag="editingTag" />
     </div>
   </div>
+  <confirm-delete-modal :is-open="showConfirmModal"
+    message="Tem certeza que deseja excluir esta categoria? Esta ação não pode ser desfeita."
+    @confirm="deleteCategoryFromDB" @cancel="showConfirmModal = false" />
 </template>
-
-<script setup>
-import { useBrandStore } from '@/store/modules/useBrandStore'
-import { useCategoryStore } from '@/store/modules/useCategoryStore'
-import { useTagStore } from '@/store/modules/useTagStores'
-import { useToast } from 'vue-toastification'
-import { ref, reactive, onMounted } from 'vue'
-
-const toast = useToast()
-const categoryStore = useCategoryStore()
-const brandStore = useBrandStore()
-const tagStore = useTagStore()
-
-const activeTab = ref('categories')
-const tabs = [
-  { id: 'categories', name: 'Categorias' },
-  { id: 'brands', name: 'Marcas' },
-  { id: 'tags', name: 'Tags' },
-  { id: 'notifications', name: 'Notificações' }
-]
-
-const categories = ref([])
-const brands = ref([])
-const tags = ref([])
-
-const showCategoryModal = ref(false)
-const showBrandModal = ref(false)
-const showTagModal = ref(false)
-
-const editingCategory = reactive({
-  id: null,
-  name: '',
-  description: '',
-  active: true
-})
-
-const editingBrand = reactive({
-  id: null,
-  name: '',
-  logo: null,
-  active: true
-})
-
-const editingTag = reactive({
-  id: null,
-  name: ''
-})
-
-const fetchCategories = () => {
-    categories.value = categoryStore.fetchCategories()
-}
-
-const fetchBrands = () => {
-    brands.value = brandStore.fetchBrands()
-}
-
-const fetchTags = () => {
-  tags.value = tagStore.fetchTags()
-}
-
-const openCategoryModal = (category = null) => {
-  if (category) {
-    Object.assign(editingCategory, category)
-  } else {
-    Object.assign(editingCategory, { id: null, name: '', description: '', active: true })
-  }
-  showCategoryModal.value = true
-}
-
-const openBrandModal = (brand = null) => {
-  if (brand) {
-    Object.assign(editingBrand, brand)
-  } else {
-    Object.assign(editingBrand, { id: null, name: '', logo: null, active: true })
-  }
-  showBrandModal.value = true
-}
-
-const openTagModal = (tag = null) => {
-  if (tag) {
-    Object.assign(editingTag, tag)
-  } else {
-    Object.assign(editingTag, { id: null, name: '' })
-  }
-  showTagModal.value = true
-}
-
-const saveCategory = () => {
-  if (editingCategory.id) {
-    const index = categories.value.findIndex(c => c.id === editingCategory.id)
-    if (index !== -1) {
-      categories.value.splice(index, 1, { ...editingCategory })
-    }
-  } else {
-    const newId = Math.max(0, ...categories.value.map(c => c.id)) + 1
-    categories.value.push({ ...editingCategory, id: newId })
-  }
-  showCategoryModal.value = false
-  toast.sucess(`Categoria ${editingCategory.id ? 'atualizada' : 'criada'} com sucesso!`)
-}
-
-const deleteCategory = id => {
-
-}
-
-const deleteBrand = id => {
-
-}
-
-const deleteTag = id => {
-  if (confirm('Tem certeza que deseja excluir esta tag?')) {
-    tags.value = tags.value.filter(t => t.id !== id)
-    toast.sucess('Tag excluida com sucesso!')
-  }
-}
-
-const saveNotificationSettings = () => {
-  toast.sucess('Configurações salvas com sucesso!')
-}
-
-onMounted(() => {
-  fetchCategories()
-  fetchBrands()
-  fetchTags()
-})
-
-</script>

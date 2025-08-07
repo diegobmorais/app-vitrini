@@ -74,6 +74,36 @@ export const useCategoryStore = defineStore('categories', () => {
     await fetchCategoryById(categoryId)
   }
 
+  const createCategory = async (data) => {
+    try {
+      const response = await api.post('api/category', data)      
+      await fetchCategories()
+      return response.data
+    } catch (err) {
+      console.error('Erro ao criar categoria:', err)
+    }
+  }
+
+  const deleteCategoryById = async (categoryId) => {
+    try {
+      await api.delete(`api/category/${categoryId}`)
+      await fetchCategories()
+      
+    } catch (err) {
+      console.error('Erro ao excluir categoria:', err)
+    }
+  }
+
+  const updateCategory = async (categoryId, data) => {    
+    try {
+      const response = await api.put(`api/category/${categoryId}`, data)
+      await fetchCategories()
+      return response.data
+    } catch (err) {
+      console.error('Erro ao atualizar categoria:', err)
+    }
+  }
+
   return {
     // State
     categories,
@@ -95,5 +125,8 @@ export const useCategoryStore = defineStore('categories', () => {
     fetchCategories,
     fetchCategoryById,
     fetchCategoryProducts,
+    deleteCategoryById,
+    updateCategory,
+    createCategory
   }
 })

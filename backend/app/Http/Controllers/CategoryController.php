@@ -28,7 +28,8 @@ class CategoryController extends Controller
         $validateRequest = $request->validate([
             'name' => 'required|max:90',
             'slug' => 'nullable|unique:brands,slug',
-            'description' => 'required|max:150'
+            'description' => 'required|max:150',
+            'featured' => 'nullable|boolean'
         ]);
 
         if (empty($validateRequest['slug'])) {
@@ -80,7 +81,8 @@ class CategoryController extends Controller
         $validateRequest = $request->validate([
             'name' => 'required|max:90',
             'slug' => 'nullable|unique:category,slug,' . $category->id,
-            'description' => 'required|max:150'
+            'description' => 'required|max:150',
+            'featured' => 'nullable|boolean'
         ]);
 
         if (empty($validateRequest['slug'])) {
