@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductImageController;
 use App\Http\Controllers\ServiceController;
@@ -48,6 +49,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('delete-temp-image', [ProductImageController::class, 'deleteTemp']);
     Route::put('/image/{id}/main-image', [ProductImageController::class, 'setMainImage']);
 });
+
 //category
 Route::apiResource('category', CategoryController::class);
 Route::get('categories/featured', [CategoryController::class, 'categoriesFeatured']);
@@ -63,7 +65,8 @@ Route::prefix('products/{product}')->group(function () {
     Route::get('images', [ProductImageController::class, 'index']);
     Route::post('images', [ProductImageController::class, 'store']);
 });
-
-
 //supplier
 Route::apiResource('suppliers', SupplierController::class);
+
+//oders
+Route::apiResource('orders', OrderController::class);

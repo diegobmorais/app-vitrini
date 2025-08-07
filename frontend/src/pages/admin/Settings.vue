@@ -288,10 +288,16 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
-import { useNotificationStore } from '@/store/modules/useNotificationStore'
+import { useBrandStore } from '@/store/modules/useBrandStore'
+import { useCategoryStore } from '@/store/modules/useCategoryStore'
+import { useTagStore } from '@/store/modules/useTagStores'
+import { useToast } from 'vue-toastification'
+import { ref, reactive, onMounted } from 'vue'
 
-const notificationsStore = useNotificationStore()
+const toast = useToast()
+const categoryStore = useCategoryStore()
+const brandStore = useBrandStore()
+const tagStore = useTagStore()
 
 const activeTab = ref('categories')
 const tabs = [
@@ -328,49 +334,16 @@ const editingTag = reactive({
   name: ''
 })
 
-const notificationSettings = reactive({
-  welcome: 'Bem-vindo à nossa loja! Estamos felizes em tê-lo conosco.',
-  orderConfirmation: 'Seu pedido foi confirmado e está sendo processado.',
-  orderShipped: 'Seu pedido foi enviado e está a caminho!',
-  outOfStock: 'Desculpe, este produto está temporariamente fora de estoque.',
-  enableEmail: true,
-  enableSms: false
-})
-
-// Simulações de fetch (API fake)
 const fetchCategories = () => {
-  setTimeout(() => {
-    categories.value = [
-      { id: 1, name: 'Alimentos', description: 'Produtos alimentícios para pets', active: true },
-      { id: 2, name: 'Brinquedos', description: 'Brinquedos para pets', active: true },
-      { id: 3, name: 'Acessórios', description: 'Acessórios para pets', active: false }
-    ]
-  }, 500)
+    categories.value = categoryStore.fetchCategories()
 }
 
 const fetchBrands = () => {
-  setTimeout(() => {
-    brands.value = [
-      { id: 1, name: 'PetFood', logo: '/images/brands/petfood.png', active: true },
-      { id: 2, name: 'PetToys', logo: '/images/brands/pettoys.png', active: true },
-      { id: 3, name: 'PetCare', logo: null, active: false }
-    ]
-  }, 500)
+    brands.value = brandStore.fetchBrands()
 }
 
 const fetchTags = () => {
-  setTimeout(() => {
-    tags.value = [
-      { id: 1, name: 'Promoção' },
-      { id: 2, name: 'Novo' },
-      { id: 3, name: 'Destaque' },
-      { id: 4, name: 'Limitado' }
-    ]
-  }, 500)
-}
-
-const fetchNotificationSettings = () => {
-  // Aqui você pode buscar as configs do backend se quiser
+  tags.value = tagStore.fetchTags()
 }
 
 const openCategoryModal = (category = null) => {
@@ -411,54 +384,32 @@ const saveCategory = () => {
     categories.value.push({ ...editingCategory, id: newId })
   }
   showCategoryModal.value = false
-  notificationsStore.add({
-    type: 'success',
-    message: `Categoria ${editingCategory.id ? 'atualizada' : 'criada'} com sucesso!`
-  })
+  toast.sucess(`Categoria ${editingCategory.id ? 'atualizada' : 'criada'} com sucesso!`)
 }
 
 const deleteCategory = id => {
-  if (confirm('Tem certeza que deseja excluir esta categoria?')) {
-    categories.value = categories.value.filter(c => c.id !== id)
-    notificationsStore.add({
-      type: 'success',
-      message: 'Categoria excluída com sucesso!'
-    })
-  }
+
 }
 
 const deleteBrand = id => {
-  if (confirm('Tem certeza que deseja excluir esta marca?')) {
-    brands.value = brands.value.filter(b => b.id !== id)
-    notificationsStore.add({
-      type: 'success',
-      message: 'Marca excluída com sucesso!'
-    })
-  }
+
 }
 
 const deleteTag = id => {
   if (confirm('Tem certeza que deseja excluir esta tag?')) {
     tags.value = tags.value.filter(t => t.id !== id)
-    notificationsStore.add({
-      type: 'success',
-      message: 'Tag excluída com sucesso!'
-    })
+    toast.sucess('Tag excluida com sucesso!')
   }
 }
 
 const saveNotificationSettings = () => {
-  // Simulação de salvamento
-  notificationsStore.add({
-    type: 'success',
-    message: 'Configurações de notificação salvas com sucesso!'
-  })
+  toast.sucess('Configurações salvas com sucesso!')
 }
 
-// Executar fetch ao montar
-fetchCategories()
-fetchBrands()
-fetchTags()
-fetchNotificationSettings()
+onMounted(() => {
+  fetchCategories()
+  fetchBrands()
+  fetchTags()
+})
 
 </script>
