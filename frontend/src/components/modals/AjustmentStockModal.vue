@@ -1,111 +1,121 @@
 <template>
-    <div v-if="showAdjustmentModal" class="fixed inset-0 z-10 overflow-y-auto">
-        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-            </div>
+    <div v-if="showAdjustmentModal" class="fixed inset-0 z-50 overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-6 pb-20 text-center sm:block sm:p-0">
+            <!-- Fundo escurecido -->
+            <div class="fixed inset-0 bg-black bg-opacity-30 transition-opacity" @click="emit('close')"></div>
+
+            <!-- Espaçador invisível -->
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <!-- Conteúdo do modal -->
             <div
-                class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                <form @submit.prevent="saveStockAdjustment">
-                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                        <div class="mb-4">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900">
-                                Ajuste de Estoque
-                            </h3>
-                            <p v-if="selectedProduct" class="mt-1 text-sm text-gray-500">
-                                {{ selectedProduct.name }} (SKU: {{ selectedProduct.sku }})
-                            </p>
+                class="inline-block align-middle bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:max-w-lg sm:w-full scale-100 opacity-100 duration-300 ease-in-out">
+                <form @submit.prevent="saveStockAdjustment" class="divide-y divide-gray-100">
+                    <!-- Cabeçalho -->
+                    <div class="px-6 pt-6 pb-4">
+                        <h3 class="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                            Ajuste de Estoque
+                        </h3>
+                        <p v-if="selectedProduct" class="mt-1 text-sm text-gray-600">
+                            {{ selectedProduct.name }} <span class="text-gray-400 text-xs">(SKU: {{ selectedProduct.sku
+                            }})</span>
+                        </p>
+                    </div>
+
+                    <!-- Corpo do formulário -->
+                    <div class="px-6 py-5 space-y-5">
+                        <!-- Campo de busca de produto -->
+                        <div class="relative">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Produto</label>
+                            <input v-model="searchTerm" type="text" @focus="onFocus" @onblur="onBlur"
+                                placeholder="Buscar produto por nome ou SKU..."
+                                class="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" />
+
+                            <!-- Dropdown de resultados -->
+                            <ul v-if="showDropdown && searchResults.length > 0"
+                                class="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-auto ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                <li v-for="product in searchResults" :key="product.id"
+                                    @mousedown="selectProduct(product)" @click="selectProduct(product)"
+                                    class="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-50 last:border-0 flex items-center justify-between transition-colors duration-150">
+                                    <span class="font-medium text-gray-900 text-sm">{{ product.name }}</span>
+                                    <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                                        {{ product.sku }}
+                                    </span>
+                                </li>
+                            </ul>
+
+                            <!-- Mensagem sem resultados -->
+                            <div v-else-if="showDropdown && searchResults.length === 0"
+                                class="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg p-3 text-gray-500 text-sm">
+                                Nenhum produto encontrado.
+                            </div>
                         </div>
-                        <div class="space-y-4">
-                            <div class="reactive">
-                                <label for="product" class="block text-sm font-medium text-gray-700">Produto</label>
-                                <!-- Campo de busca -->
-                                <input v-model="searchTerm" type="text" @focus="onFocus" @blur="onBlur"
-                                    placeholder="Buscar produto por nome ou SKU..."
-                                    class="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
 
-                                <!-- Dropdown de resultados -->
-                                <ul v-if="showDropdown && searchResults.length > 0"
-                                    class="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
-                                    <li v-for="product in searchResults" :key="product.id"
-                                        @click="selectProduct(product)"
-                                        class="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between truncate">
-                                        <span class="font-medium text-gray-900 truncate">{{ product.name }}</span>
-                                        <span class="ml-3 text-sm text-gray-500 whitespace-nowrap">
-                                            {{ product.sku }}
-                                        </span>
-                                    </li>
-                                </ul>
-                                <!-- Mensagem sem resultados -->
-                                <div v-else-if="showDropdown && searchResults.length === 0"
-                                    class="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg p-2 text-gray-500 text-sm">
-                                    Nenhum produto encontrado.
-                                </div>
-                            </div>
+                        <!-- Estoque Atual -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Estoque Atual</label>
+                            <input :value="currentStock" type="number" disabled
+                                class="w-full rounded-xl border-gray-200 bg-gray-50 text-gray-700 shadow-sm focus:ring-2 focus:ring-blue-500 focus:ring-offset-1" />
+                        </div>
 
-                            <div>
-                                <label for="current_stock" class="block text-sm font-medium text-gray-700">Estoque
-                                    Atual</label>
-                                <input id="current_stock" :value="currentStock" type="number" disabled
-                                    class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm" />
-                            </div>
+                        <!-- Tipo de Ajuste -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Ajuste</label>
+                            <select v-model="adjustmentForm.type" required
+                                class="w-full rounded-xl border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="" disabled selected>Selecione o tipo de ajuste</option>
+                                <option value="add">Adicionar</option>
+                                <option value="remove">Remover</option>
+                                <option value="set">Ajustar Valor</option>
+                            </select>
+                        </div>
 
-                            <div>
-                                <label for="adjustment_type" class="block text-sm font-medium text-gray-700">Tipo de
-                                    Ajuste</label>
-                                <select id="adjustment_type" v-model="adjustmentForm.type" required
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
-                                    <option value="" disabled selected>Selecione o tipo de ajuste</option>
-                                    <option value="add">Adicionar</option>
-                                    <option value="remove">Remover</option>
-                                    <option value="set">Ajustar Valor</option>
-                                </select>
-                            </div>
+                        <!-- Quantidade -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Quantidade</label>
+                            <input v-model.number="adjustmentForm.quantity" type="number" min="1" required
+                                class="w-full rounded-xl border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                        </div>
 
-                            <div>
-                                <label for="quantity" class="block text-sm font-medium text-gray-700">Quantidade</label>
-                                <input id="quantity" v-model.number="adjustmentForm.quantity" type="number" min="1"
-                                    required
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" />
-                            </div>
+                        <!-- Motivo -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Motivo</label>
+                            <select v-model="adjustmentForm.reason" required
+                                class="w-full rounded-xl border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="">Selecione um motivo</option>
+                                <option value="Compra">Compra</option>
+                                <option value="Venda">Venda</option>
+                                <option value="Devolução">Devolução</option>
+                                <option value="Perda/Dano">Perda/Dano</option>
+                                <option value="Correção de Inventário">Correção de Inventário</option>
+                                <option value="Outros">Outro</option>
+                            </select>
+                        </div>
 
-                            <div>
-                                <label for="reason" class="block text-sm font-medium text-gray-700">Motivo</label>
-                                <select id="reason" v-model="adjustmentForm.reason" required
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
-                                    <option value="">Selecione um motivo</option>
-                                    <option value="Compra">Compra</option>
-                                    <option value="Venda">Venda</option>
-                                    <option value="Devolução">Devolução</option>
-                                    <option value="Perda/Dano">Perda/Dano</option>
-                                    <option value="Correção de Inventário">Correção de Inventário</option>
-                                    <option value="Outros">Outro</option>
-                                </select>
-                            </div>
+                        <!-- Observações -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Observações</label>
+                            <textarea v-model="adjustmentForm.notes" rows="2"
+                                class="w-full rounded-xl border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                        </div>
 
-                            <div v-if="adjustmentForm.reason === 'other'">
-                                <label for="notes" class="block text-sm font-medium text-gray-700">Observações</label>
-                                <textarea id="notes" v-model="adjustmentForm.notes" rows="2"
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"></textarea>
-                            </div>
-
-                            <div>
-                                <label for="new_stock" class="block text-sm font-medium text-gray-700">Novo
-                                    Estoque</label>
-                                <input id="new_stock" :value="newStockPreview" type="number" disabled
-                                    class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm" />
-                            </div>
+                        <!-- Novo Estoque (prévia) -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Novo Estoque</label>
+                            <input :value="newStockPreview" type="number" disabled
+                                class="w-full rounded-xl border-gray-200 bg-gray-50 text-gray-700 shadow-sm" />
                         </div>
                     </div>
-                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                        <button type="submit"
-                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary-600 text-base font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:ml-3 sm:w-auto sm:text-sm">
-                            Salvar
-                        </button>
+
+                    <!-- Rodapé com botões -->
+                    <div class="px-6 py-4 bg-gray-50 flex flex-col-reverse sm:flex-row sm:justify-end gap-3 sm:gap-2">
                         <button type="button" @click="emit('close')"
-                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                            class="px-5 py-2.5 rounded-xl border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-all duration-150">
                             Cancelar
+                        </button>
+                        <button type="submit"
+                            class="px-5 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-all duration-150 shadow-sm">
+                            Salvar
                         </button>
                     </div>
                 </form>
@@ -171,8 +181,8 @@ watch(searchTerm, (value) => {
 
     clearTimeout(searchTimer)
     searchTimer = setTimeout(async () => {
-        const resp = await productStore.fetchProducts({ search: value })        
-        
+        const resp = await productStore.fetchProducts({ search: value })
+
         showDropdown.value = true
     }, 300)
 })
@@ -184,16 +194,15 @@ const selectProduct = (product) => {
     showDropdown.value = false
     adjustmentForm.value.product_id = product.id
 }
-
-// Foco no campo
+const onBlur = () => {   
+    setTimeout(() => {
+        showDropdown.value = false
+    }, 150);
+}
 const onFocus = () => {
-    if (searchTerm.value) showDropdown.value = true
+    showDropdown.value = true
 }
 
-// Desfoco
-const onBlur = () => {
-    setTimeout(() => (showDropdown.value = false), 100)
-}
 // --- Produto atual ---
 const currentProduct = computed(() => {
     if (props.selectedProduct) return props.selectedProduct
@@ -259,7 +268,7 @@ watch(
 // --- Salva ajuste ---
 const saveStockAdjustment = async () => {
     if (!adjustmentForm.value.product_id || !adjustmentForm.value.reason) {
-        toast.warning('Preencha todos os campos obrigatórios')      
+        toast.warning('Preencha todos os campos obrigatórios')
         return
     }
     try {
@@ -270,13 +279,11 @@ const saveStockAdjustment = async () => {
             set: 'adjustment'
         }
         const payload = {
-            product_id: adjustmentForm.value.product_id,          
+            product_id: adjustmentForm.value.product_id,
             type: typeMap[adjustmentForm.value.type],
             quantity: adjustmentForm.value.quantity,
-            description: [
-                adjustmentForm.value.reason,
-                adjustmentForm.value.notes ? `(${adjustmentForm.value.notes})` : ''
-            ].filter(Boolean).join(' - ')
+            description: adjustmentForm.value.reason,
+            observation: adjustmentForm.value.notes
         }
         await inventoryStore.addMovement(payload)
         emit('saved')
@@ -290,7 +297,7 @@ const saveStockAdjustment = async () => {
         }
         emit('close')
     } catch (error) {
-        toast.error('Preencha todos os campos obrigatórios')  
+        toast.error('Preencha todos os campos obrigatórios')
         console.error(error)
     }
 }

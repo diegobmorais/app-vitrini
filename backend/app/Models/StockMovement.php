@@ -10,7 +10,8 @@ class StockMovement extends Model
         'product_id',       
         'type',
         'quantity',
-        'description'
+        'description',
+        'observation'
     ];
     const STOCK_INITIAL = "Estoque inicial";
 

@@ -103,6 +103,7 @@ class StockMovementController extends Controller
             'type' => 'required|in:in,out',
             'quantity' => 'required|integer|min:1',
             'description' => 'nullable|string|max:255',
+            'observation' => 'nullable|string|max:255',
         ]);
 
         $movement = StockMovement::create($data);
