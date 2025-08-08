@@ -6,31 +6,18 @@
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
         <div
             class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-            <form @submit.prevent="saveCategory">
+            <form @submit.prevent="saveTagSubmit">
                 <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                     <div class="mb-4">
                         <h3 class="text-lg leading-6 font-medium text-gray-900">
-                            {{ editingCategory.id ? 'Editar Categoria' : 'Nova Categoria' }}
+                            {{ editingTag.id ? 'Editar Categoria' : 'Nova Categoria' }}
                         </h3>
                     </div>
                     <div class="space-y-4">
                         <div>
-                            <label for="categoryName" class="block text-sm font-medium text-gray-700">Nome</label>
-                            <input id="categoryName" v-model="editingCategory.name" type="text" required
+                            <label for="tagName" class="block text-sm font-medium text-gray-700">Nome</label>
+                            <input id="tagName" v-model="editingTag.name" type="text" required
                                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" />
-                        </div>
-                        <div>
-                            <label for="categoryDescription"
-                                class="block text-sm font-medium text-gray-700">Descrição</label>
-                            <textarea id="categoryDescription" v-model="editingCategory.description" rows="3"
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"></textarea>
-                        </div>
-                        <div class="flex items-center">
-                            <input id="categoryActive" v-model="editingCategory.active" type="checkbox"
-                                class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded" />
-                            <label for="categoryActive" class="ml-2 block text-sm text-gray-900">
-                                Ativo
-                            </label>
                         </div>
                     </div>
                 </div>
@@ -48,3 +35,51 @@
         </div>
     </div>
 </template>
+<script setup>
+import { ref, watch } from 'vue'
+
+const props = defineProps({
+    tag: {
+        type: Object,
+        required: false,
+        default: () => ({})
+    }
+})
+// Define os eventos que este componente pode emitir
+const emit = defineEmits(['close', 'save'])
+
+const editingTag = ref({
+    name: '',
+    description: '',
+})
+
+watch(
+    () => props.tag,
+    (newVal) => {
+        if (newVal) {
+            Object.assign(editingTag.value, {
+                id: newVal.id,
+                name: newVal.name,
+                description: newVal.description,
+            })
+
+        } else {
+            Object.assign(editingTag.value, {
+                name: '',
+                description: '',
+            })
+        }
+    },
+    { immediate: true }
+)
+
+const saveTagSubmit = () => {
+    const payload = {
+        ...editingTag.value,
+        id: editingTag.value.id ? Number(editingTag.value.id) : null
+    }
+
+    emit('save', payload)
+    emit('close')
+}
+</script>

@@ -12,7 +12,8 @@ export const useCategoryStore = defineStore('categories', () => {
 
   // Getters
   const allCategories = computed(() => categories.value)
-
+  const categoriesCount = computed(() => categories.value.length)
+  
   const categoryById = (id) => {
     return categories.value.find((c) => c.id === id)
   }
@@ -84,7 +85,7 @@ export const useCategoryStore = defineStore('categories', () => {
     }
   }
 
-  const deleteCategoryById = async (categoryId) => {
+  const deleteCategory = async (categoryId) => {
     try {
       await api.delete(`api/category/${categoryId}`)
       await fetchCategories()
@@ -125,7 +126,7 @@ export const useCategoryStore = defineStore('categories', () => {
     fetchCategories,
     fetchCategoryById,
     fetchCategoryProducts,
-    deleteCategoryById,
+    deleteCategory,
     updateCategory,
     createCategory
   }

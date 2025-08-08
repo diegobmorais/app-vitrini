@@ -371,7 +371,7 @@ import { imageService } from '@/services/imageService'
 
 import { useCategoryStore } from '@/store/modules/useCategoryStore'
 import { useBrandStore } from '@/store/modules/useBrandStore'
-import { useTagStore } from '@/store/modules/useTagStores'
+import { useTagStore } from '@/store/modules/useTagStore'
 import { useSupplierStore } from '@/store/modules/useSupplierStore'
 import { useProductStore } from '@/store/modules/useProductStore'
 import { useToast } from 'vue-toastification'
