@@ -73,8 +73,8 @@
         <!-- Product images -->
         <div class="md:w-1/2 p-6">
           <div class="relative mb-4 bg-gray-100 rounded-lg overflow-hidden">
-            <img :src="product.images?.length ? `${baseURL}${product.images[0].url}` : '#'"
-                :alt="product.name"  class="w-full h-80 object-contain">
+            <img :src="product.images?.length ? `${baseURL}${product.images[0].url}` : '#'" :alt="product.name"
+              class="w-full h-80 object-contain">
 
             <!-- Badges -->
             <div class="absolute top-4 left-4 flex flex-col gap-2">
@@ -88,11 +88,12 @@
           </div>
 
           <!-- Thumbnails -->
-          <div v-if="product.images[0].url && product.images?.length > 0" class="flex gap-2 overflow-x-auto pb-2">
+          <div v-if="product?.images?.length > 0 && product.images[0]?.url" class="flex gap-2 overflow-x-auto pb-2">
             <button v-for="(image, index) in allImages" :key="index" @click="currentImage = image"
               class="w-16 h-16 rounded-md overflow-hidden border-2 flex-shrink-0"
               :class="currentImage === image ? 'border-primary-500' : 'border-gray-200'">
-              <img :src="`${baseURL}${product.images[0].url}`" :alt="`${product.name} - Imagem ${index + 1}`" class="w-full h-full object-cover">
+              <img :src="`${baseURL}${product.images[0].url}`" :alt="`${product.name} - Imagem ${index + 1}`"
+                class="w-full h-full object-cover">
             </button>
           </div>
         </div>
@@ -244,7 +245,7 @@
         </div>
 
         <!-- Specifications tab -->
-        <div v-if="activeTab === 'specifications'" class="py-4">
+        <!-- <div v-if="activeTab === 'specifications'" class="py-4">
           <div v-if="product.specifications && product.specifications.length > 0">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div v-for="(spec, index) in product.specifications" :key="index" class="border-b border-gray-200 pb-2">
@@ -256,7 +257,7 @@
           <div v-else class="text-gray-600 italic">
             Especificações não disponíveis para este produto.
           </div>
-        </div>
+        </div> -->
 
         <!-- Reviews tab -->
         <div v-if="activeTab === 'reviews'" class="py-4">
@@ -324,7 +325,7 @@ const currentImage = ref('')
 // Tabs
 const tabs = [
   { id: 'description', name: 'Descrição' },
-  { id: 'specifications', name: 'Especificações' },
+  // { id: 'specifications', name: 'Especificações' },
   { id: 'reviews', name: 'Avaliações' }
 ]
 

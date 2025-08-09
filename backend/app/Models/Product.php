@@ -77,4 +77,40 @@ class Product extends Model
     {
         return $this->belongsTo(ProductImage::class, "main_image_id");
     }
+    public function getStockQuantityAttribute()
+    {       
+        $lastAdjustment = $this->stockMovements()
+            ->where('type', 'adjustment')
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        if ($lastAdjustment) {          
+            $baseQuantity = $lastAdjustment->quantity;
+            
+            $movementsAfterAdjustment = $this->stockMovements()
+                ->where('created_at', '>', $lastAdjustment->created_at)
+                ->get();
+
+            $balance = 0;
+            foreach ($movementsAfterAdjustment as $movement) {
+                if (in_array($movement->type, ['in', 'entrada'])) {
+                    $balance += $movement->quantity;
+                } elseif (in_array($movement->type, ['out', 'saida'])) {
+                    $balance -= $movement->quantity;
+                }
+            }
+
+            return $baseQuantity + $balance;
+        } else {         
+            $totalIn = $this->stockMovements()
+                ->whereIn('type', ['in', 'entrada'])
+                ->sum('quantity');
+
+            $totalOut = $this->stockMovements()
+                ->whereIn('type', ['out', 'saida'])
+                ->sum('quantity');
+
+            return $totalIn - $totalOut;
+        }
+    }
 }

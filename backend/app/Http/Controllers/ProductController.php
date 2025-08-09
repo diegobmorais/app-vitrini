@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreProductRequest;
 use App\Models\Product;
+use App\Models\StockMovement;
 use App\Services\StockMovementService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -76,7 +77,7 @@ class ProductController extends Controller
                 $this->getSortDirection($request->sort)
             ]);
         }
-            
+
         $perPage = $request->input('per_page', 10);
         $currentPage = $request->input('page', 1);
         $total = $products->count();
@@ -96,7 +97,7 @@ class ProductController extends Controller
         );
 
         return response()->json($paginated);
-    }   
+    }
     private function getSortField($sort)
     {
         return match ($sort) {
@@ -213,12 +214,14 @@ class ProductController extends Controller
     }
     public function showBySlug($slug)
     {
-        $product = Product::with('images')->where('slug', $slug)->first();
+        $product = Product::with('images')
+            ->where('slug', $slug)
+            ->first();
 
         if (!$product) {
             return response()->json(['message' => 'Produto não encontrado.'], 404);
         }
-
+       
         return response()->json($product);
     }
 }
