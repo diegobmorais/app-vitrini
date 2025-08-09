@@ -7,18 +7,24 @@ export const useBrandStore = defineStore('brands', () => {
   const brands = ref([])
   const loading = ref(false)
   const error = ref(null)
+  const totalBrands = ref(0)
+  const lastPage = ref(1)
 
   // Getters (como computed)
   const brandCount = computed(() => brands.value.length)
   const getBrandById = (id) => brands.value.find(b => b.id === id)
 
   // Actions
-  async function fetchBrands() {
+  async function fetchBrands(page = 1, limit = 10, search = '') {
     loading.value = true
     error.value = null
     try {
-      const { data } = await api.get('/api/brands')
-      brands.value = data
+      const response  = await api.get('/api/brands', {
+        params: { page, limit, search }
+      })
+      brands.value = response.data.data
+      totalBrands.value = response.data.total
+      lastPage.value = response.data.last_page
     } catch (err) {
       error.value = err.response?.data?.message || 'Erro ao buscar marcas'
       console.error(error.value)
@@ -62,6 +68,8 @@ export const useBrandStore = defineStore('brands', () => {
     brands,
     loading,
     error,
+    totalBrands,
+    lastPage,
 
     // getters
     brandCount,

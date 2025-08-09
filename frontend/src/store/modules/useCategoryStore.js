@@ -6,6 +6,8 @@ import api from '@/main'
 export const useCategoryStore = defineStore('categories', () => {
   // State
   const categories = ref([])
+  const totalCategories = ref(0)
+  const lastPage = ref(1)
   const category = ref(null)
   const loading = ref(false)
   const error = ref(null)
@@ -13,7 +15,7 @@ export const useCategoryStore = defineStore('categories', () => {
   // Getters
   const allCategories = computed(() => categories.value)
   const categoriesCount = computed(() => categories.value.length)
-  
+
   const categoryById = (id) => {
     return categories.value.find((c) => c.id === id)
   }
@@ -38,13 +40,18 @@ export const useCategoryStore = defineStore('categories', () => {
   }
 
   // Actions
-  const fetchCategories = async () => {
+  const fetchCategories = async (page = 1, limit = 10, search = '') => {
     loading.value = true
     try {
-      const response = await api.get('api/category')
-      categories.value = response.data
-      error.value = null  
-      
+      const response = await api.get('api/category', {
+        params: { page, limit, search }
+      })
+      categories.value = response.data.data
+      totalCategories.value = response.data.total
+      lastPage.value = response.data.last_page
+
+      error.value = null
+
       return response.data
     } catch (err) {
       error.value = err.message || 'Erro ao carregar categorias'
@@ -68,7 +75,7 @@ export const useCategoryStore = defineStore('categories', () => {
     }
   }
 
-  const fetchCategoryProducts = async (categoryId, productStore) => {   
+  const fetchCategoryProducts = async (categoryId, productStore) => {
     productStore.updateFilters({ category: categoryId })
     await productStore.fetchProducts()
 
@@ -77,7 +84,7 @@ export const useCategoryStore = defineStore('categories', () => {
 
   const createCategory = async (data) => {
     try {
-      const response = await api.post('api/category', data)      
+      const response = await api.post('api/category', data)
       await fetchCategories()
       return response.data
     } catch (err) {
@@ -89,13 +96,13 @@ export const useCategoryStore = defineStore('categories', () => {
     try {
       await api.delete(`api/category/${categoryId}`)
       await fetchCategories()
-      
+
     } catch (err) {
       console.error('Erro ao excluir categoria:', err)
     }
   }
 
-  const updateCategory = async (categoryId, data) => {    
+  const updateCategory = async (categoryId, data) => {
     try {
       const response = await api.put(`api/category/${categoryId}`, data)
       await fetchCategories()
@@ -111,6 +118,8 @@ export const useCategoryStore = defineStore('categories', () => {
     category,
     loading,
     error,
+    totalCategories,
+    lastPage,
 
     // Getters
     allCategories,

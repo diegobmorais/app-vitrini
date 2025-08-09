@@ -11,12 +11,26 @@ class BrandController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {  
-        if (Auth::user()) {          
-            $brands = Brand::all();         
-            return response()->json($brands, 200);
+    public function index(Request $request)
+    {
+        $query = Brand::query();
+
+        if ($request->filled('search')) {
+            $query->where('name', 'LIKE', '%' . $request->search . '%');
         }
+
+        $perPage = $request->input('limit', 10);
+        $page = $request->input('page', 1);
+
+        $data = $query->paginate($perPage, ['*'], 'page', $page);
+
+        return response()->json([
+            'data' => $data->items(),
+            'total' => $data->total(),
+            'page' => $data->currentPage(),
+            'last_page' => $data->lastPage(),
+            'per_page' => $data->perPage(),
+        ]);
     }
     /**
      * Store a newly created resource in storage.

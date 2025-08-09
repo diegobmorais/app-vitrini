@@ -26,7 +26,11 @@
               Nova Categoria
             </button>
           </div>
-
+          <!-- Campo de busca -->
+          <div class="mb-4">
+            <input v-model="categorySearch" type="text" placeholder="Buscar categoria..."
+              class="w-full max-w-xs px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500" />
+          </div>
           <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
               <thead class="bg-gray-50">
@@ -74,6 +78,9 @@
               </tbody>
             </table>
           </div>
+          <!-- Paginação -->
+          <Pagination :current-page="categoryPage" :total-pages="categoryStore.lastPage"
+            :total="categoryStore.totalCategories" @page-changed="categoryPage = $event" />
         </div>
 
         <!-- Marcas -->
@@ -85,7 +92,11 @@
               Nova Marca
             </button>
           </div>
-
+          <!-- Campo de busca -->
+          <div class="mb-4">
+            <input v-model="brandSearch" type="text" placeholder="Buscar marca..."
+              class="w-full max-w-xs px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500" />
+          </div>
           <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
               <thead class="bg-gray-50">
@@ -126,6 +137,9 @@
               </tbody>
             </table>
           </div>
+          <!-- Paginação -->
+          <Pagination :current-page="brandPage" :total-pages="brandStore.lastPage"
+            :total="brandStore.totalBrands" @page-changed="brandPage = $event" />
         </div>
 
         <!-- Tags -->
@@ -242,12 +256,14 @@ import { useBrandStore } from '@/store/modules/useBrandStore'
 import { useCategoryStore } from '@/store/modules/useCategoryStore'
 import { useTagStore } from '@/store/modules/useTagStore'
 import { useToast } from 'vue-toastification'
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
 import { useNotificationStore } from '@/store/modules/useNotificationStore'
 import SettingCategoryModal from '@/components/modals/settings-modals/SettingCategoryModal.vue'
 import SettingBrandModal from '@/components/modals/settings-modals/SettingBrandModal.vue'
 import SettingTagsModal from '@/components/modals/settings-modals/SettingTagsModal.vue'
 import ConfirmDeleteModal from '@/components/ui/ConfirmDeleteModal.vue'
+import { usePaginationStore } from '@/store/modules/usePaginationStore'
+import Pagination from '@/components/ui/Pagination.vue'
 
 
 const toast = useToast()
@@ -264,6 +280,33 @@ const tabs = [
   { id: 'notifications', name: 'Notificações' }
 ]
 
+// Filtros
+const categoryPagination = usePaginationStore(() => categoryStore.categories, 'name')
+const brandPagination = usePaginationStore(() => brandStore.brands, 'name')
+
+// Desestruture com nomes claros
+const {
+  search: categorySearch,
+  page: categoryPage,
+  paginated: paginatedCategories,
+  totalPages: categoryTotalPages
+} = categoryPagination
+
+const {
+  search: brandSearch,
+  page: brandPage,
+  paginated: paginatedBrands,
+  totalPages: brandTotalPages
+} = brandPagination
+
+watch([categorySearch, categoryPage], async ([search, page]) => {
+  await categoryStore.fetchCategories(categoryPage.value, 10, categorySearch.value)
+})
+
+watch([brandSearch, brandPage], async ([search, page]) => {
+  await brandStore.fetchBrands(brandPage.value, 10, brandSearch.value)
+})
+// Modais
 const modalOpen = ref(null)
 const categories = ref([])
 const brands = ref([])
@@ -271,7 +314,6 @@ const tags = ref([])
 const notificationSettings = ref({})
 const showConfirmModal = ref(false)
 const deleteTarget = ref({ type: null, id: null, name: null })
-
 
 const isModalOpen = (type) => modalOpen.value === type
 
@@ -515,8 +557,8 @@ const saveNotificationSettings = () => {
 }
 
 onMounted(async () => {
-  await categoryStore.fetchCategories()
-  await brandStore.fetchBrands()
+  await categoryStore.fetchCategories(1, 10, '')
+  await brandStore.fetchBrands(1, 10, '')
   await tagStore.fetchTags()
   await fetchNotifications()
 })
