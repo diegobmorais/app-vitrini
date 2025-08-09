@@ -30,27 +30,49 @@
       <div class="absolute bottom-0 left-0 right-0 h-16 bg-white"
         style="clip-path: polygon(0 100%, 100% 100%, 100% 0);"></div>
     </section>
-
     <!-- Featured Categories -->
     <section class="py-12 md:py-20 bg-gray-50">
       <div class="container mx-auto px-4">
         <h2 class="text-3xl font-bold text-center mb-12">Categorias em Destaque</h2>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-          <div v-for="(category, index) in featuredCategories" :key="index" class="category-card">
-            <router-link :to="`/produtos?cat=${category.id}`"
-              class="block bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:scale-105">
-              <div class="aspect-square relative overflow-hidden">
-                <img :src="category.image" :alt="category.name" class="w-full h-full object-cover" />
+
+        <div class="relative">
+          <!-- button next -->
+          <button @click="scrollLeft"
+            class="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100 transition-colors -translate-x-1/2"
+            aria-label="Scroll para esquerda">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+          </button>
+
+          <!-- Container do carrossel -->
+          <div ref="carousel" class="overflow-x-auto scrollbar-hide px-12">
+            <div class="flex space-x-6 py-4" style="min-width: max-content;">
+              <div v-for="(category, index) in featuredCategories" :key="index" class="category-card flex-shrink-0">
+                <router-link :to="`/produtos?cat=${category.id}`"
+                  class="block bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:scale-105 w-64">
+                  <div class="aspect-square relative overflow-hidden">
+                    <img :src="category.image" :alt="category.name" class="w-full h-full object-cover" loading="lazy" />
+                  </div>
+                  <div class="p-4 text-center">
+                    <h3 class="font-semibold text-lg">{{ category.name }}</h3>
+                  </div>
+                </router-link>
               </div>
-              <div class="p-4 text-center">
-                <h3 class="font-semibold text-lg">{{ category.name }}</h3>
-              </div>
-            </router-link>
+            </div>
           </div>
+
+          <!-- button prev -->
+          <button @click="scrollRight"
+            class="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100 transition-colors translate-x-1/2"
+            aria-label="Scroll para direita">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </button>
         </div>
       </div>
     </section>
-
     <!-- Featured Products -->
     <section class="py-12 md:py-20">
       <div class="container mx-auto px-4">
@@ -127,10 +149,9 @@ import api from '@/main'
 
 const newsletterEmail = ref('')
 const isSubscribing = ref(false)
-
 const featuredCategories = ref([])
 const featuredProducts = ref([])
-
+const carousel = ref(null)
 const testimonials = ref([
   {
     name: 'Ana Silva',
@@ -192,6 +213,27 @@ const subscribeNewsletter = async () => {
     isSubscribing.value = false
   }
 }
+const scrollLeft = () => {
+  if (carousel.value) {
+    const cardWidth = getCardWidth()
+    carousel.value.scrollBy({
+      left: -cardWidth,
+      behavior: 'smooth'
+    })
+  }
+}
+const getCardWidth = () => {
+  return 280
+}
+const scrollRight = () => {
+  if (carousel.value) {
+    const cardWidth = getCardWidth()
+    carousel.value.scrollBy({
+      left: cardWidth,
+      behavior: 'smooth'
+    })
+  }
+}
 
 onMounted(() => {
   fetchProducts()
@@ -199,9 +241,31 @@ onMounted(() => {
 })
 </script>
 
-
 <style scoped>
 .home-page {
   overflow-x: hidden;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.relative {
+  padding: 0 2rem;
+}
+
+@media (max-width: 768px) {
+  .relative {
+    padding: 0 1.5rem;
+  }
+
+  .category-card {
+    min-width: 280px;
+  }
 }
 </style>
