@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AddressController;
+use App\Http\Controllers\API\CartController;
+use App\Http\Controllers\API\CheckoutController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
@@ -48,6 +50,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('uploads/temp-images', [ProductImageController::class, 'uploadTempImages']);
     Route::delete('delete-temp-image', [ProductImageController::class, 'deleteTemp']);
     Route::put('/image/{id}/main-image', [ProductImageController::class, 'setMainImage']);
+    //
+    Route::apiResource('/cart', CartController::class);
+    Route::post('/cart/items', [CartController::class, 'addItem']);
+    Route::patch('/cart/items/{itemId}', [CartController::class, 'updateItem']);
+    Route::delete('/cart/items/{itemId}', [CartController::class, 'removeItem']);
+    Route::delete('/cart', [CartController::class, 'clear']);
+
+    Route::post('/checkout', [CheckoutController::class, 'checkout']);
 });
 
 //category

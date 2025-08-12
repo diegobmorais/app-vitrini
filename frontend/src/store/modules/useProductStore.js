@@ -6,7 +6,6 @@ export const useProductStore = defineStore('products', {
     products: [],
     product: null,
     related_products: [],
-    items: [],
     loading: false,
     error: null,
     uploadSessionId: null,
@@ -168,6 +167,7 @@ export const useProductStore = defineStore('products', {
     resetUploadSession() {
       this.uploadSessionId = null
       this.uploadedImages = []
-    }
+    },
   }
+
 })

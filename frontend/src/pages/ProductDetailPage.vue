@@ -303,6 +303,8 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import ProductCard from '@/components/shop/ProductCard.vue'
 import { useProductStore } from '@/store/modules/useProductStore'
+import router from '@/router';
+import { useCartStore } from '@/store/modules/userCartStore';
 
 const baseURL = import.meta.env.VITE_API_BASE_URL;
 
@@ -316,6 +318,7 @@ const props = defineProps({
 
 // Pinia store
 const productStore = useProductStore()
+const cartStore = useCartStore()
 
 // Local state
 const quantity = ref(1)
@@ -400,7 +403,8 @@ const decrementQuantity = () => {
 // Cart actions via Pinia store
 const addToCart = () => {
   if (product.value && product.value.stock > 0) {
-    productStore.addToCart({ product: product.value, quantity: quantity.value })
+    cartStore.addToCart({ product: product.value, quantity: quantity.value })
+    router.push({ name: 'cart' })
   }
 }
 
