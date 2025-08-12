@@ -333,7 +333,7 @@ const tabs = [
 const product = computed(() => productStore.product)
 const loading = computed(() => productStore.isLoading)
 const error = computed(() => productStore.error)
-const relatedProducts = computed(() => product.value?.related_products || [])
+const relatedProducts = computed(() => productStore.related_products || [])
 
 const isOnSale = computed(() => {
   return product.value?.sale_price && product.value.sale_price < product.value.price

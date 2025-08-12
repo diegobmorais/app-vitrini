@@ -213,7 +213,7 @@ class ProductController extends Controller
         ]);
     }
     public function showBySlug($slug)
-    {
+    {   
         $product = Product::with('images')
             ->where('slug', $slug)
             ->first();
@@ -221,7 +221,21 @@ class ProductController extends Controller
         if (!$product) {
             return response()->json(['message' => 'Produto não encontrado.'], 404);
         }
-       
-        return response()->json($product);
+  
+        $relatedProducts = Product::with('images')
+            ->where('category_id', $product->category_id)
+            ->where('id', '!=', $product->id)
+            ->limit(10)
+            ->get()
+            ->map(function ($p) {
+                $p->stock = $p->getStockAttribute();
+                return $p;
+            });
+
+        // Retorna o produto + produtos relacionados
+        return response()->json([
+            'product' => $product,
+            'related_products' => $relatedProducts
+        ]);
     }
 }

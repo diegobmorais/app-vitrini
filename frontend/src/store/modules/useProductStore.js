@@ -5,6 +5,7 @@ export const useProductStore = defineStore('products', {
   state: () => ({
     products: [],
     product: null,
+    related_products: [],
     items: [],
     loading: false,
     error: null,
@@ -80,7 +81,8 @@ export const useProductStore = defineStore('products', {
       this.error = null
       try {
         const response = await api.get(`/api/product-detail/${slug}`)
-        this.product = response.data
+        this.product = response.data.product
+        this.related_products = response.data.related_products
       } catch (err) {
         this.error = err.response?.data?.message || 'Erro ao carregar produto'
         console.error('Error fetching product:', err)
