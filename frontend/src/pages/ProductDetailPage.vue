@@ -396,7 +396,6 @@ const decrementQuantity = () => {
 
 const addToCart = async () => {
   const currentProduct = productStore.product
-  console.log('currentProduct', currentProduct);
   if (currentProduct && currentProduct.stock > 0) { 
     try {
       await cartStore.addItemToCart(currentProduct.id, quantity.value )

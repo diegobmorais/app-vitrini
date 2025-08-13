@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\UpdateCartItemQuantity;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Product;
@@ -20,7 +21,7 @@ class CartController extends Controller
     }
 
     public function addItem(Request $request)
-    {
+    {          
         $request->validate([
             'product_id' => 'required|integer|exists:products,id',
             'quantity' => 'nullable|integer|min:1',           
@@ -38,17 +39,15 @@ class CartController extends Controller
     
         $price = $product->price;
 
-        $item = CartItem::updateOrCreate(
+        $item = CartItem::create(
             [
                 'cart_id' => $cart->id,
-                'product_id' => $product->id,                
-            ],
-            [
-                'quantity' => \DB::raw("quantity + {$qty}"),
+                'product_id' => $product->id,  
+                'quantity' => $qty,
                 'price_at_time' => $price
             ]
-        );
-        
+        );         
+         
         $cart->load('items.product');
 
         return response()->json(['cart' => $cart], 201);
@@ -66,9 +65,9 @@ class CartController extends Controller
             return response()->json(['message' => 'Estoque insuficiente'], 422);
         }
 
-        $item->quantity = $request->quantity;
-        $item->save();
-
+        // $item->quantity = $request->quantity;
+        // $item->save();
+        UpdateCartItemQuantity::dispatch($cart->id, $product->id, $request->quantity);
         $cart->load('items.product');
         return response()->json(['cart' => $cart], 200);
     }

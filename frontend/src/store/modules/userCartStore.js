@@ -63,7 +63,7 @@ export const useCartStore = defineStore('cart', () => {
     }
   }
 
-  async function addItemToCart(productId, quantity = 1) {
+  async function addItemToCart(productId, quantity) {
     try {
       const response = await api.post('/api/cart/items', {
         product_id: productId,
@@ -86,20 +86,39 @@ export const useCartStore = defineStore('cart', () => {
   }
 
   async function updateQuantity(itemId, quantity) {
+    const itemIndex = items.value.findIndex(i => i.id === itemId)
+    if (itemIndex === -1) return
+
+    const originalItem = { ...items.value[itemIndex] }
+
     try {
-      const response = await api.patch(`/api/cart/items/${itemId}`, { quantity })
-      items.value = response.data.cart.items.map(item => ({
-        id: item.id,
-        product_id: item.product_id,
-        name: item.product.name,
-        price: parseFloat(item.product.price),
-        quantity: item.quantity,
-        sku: item.product.sku,
-        slug: item.product.slug,
-        stock_quantity: item.product.stock,
-        image: item.product.image || '/images/placeholder.jpg',
-      })) || []
+      items.value[itemIndex] = {
+        ...items.value[itemIndex],
+        quantity: quantity
+      }
+
+      const response = await api.patch(`/api/cart/items/${itemId}`, {
+        quantity: quantity
+      })
+
+      const currentIndex = items.value.findIndex(i => i.id === itemId)
+      if (currentIndex !== -1) {
+        const updatedItemsFromResponse = response.data.cart.items;
+        const itemFromResponse = updatedItemsFromResponse.find(i => i.id === itemId);
+
+        if (itemFromResponse) {
+          items.value[currentIndex] = {
+            ...items.value[currentIndex],
+          };
+        }
+      }
+
     } catch (err) {
+      const currentIndex = items.value.findIndex(i => i.id === itemId)
+      if (currentIndex !== -1) {
+        items.value[currentIndex] = originalItem
+      }
+      console.error('Erro ao enviar atualização de quantidade:', err)
       throw err
     }
   }

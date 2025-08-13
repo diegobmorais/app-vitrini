@@ -58,29 +58,27 @@
                     <div class="text-primary-600 font-bold mb-2">
                       R$ {{ (item.price * item.quantity) }}
                     </div>
-
                     <!-- Quantity Controls -->
                     <div class="flex items-center">
                       <button @click="updateQuantity(item, item.quantity - 1)"
-                        class="w-8 h-8 rounded-l-md bg-gray-100 flex items-center justify-center border border-gray-300 hover:bg-gray-200 transition"
-                        :disabled="item.quantity <= 1" :class="{ 'opacity-50 cursor-not-allowed': item.quantity <= 1 }">
+                        class="w-8 h-8 bg-gray-100 flex items-center justify-center border border-gray-300 rounded-l hover:bg-gray-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        :disabled="item.quantity <= 1">
                         <i class="fas fa-minus text-xs"></i>
                       </button>
-                      <input type="number" v-model.number="item.quantity" min="1" :max="item.stock_quantity || 99"
-                        class="w-12 h-8 border-t border-b border-gray-300 text-center focus:outline-none focus:ring-0"
-                        @change="updateQuantity(item, item.quantity)">
+
+                      <input type="text" :value="item.quantity" readonly
+                        class="w-12 h-8 border-t border-b border-gray-300 text-center bg-white" />
                       <button @click="updateQuantity(item, item.quantity + 1)"
-                        class="w-8 h-8 rounded-r-md bg-gray-100 flex items-center justify-center border border-gray-300 hover:bg-gray-200 transition"
-                        :disabled="item.quantity >= (item.stock_quantity || 99)"
-                        :class="{ 'opacity-50 cursor-not-allowed': item.quantity >= (item.stock_quantity || 99) }">
+                        class="w-8 h-8 bg-gray-100 flex items-center justify-center border border-gray-300 rounded-r hover:bg-gray-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        :disabled="item.quantity >= (item.stock_quantity || 99)">
                         <i class="fas fa-plus text-xs"></i>
                       </button>
-
                       <button @click="removeItem(item)" class="ml-4 text-red-500 hover:text-red-700 transition"
                         title="Remover item">
                         <i class="fas fa-trash-alt"></i>
                       </button>
                     </div>
+
                   </div>
                 </div>
               </div>
@@ -182,6 +180,7 @@
 import { useCartStore } from '@/store/modules/userCartStore'
 import { ref, computed, watch, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
+import Swal from 'sweetalert2'
 
 const cartStore = useCartStore()
 const toast = useToast()
@@ -189,13 +188,11 @@ const toast = useToast()
 const couponCode = ref('')
 const appliedCoupon = ref(null)
 const shipping = ref(0)
-const taxRate = 0.08 
+const taxRate = 0.08
 
 const cartItems = computed(() => cartStore.items)
 
-const totalItems = computed(() =>
-  cartStore.items.reduce((total, item) => total + item.quantity, 0)
-)
+const totalItems = computed(() => cartStore.totalItems)
 
 const subtotal = computed(() =>
   cartStore.items.reduce((total, item) => total + item.price * item.quantity, 0)
@@ -217,11 +214,16 @@ const total = computed(() => subtotal.value - discount.value + shipping.value + 
 
 
 function updateQuantity(item, quantity) {
-  if (quantity < 1) quantity = 1
-  if (quantity > (item.stock_quantity || 99)) quantity = item.stock_quantity || 99
-  cartStore.updateQuantity(item.id, quantity)
+  const qty = parseInt(quantity)
+  if (isNaN(qty) || qty < 1) return
+
+  const maxQty = item.stock_quantity || 99
+  const finalQty = Math.min(Math.max(qty, 1), maxQty)
+
+  cartStore.updateQuantity(item.id, finalQty)
   calculateShipping()
 }
+
 
 function removeItem(item) {
   cartStore.removeItem(item.id)
@@ -230,13 +232,30 @@ function removeItem(item) {
 }
 
 function clearCart() {
-  if (confirm('Tem certeza que deseja limpar o carrinho?')) {
-    cartStore.clearCart()
-    appliedCoupon.value = null
-    couponCode.value = ''
-    shipping.value = 0
-    toast.info('Carrinho limpo com sucesso!')
-  }
+  Swal.fire({
+    title: 'Você tem certeza?',
+    text: 'Esta ação não poderá ser desfeita?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Sim, limpar',
+    cancelButtonText: 'Cancelar'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      cartStore.clearCart()
+      appliedCoupon.value = null
+      couponCode.value = ''
+      shipping.value = 0
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Carrinho limpo com sucesso!',
+        showConfirmButton: false,
+        timer: 1500
+      })
+    }
+  })
 }
 
 function applyCoupon() {

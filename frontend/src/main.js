@@ -7,6 +7,8 @@ import "./assets/css/tailwind.css"
 import { useAuthStore } from "./store/modules/useAuthStore"
 import Toast from 'vue-toastification'
 import 'vue-toastification/dist/index.css'
+import '@fortawesome/fontawesome-free/css/all.min.css'
+
 
 // Configuração global do Axios
 axios.defaults.withCredentials = true
