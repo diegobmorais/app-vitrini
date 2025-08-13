@@ -316,23 +316,19 @@ const props = defineProps({
   }
 })
 
-// Pinia store
 const productStore = useProductStore()
 const cartStore = useCartStore()
 
-// Local state
 const quantity = ref(1)
 const activeTab = ref('description')
 const currentImage = ref('')
 
-// Tabs
 const tabs = [
   { id: 'description', name: 'Descrição' },
   // { id: 'specifications', name: 'Especificações' },
   { id: 'reviews', name: 'Avaliações' }
 ]
 
-// Computed based on store state
 const product = computed(() => productStore.product)
 const loading = computed(() => productStore.isLoading)
 const error = computed(() => productStore.error)
@@ -370,7 +366,6 @@ const allImages = computed(() => {
   return images
 })
 
-// Utils
 const formatPrice = (price) => {
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
@@ -387,7 +382,6 @@ const formatDate = (dateString) => {
   }).format(date)
 }
 
-// Quantity handlers
 const incrementQuantity = () => {
   if (product.value && quantity.value < product.value.stock) {
     quantity.value++
@@ -400,19 +394,23 @@ const decrementQuantity = () => {
   }
 }
 
-// Cart actions via Pinia store
-const addToCart = () => {
-  if (product.value && product.value.stock > 0) {
-    cartStore.addToCart({ product: product.value, quantity: quantity.value })
-    router.push({ name: 'cart' })
+const addToCart = async () => {
+  const currentProduct = productStore.product
+  console.log('currentProduct', currentProduct);
+  if (currentProduct && currentProduct.stock > 0) { 
+    try {
+      await cartStore.addItemToCart(currentProduct.id, quantity.value )
+      router.push({ name: 'cart' })
+    } catch (error) {
+      alert('Erro ao adicionar produto ao carrinho')
+    }
   }
 }
 
 const addToCartRelated = (relatedProduct, qty = 1) => {
-  productStore.addToCart({ product: relatedProduct, quantity: qty })
+  productStore.addItemToCart({ product: relatedProduct, quantity: qty })
 }
 
-// Watchers
 watch(() => props.slug, (newSlug) => {
   if (newSlug) {
     productStore.fetchProduct(newSlug)
@@ -421,15 +419,13 @@ watch(() => props.slug, (newSlug) => {
   }
 })
 
-// Initialize
-onMounted(() => {
-  productStore.fetchProduct(props.slug)
-})
-
-// Set initial current image when product loads/changes
 watch(product, (newProduct) => {
   if (newProduct && newProduct.image) {
     currentImage.value = newProduct.image
   }
+})
+
+onMounted(() => {
+  productStore.fetchProduct(props.slug)
 })
 </script>

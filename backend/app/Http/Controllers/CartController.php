@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\API;
+namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cart;
@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Auth;
 class CartController extends Controller
 {
     public function index()
-    {
+    {   
         $user = Auth::user();
         $cart = Cart::firstOrCreate(['user_id' => $user->id]);
         $cart->load('items.product');

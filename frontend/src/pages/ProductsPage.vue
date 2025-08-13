@@ -197,7 +197,7 @@
                 </div>
                 <div v-if="product.isNew"
                   class="absolute top-2 right-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded">
-                  Novo
+                  Novo 
                 </div>
               </div>          
               <div class="p-4 flex-grow flex flex-col">
@@ -380,7 +380,6 @@ const filteredProducts = computed(() => {
   return result
 })
 
-// Paginação
 const totalPages = computed(() =>
   Math.ceil(filteredProducts.value.length / itemsPerPage.value)
 )
@@ -390,12 +389,10 @@ const paginatedProducts = computed(() => {
   return filteredProducts.value.slice(start, start + itemsPerPage.value)
 })
 
-// Resetar para página 1 quando filtros mudam
 watch(filteredProducts, () => {
   currentPage.value = 1
 })
 
-// Atualizar URL com filtros
 const applyFilters = () => {
   const query = {}
 
@@ -410,7 +407,6 @@ const applyFilters = () => {
   router.push({ query })
 }
 
-// Resetar filtros e URL
 const resetFilters = () => {
   filters.value = {
     search: '',
@@ -424,14 +420,6 @@ const resetFilters = () => {
   router.push({ query: {} })
 }
 
-// Adicionar produto ao carrinho (implemente sua store de carrinho)
-const addToCart = (product) => {
-  // Exemplo: chamar store ou emitir evento
-  console.log('Adicionar ao carrinho:', product)
-  alert(`${product.name} adicionado ao carrinho!`)
-}
-
-// Carregar dados na montagem
 onMounted(() => {  
   productStore.fetchProducts()
   categoryStore.fetchCategories()

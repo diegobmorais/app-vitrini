@@ -46,17 +46,17 @@
                       </router-link>
                     </h3>
                     <div class="text-sm text-gray-500 mb-2">
-                      <span v-if="item.variant">{{ item.variant.name }}</span>
+                      <!-- <span v-if="item.variant">{{ item.variant.name }}</span> -->
                       <span v-if="item.sku" class="ml-2">SKU: {{ item.sku }}</span>
                     </div>
                     <div class="text-sm text-gray-500 mb-4">
-                      <span>Preço unitário: R$ {{ item.price.toFixed(2) }}</span>
+                      <span>Preço unitário: R$ {{ item.price }}</span>
                     </div>
                   </div>
 
                   <div class="flex flex-col sm:items-end">
                     <div class="text-primary-600 font-bold mb-2">
-                      R$ {{ (item.price * item.quantity).toFixed(2) }}
+                      R$ {{ (item.price * item.quantity) }}
                     </div>
 
                     <!-- Quantity Controls -->
@@ -189,18 +189,16 @@ const toast = useToast()
 const couponCode = ref('')
 const appliedCoupon = ref(null)
 const shipping = ref(0)
-const taxRate = 0.08 // 8% imposto
+const taxRate = 0.08 
 
-// Sincronizar cartItems com store
 const cartItems = computed(() => cartStore.items)
 
-// Computed properties
 const totalItems = computed(() =>
-  cartItems.value.reduce((total, item) => total + item.quantity, 0)
+  cartStore.items.reduce((total, item) => total + item.quantity, 0)
 )
 
 const subtotal = computed(() =>
-  cartItems.value.reduce((total, item) => total + item.price * item.quantity, 0)
+  cartStore.items.reduce((total, item) => total + item.price * item.quantity, 0)
 )
 
 const discount = computed(() => {
@@ -217,12 +215,6 @@ const discount = computed(() => {
 const tax = computed(() => (subtotal.value - discount.value) * taxRate)
 const total = computed(() => subtotal.value - discount.value + shipping.value + tax.value)
 
-// Métodos
-async function fetchCartItems() {
-  // Use store action para buscar os itens (ou API)
-  await cartStore.fetchItems()
-  calculateShipping()
-}
 
 function updateQuantity(item, quantity) {
   if (quantity < 1) quantity = 1
@@ -254,9 +246,6 @@ function applyCoupon() {
   }
   const code = couponCode.value.toUpperCase()
 
-  // Aqui você pode usar uma action no store para validar o cupom via API
-
-  // Placeholder
   if (code === 'PETSHOP10') {
     appliedCoupon.value = { code: 'PETSHOP10', type: 'percentage', value: 10 }
     toast.success('Cupom de 10% de desconto aplicado!')
@@ -276,7 +265,7 @@ function calculateShipping() {
 
 // Ao montar o componente
 onMounted(() => {
-  fetchCartItems()
+  cartStore.fetchItems()
 })
 
 // Caso queira recalcular frete sempre que o subtotal mudar:

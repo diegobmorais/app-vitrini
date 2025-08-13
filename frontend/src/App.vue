@@ -26,8 +26,8 @@ import HeaderComponent from './components/layout/HeaderComponent.vue'
 import FooterComponent from './components/layout/FooterComponent.vue'
 // import NotificationsContainer from './components/ui/NotificationsContainer.vue'
 import CartModal from './components/shop/CartModal.vue'
-import { useCartStore } from './store/modules/userCartStore'
 import { useCategoryStore } from './store/modules/useCategoryStore'
+import { useCartStore } from './store/modules/userCartStore'
 
 // Importa os stores
 

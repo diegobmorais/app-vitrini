@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import axios from 'axios'
+import api from '@/main'
 
 export const useCartStore = defineStore('cart', () => {
   // States
@@ -21,6 +21,8 @@ export const useCartStore = defineStore('cart', () => {
   const cartItemCount = computed(() =>
     items.value.reduce((count, item) => count + item.quantity, 0)
   )
+  const totalItems = computed(() => items.value.reduce((sum, item) => sum + item.quantity, 0))
+  const subtotal = computed(() => items.value.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0))
   const isCartEmpty = computed(() => items.value.length === 0)
   const cartSummary = computed(() => summary.value)
   const isLoading = computed(() => loading.value)
@@ -30,39 +32,6 @@ export const useCartStore = defineStore('cart', () => {
   function setCartItems(newItems) {
     items.value = newItems
   }
-
-  function addToCart({ product, quantity }) {
-    const existingItem = items.value.find((item) => item.id === product.id)
-    if (existingItem) {
-      existingItem.quantity += quantity
-    } else {
-      items.value.push({
-        id: product.id,
-        name: product.name,
-        slug: product.slug,
-        price: product.price,
-        sale_price: product.sale_price,
-        image: product.image,
-        quantity,
-      })
-    }
-  }
-
-  function removeFromCart(productId) {
-    items.value = items.value.filter((item) => item.id !== productId)
-  }
-
-  function updateQuantity({ productId, quantity }) {
-    const item = items.value.find((item) => item.id === productId)
-    if (item) {
-      item.quantity = quantity
-    }
-  }
-
-  function clearCart() {
-    items.value = []
-  }
-
   function toggleCartModal(show = null) {
     if (show !== null) {
       showModal.value = show
@@ -70,7 +39,98 @@ export const useCartStore = defineStore('cart', () => {
       showModal.value = !showModal.value
     }
   }
+  async function fetchItems() {
+    loading.value = true
+    try {
+      const response = await api.get('/api/cart')
+      items.value = response.data.cart.items.map(item => ({
+        id: item.id,
+        product_id: item.product_id,
+        name: item.product.name,
+        price: parseFloat(item.product.price),
+        quantity: item.quantity,
+        sku: item.product.sku,
+        slug: item.product.slug,
+        stock_quantity: item.product.stock,
+        image: item.product.image || '/images/placeholder.jpg',
 
+      }))
+    } catch (err) {
+      error.value = 'Erro ao carregar carrinho'
+      console.error(err)
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function addItemToCart(productId, quantity = 1) {
+    try {
+      const response = await api.post('/api/cart/items', {
+        product_id: productId,
+        quantity
+      })
+      items.value = response.data.cart.items.map(item => ({
+        id: item.id,
+        product_id: item.product_id,
+        name: item.product.name,
+        price: parseFloat(item.product.price),
+        quantity: item.quantity,
+        sku: item.product.sku,
+        slug: item.product.slug,
+        stock_quantity: item.product.stock,
+        image: item.product.image || '/images/placeholder.jpg',
+      })) || []
+    } catch (err) {
+      throw err
+    }
+  }
+
+  async function updateQuantity(itemId, quantity) {
+    try {
+      const response = await api.patch(`/api/cart/items/${itemId}`, { quantity })
+      items.value = response.data.cart.items.map(item => ({
+        id: item.id,
+        product_id: item.product_id,
+        name: item.product.name,
+        price: parseFloat(item.product.price),
+        quantity: item.quantity,
+        sku: item.product.sku,
+        slug: item.product.slug,
+        stock_quantity: item.product.stock,
+        image: item.product.image || '/images/placeholder.jpg',
+      })) || []
+    } catch (err) {
+      throw err
+    }
+  }
+
+  async function removeItem(itemId) {
+    try {
+      const response = await api.delete(`/api/cart/items/${itemId}`)
+      items.value = response.data.cart.items.map(item => ({
+        id: item.id,
+        product_id: item.product_id,
+        name: item.product.name,
+        price: parseFloat(item.product.price),
+        quantity: item.quantity,
+        sku: item.product.sku,
+        slug: item.product.slug,
+        stock_quantity: item.product.stock,
+        image: item.product.image || '/images/placeholder.jpg',
+      })) || []
+    } catch (err) {
+      throw err
+    }
+  }
+
+  async function clearCart() {
+    try {
+      await api.delete('/api/cart')
+      items.value = []
+    } catch (err) {
+      throw err
+    }
+  }
   function setLoading(value) {
     loading.value = value
   }
@@ -85,9 +145,9 @@ export const useCartStore = defineStore('cart', () => {
       return total + price * item.quantity
     }, 0)
 
-    const tax = subtotal * 0.1 // 10% tax
-    const shipping = subtotal > 100 ? 0 : 15 // free shipping over 100
-    const discount = 0 // default no discount
+    const tax = subtotal * 0.1
+    const shipping = subtotal > 100 ? 0 : 15
+    const discount = 0
 
     summary.value = {
       subtotal,
@@ -137,7 +197,7 @@ export const useCartStore = defineStore('cart', () => {
         payment_method: checkoutData.paymentMethod,
       }
 
-      const response = await axios.post('api/checkout', payload)
+      const response = await api.post('api/checkout', payload)
 
       clearCart()
       updateCartSummary()
@@ -169,11 +229,11 @@ export const useCartStore = defineStore('cart', () => {
     cartSummary,
     isLoading,
     getError,
+    totalItems,
+    subtotal,
 
     // mutations
     setCartItems,
-    addToCart,
-    removeFromCart,
     updateQuantity,
     clearCart,
     toggleCartModal,
@@ -185,5 +245,8 @@ export const useCartStore = defineStore('cart', () => {
     saveCart,
     loadCart,
     checkout,
+    fetchItems,
+    addItemToCart,
+    removeItem,
   }
 })
