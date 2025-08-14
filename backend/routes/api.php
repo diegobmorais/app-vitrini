@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AddressController;
+use App\Http\Controllers\AppointmentController;
+use App\Http\Controllers\AvailabilitySlotController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\Auth\AuthController;
@@ -31,25 +33,43 @@ Route::middleware('auth:sanctum')->group(function () {
             'user' => Auth::user()
         ]);
     });
+
     //Brands
     Route::apiResource('brands', BrandController::class);
+
     //tags
     Route::apiResource('tags', TagController::class);
+
     //stock movements
     Route::apiResource('stock', StockMovementController::class);
     Route::get('/stock/{id}/movements', [StockMovementController::class, 'movements']);
     Route::get('/stock-movements/product/{id}', [StockMovementController::class, 'movementsByType']);
+
     //products
     Route::apiResource('product', ProductController::class)->except(['index']);
+
+    //servies
+    Route::post('/availability-slots', [AvailabilitySlotController::class, 'createSlots']);
+    Route::get('/availability-slots', [AvailabilitySlotController::class, 'getAvailableSlots']);
+    Route::post('/availability-slots/{slot}/book', [AvailabilitySlotController::class, 'bookSlot']);
+    Route::post('/availability-slots/{slot}/unbook', [AvailabilitySlotController::class, 'unbookSlot']);
+
+    //appointments
+    Route::apiResource('appointments', AppointmentController::class)->only(['index', 'update']);
+    Route::patch('/appointments/{appointment}/status', [AppointmentController::class, 'updateStatus']);
+
     //address
     Route::apiResource('address', AddressController::class);
+
     //customers
     Route::apiResource('customer', CustomerController::class);
+
     //image
     Route::delete('images/{id}', [ProductImageController::class, 'destroy']);
     Route::post('uploads/temp-images', [ProductImageController::class, 'uploadTempImages']);
     Route::delete('delete-temp-image', [ProductImageController::class, 'deleteTemp']);
     Route::put('/image/{id}/main-image', [ProductImageController::class, 'setMainImage']);
+
     //cart
     Route::apiResource('cart', CartController::class);
     Route::post('/cart/items', [CartController::class, 'addItem']);
@@ -57,14 +77,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/cart/items/{itemId}', [CartController::class, 'removeItem']);
     Route::delete('/cart', [CartController::class, 'clear']);
 
+    //checkout
     Route::post('/checkout', [CheckoutController::class, 'checkout']);
 });
 
 //category
 Route::apiResource('category', CategoryController::class);
 Route::get('categories/featured', [CategoryController::class, 'categoriesFeatured']);
+
 //service
 Route::apiResource('service', ServiceController::class);
+Route::get('/services', [ServiceController::class, 'index']);
+
 // product
 Route::get('product', [ProductController::class, 'index']);
 Route::get('products/featured', [ProductController::class, 'productsFeatured']);
@@ -75,6 +99,7 @@ Route::prefix('products/{product}')->group(function () {
     Route::get('images', [ProductImageController::class, 'index']);
     Route::post('images', [ProductImageController::class, 'store']);
 });
+
 //supplier
 Route::apiResource('suppliers', SupplierController::class);
 

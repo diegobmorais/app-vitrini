@@ -141,7 +141,8 @@
                                 <div>
                                     <label for="stock" class="block text-sm font-medium text-gray-700">Quantidade em
                                         Estoque</label>
-                                    <input type="number" id="stock" v-model="product.stock" min="0" :disabled="isEditing"
+                                    <input type="number" id="stock" v-model="product.stock" min="0"
+                                        :disabled="isEditing"
                                         class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
                                 </div>
 
@@ -197,7 +198,8 @@
                                             </svg>
                                         </button>
 
-                                        <button type="button" v-if="!isMainImage(image)" @click.prevent="setAsMainImage(image.id)"
+                                        <button type="button" v-if="!isMainImage(image)"
+                                            @click.prevent="setAsMainImage(image.id)"
                                             class="bg-white text-[10px] px-2 py-0.5 rounded shadow hover:bg-gray-100"
                                             title="Definir como principal">
                                             Definir como principal
@@ -417,7 +419,7 @@ const product = reactive({
     category_id: '',
     brand_id: '',
     supplier_id: '',
-    tags: [],
+    tags: '',
     weight: '',
     length: '',
     width: '',
@@ -432,7 +434,7 @@ async function saveProduct() {
     const payload = {
         ...product,
         upload_session_id: uploadSessionId.value,
-        tags: product.tags.map(tag => tag.name)
+        tags: product.tags.map(t => t.name).join(',')
     }
 
     try {
@@ -449,10 +451,10 @@ async function saveProduct() {
         router.push('/painel-administrador/produtos')
     } catch (error) {
         console.error('Erro capturado:', error)
-        if (error.response?.status === 422) {          
+        if (error.response?.status === 422) {
             formErrors.value = error.response.data.errors
             toast.error('Por favor, corrija os erros do formulário.')
-        } else {           
+        } else {
             toast.error('Erro ao salvar produto!')
         }
     } finally {
@@ -542,7 +544,7 @@ const setAsMainImage = async (imageId) => {
     }
 };
 
-onMounted(async () => {
+onMounted( async() => {
     uploadSessionId.value = crypto.randomUUID()
 
     categoriesStore.fetchCategories()
@@ -551,9 +553,12 @@ onMounted(async () => {
     suppliersStore.fetchSuppliers()
 
     if (isEditing.value) {
-        const data = await productsStore.fetchProduct(route.params.id)
+        const response = await productsStore.fetchProduct(route.params.id)
+        const data = response.product  
 
-        const formattedTags = (data.tags || []).map(tag => ({ name: tag }))
+        const formattedTags = data.tags
+            ? data.tags.split(',').map(tag => ({ name: tag.trim() }))
+            : []
 
         Object.assign(product, {
             ...data,

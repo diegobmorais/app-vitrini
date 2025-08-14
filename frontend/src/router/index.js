@@ -25,6 +25,8 @@ import Services from "../pages/admin/Services.vue"
 import ServicePage from "../pages/ServicePage.vue"
 import { useAuthStore } from "@/store/modules/useAuthStore"
 import CustomerDetails from "../pages/admin/CustomerDetails.vue"
+import ServiceAvailability from "../pages/admin/ServiceAvailability.vue"
+import ServiceAppointments from "@/pages/admin/ServiceAppointments.vue"
 
 const routes = [
   {
@@ -147,7 +149,7 @@ const routes = [
         name: "admin-customers-details",
         component: CustomerDetails,
         meta: { title: 'Clientes' }
-      },   
+      },
       {
         path: "/painel-administrador/fornecedores",
         name: "admin-suppliers",
@@ -191,6 +193,18 @@ const routes = [
         component: Services,
         meta: { title: 'Serviços' }
       },
+      {
+        path: '/painel-administrador/servicos/disponibilidade',
+        name: 'admin-service-availability',
+        component: ServiceAvailability,
+        meta: { title: 'Disponibilidade de Serviços' }
+      },
+      {
+        path: '/painel-administrador/servicos/agendamentos',
+        name: 'admin-service-appointments',
+        component: ServiceAppointments,
+        meta: { title: 'Agendamentos de Serviços' }
+      },
     ]
   }
 ]
@@ -219,7 +233,7 @@ router.beforeEach(async (to, from, next) => {
   }
 
   if (to.meta.requiresAuth && !isAuthenticated) {
-    return next({ name: 'login', query: { redirect: to.fullPath } })    
+    return next({ name: 'login', query: { redirect: to.fullPath } })
   }
 
   return next()

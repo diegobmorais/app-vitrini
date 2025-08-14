@@ -59,7 +59,7 @@ export const useProductStore = defineStore('products', {
         }
 
         const response = await api.get('/api/product', { params })
-
+        
         this.products = response.data.data
         this.pagination.currentPage = response.data.current_page
         this.pagination.totalPages = response.data.last_page
@@ -80,8 +80,11 @@ export const useProductStore = defineStore('products', {
       this.error = null
       try {
         const response = await api.get(`/api/product-detail/${slug}`)
+              
         this.product = response.data.product
         this.related_products = response.data.related_products
+
+         return response.data 
       } catch (err) {
         this.error = err.response?.data?.message || 'Erro ao carregar produto'
         console.error('Error fetching product:', err)

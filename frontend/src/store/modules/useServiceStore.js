@@ -33,7 +33,8 @@ export const useServiceStore = defineStore('service', () => {
     try {
       const response = await api.post('/api/service', payload)
       services.value.push(response.data)
-
+      await fetchServices()
+      
       return response.data
     } catch (err) {
       error.value = err
@@ -41,18 +42,18 @@ export const useServiceStore = defineStore('service', () => {
   }
 
   async function updateService(serviceId, payload) {
-    try { 
+    try {
       if (payload instanceof FormData) {
-        payload.append('_method', 'PUT') 
+        payload.append('_method', 'PUT')
         const response = await api.post(`/api/service/${serviceId}`, payload)
-   
+
         const index = services.value.findIndex(service => service.id === serviceId)
         if (index !== -1) {
           services.value[index] = response.data
         }
         await fetchServices()
         return response.data
-      } else {     
+      } else {
         const response = await api.put(`/api/service/${serviceId}`, payload)
         const index = services.value.findIndex(service => service.id === serviceId)
         if (index !== -1) {

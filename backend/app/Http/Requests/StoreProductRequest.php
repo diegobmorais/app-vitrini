@@ -48,7 +48,7 @@ class StoreProductRequest extends FormRequest
             'featured' => 'nullable|boolean',
             'category_id' => 'nullable|integer|exists:categories,id',
             'brand_id' => 'nullable|integer|exists:brands,id',
-            'tags' => 'nullable|array',
+            'tags' => 'nullable',
             'tags.*' => 'string|max:50',
             'weight' => 'nullable|numeric|min:0',
             'length' => 'nullable|numeric|min:0',

@@ -34,16 +34,43 @@
         </svg>
         Produtos
       </router-link>
-      <router-link to="/painel-administrador/servicos"
-        class="py-2.5 px-4 rounded transition duration-200 hover:bg-gray-800 flex items-center"
-        active-class="bg-gray-800">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24"
-          stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-        </svg>
-        Serviços
-      </router-link>
+
+      <div class="space-y-1">
+        <button @click="toggleServicesMenu"
+          class="w-full py-2.5 px-4 rounded transition duration-200 hover:bg-gray-800 flex items-center justify-between"
+          :class="{ 'bg-gray-800': isServicesMenuOpen || $route.path.startsWith('/painel-administrador/servicos') }">
+          <div class="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            <span>Serviços</span>
+          </div>
+          <svg class="h-4 w-4 transition-transform" :class="{ 'rotate-180': isServicesMenuOpen }" fill="none"
+            viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        <div v-show="isServicesMenuOpen" class="ml-4 space-y-1 overflow-hidden transition-all duration-300">
+          <router-link to="/painel-administrador/servicos"
+            class="block py-2 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center text-sm"
+            active-class="bg-gray-700">
+            <span class="ml-6">Gerenciar Serviços</span>
+          </router-link>
+          <router-link to="/painel-administrador/servicos/disponibilidade"
+            class="block py-2 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center text-sm"
+            active-class="bg-gray-700">
+            <span class="ml-6">Disponibilidade</span>
+          </router-link>
+          <router-link to="/painel-administrador/servicos/agendamentos"
+            class="block py-2 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center text-sm"
+            active-class="bg-gray-700">
+            <span class="ml-6">Agendamentos</span>
+          </router-link>
+        </div>
+      </div>
 
       <router-link to="/painel-administrador/fornecedores"
         class="py-2.5 px-4 rounded transition duration-200 hover:bg-gray-800 flex items-center"
@@ -114,8 +141,8 @@
 
 <script setup>
 import { useAuthStore } from '@/store/modules/useAuthStore'
-import { useRouter } from 'vue-router'
-
+import { useRouter, useRoute } from 'vue-router'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 // Props
 const props = defineProps({
   isOpen: {
@@ -124,10 +151,35 @@ const props = defineProps({
   }
 })
 
-// Store e router
 const authStore = useAuthStore()
 const router = useRouter()
+const route = useRoute()
 
+const isServicesMenuOpen = ref(false)
+
+const isServicesMenuOpenLocalStorage = localStorage.getItem('servicesMenuOpen') === 'true'
+
+
+onMounted(() => {
+  isServicesMenuOpen.value = isServicesMenuOpenLocalStorage || route.path.startsWith('/painel-administrador/servicos')
+
+  document.addEventListener('click', handleClickOutside)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
+
+const toggleServicesMenu = () => {
+  isServicesMenuOpen.value = !isServicesMenuOpen.value
+  localStorage.setItem('servicesMenuOpen', isServicesMenuOpen.value.toString())
+}
+
+const handleClickOutside = (event) => {
+  const sidebar = document.querySelector('.sidebar')
+  if (sidebar && !sidebar.contains(event.target)) {
+  }
+}
 // Função de logout
 const logout = async () => {
   await authStore.logout()
