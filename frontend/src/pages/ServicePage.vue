@@ -13,18 +13,9 @@
       </div>
     </section>
 
-    <!-- Services Categories -->
+    <!-- Services Section -->
     <section class="py-12 px-4">
       <div class="container mx-auto max-w-6xl">
-        <!-- <div class="flex flex-wrap justify-center gap-4 mb-12">
-          <button v-for="category in categories" :key="category.id"
-            @click="selectedCategory = category.id === selectedCategory ? null : category.id"
-            class="px-6 py-2 rounded-full text-sm font-medium transition-colors"
-            :class="selectedCategory === category.id ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'">
-            {{ category.name }}
-          </button>
-        </div> -->
-        <!-- Services List -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           <div v-for="service in filteredServices" :key="service.id"
             class="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:transform hover:scale-105">
@@ -131,76 +122,9 @@
         </div>
       </div>
     </section>
-
     <!-- Service Booking Modal -->
-    <div v-if="selectedService" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <div class="p-6">
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="text-2xl font-bold text-gray-800">Agendar Serviço</h3>
-            <button @click="selectedService = null" class="text-gray-500 hover:text-gray-700">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
-          <div class="mb-6">
-            <h4 class="text-lg font-semibold text-gray-800 mb-2">{{ selectedService.name }}</h4>
-            <p class="text-gray-600 mb-2">{{ selectedService.description }}</p>
-            <p class="text-blue-600 font-bold">R$ {{ Number(selectedService.price).toFixed(2) }}</p>
-          </div>
-
-          <form @submit.prevent="bookService">
-            <div class="mb-4">
-              <label for="date" class="block text-sm font-medium text-gray-700 mb-1">Data</label>
-              <input type="date" id="date" v-model="bookingForm.date"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                required :min="minDate">
-            </div>
-
-            <div class="mb-4">
-              <label for="time" class="block text-sm font-medium text-gray-700 mb-1">Horário</label>
-              <select id="time" v-model="bookingForm.time"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                required>
-                <option value="" disabled>Selecione um horário</option>
-                <option v-for="time in availableTimes" :key="time" :value="time">{{ time }}</option>
-              </select>
-            </div>
-
-            <div class="mb-4">
-              <label for="pet" class="block text-sm font-medium text-gray-700 mb-1">Pet</label>
-              <select id="pet" v-model="bookingForm.petId"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                required>
-                <option value="" disabled>Selecione um pet</option>
-                <option v-for="pet in userPets" :key="pet.id" :value="pet.id">{{ pet.name }} ({{ pet.breed }})</option>
-              </select>
-            </div>
-
-            <div class="mb-6">
-              <label for="notes" class="block text-sm font-medium text-gray-700 mb-1">Observações</label>
-              <textarea id="notes" v-model="bookingForm.notes" rows="3"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Alguma informação adicional que devemos saber?"></textarea>
-            </div>
-
-            <div class="flex justify-end">
-              <button type="button" @click="selectedService = null"
-                class="mr-2 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
-                Cancelar
-              </button>
-              <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                :disabled="isSubmitting">
-                {{ isSubmitting ? 'Agendando...' : 'Confirmar Agendamento' }}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+    <ServiceBookingModal v-if="showBookingModal" :show="showBookingModal" :selected-service="selectedService"
+      @close="closeBookingModal" @scheduled="onServiceScheduled" />
   </div>
 </template>
 
@@ -208,30 +132,26 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
-import { useNotificationStore } from '@/store/modules/useNotificationStore'
 import { useCategoryStore } from '@/store/modules/useCategoryStore'
 import { useServiceStore } from '@/store/modules/useServiceStore'
+import ServiceBookingModal from '@/components/modals/services/ServiceBookingModal.vue'
+import { useAuthStore } from '@/store/modules/useAuthStore'
+import { useToast } from 'vue-toastification'
 
 const baseURL = import.meta.env.VITE_API_BASE_URL;
+const router = useRouter()
+const toast = useToast()
 
 // Stores Pinia
-const notificationStore = useNotificationStore()
 const serviceStore = useServiceStore()
 const categoryStore = useCategoryStore()
+const authStore = useAuthStore()
 
-const router = useRouter()
 
 // Estado local
 const selectedCategory = ref(null)
 const selectedService = ref(null)
-const isSubmitting = ref(false)
-
-const bookingForm = ref({
-  date: '',
-  time: '',
-  petId: '',
-  notes: ''
-})
+const showBookingModal = ref(false)
 
 // Dados
 const testimonials = ref([
@@ -272,11 +192,6 @@ const filteredServices = computed(() => {
   return serviceStore.services.filter(s => s.category_id === selectedCategory.value)
 })
 
-const minDate = computed(() => {
-  const today = new Date()
-  return today.toISOString().split('T')[0]
-})
-
 const getCategoryName = (id) => {
   const cat = categoryStore.categories.find(c => c.id === id)
   return cat ? cat.name : ''
@@ -284,45 +199,25 @@ const getCategoryName = (id) => {
 
 // Métodos
 const openServiceModal = (service) => {
-  const isAuthenticated = !!localStorage.getItem('user')
-
-  if (!isAuthenticated) {
-    router.push({ name: 'login', query: { redirect: router.currentRoute.value.fullPath } })
-    return
-  }
-
-  selectedService.value = service
-  bookingForm.value = { date: '', time: '', petId: '', notes: '' }
-}
-
-const bookService = async () => {
-  isSubmitting.value = true
-
-  try {
-    // Exemplo de chamada real: await api.post('api/book-service', {...})
-
-    await new Promise(resolve => setTimeout(resolve, 1000))
-
-    notificationStore.add({
-      type: 'success',
-      message: 'Serviço agendado com sucesso!',
-      timeout: 5000
-    })
-
-    selectedService.value = null
-  } catch (error) {
-    notificationStore.add({
-      type: 'error',
-      message: 'Erro ao agendar serviço. Tente novamente.',
-      timeout: 5000
-    })
-  } finally {
-    isSubmitting.value = false
+  if (authStore.user) {
+    selectedService.value = service
+    showBookingModal.value = true
+  } else {
+    router.push('/login')
   }
 }
+const closeBookingModal = () => {
+  showBookingModal.value = false
+  selectedService.value = null
+}
 
-// Carregar dados na montagem
-onMounted(() => {   
+const onServiceScheduled = () => {
+  toast.success('Serviço agendado com sucesso!')
+  
+  closeBookingModal()
+}
+
+onMounted(() => {
   serviceStore.fetchServices()
   categoryStore.fetchCategories()
 })

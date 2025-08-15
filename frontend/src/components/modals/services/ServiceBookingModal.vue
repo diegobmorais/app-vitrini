@@ -1,10 +1,17 @@
+<!-- components/modals/ServiceBookingModal.vue -->
 <template>
     <div v-if="show" class="fixed inset-0 z-50 overflow-y-auto">
-        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center">
-            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="$emit('close')"></div>
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <!-- Overlay -->
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 opacity-75" @click="$emit('close')"></div>
+            </div>
+
+            <!-- This element is to trick the browser into centering the modal contents. -->
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
             <div
-                class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+                class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
                 <form @submit.prevent="submitBooking">
                     <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                         <div class="sm:flex sm:items-start">
@@ -17,85 +24,76 @@
                                 </p>
 
                                 <div class="mt-4 space-y-4">
-                                    <!-- Calendário -->
+                                    <!-- Dados do cliente (já logado) -->
+                                    <div class="bg-gray-50 p-3 rounded-md">
+                                        <p class="text-sm font-medium old text-gray-700">
+                                            Cliente: {{ authStore.getUser.user.name }}
+                                        </p>
+                                        <p class="text-xs text-gray-500">
+                                            {{ authStore.getUser.user.email }}
+                                        </p>
+                                    </div>
+
+                                    <!-- Pet -->
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Data *</label>
-                                        <input v-model="form.date" type="date" :min="today" @change="loadAvailableSlots"
-                                            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                            required />
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Nome do seu Pet
+                                            *</label>
+                                        <input type="text" v-model="form.pet_name" required
+                                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                        </input>
                                     </div>
 
-                                    <!-- Slots disponíveis -->
-                                    <div v-if="availableSlots.length > 0">
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Horário *</label>
-                                        <div class="grid grid-cols-3 gap-2">
-                                            <button v-for="slot in availableSlots" :key="slot.id" type="button"
-                                                @click="selectSlot(slot)" :class="[
-                                                    'px-3 py-2 text-sm rounded-md border',
-                                                    form.slot_id === slot.id
-                                                        ? 'bg-blue-500 text-white border-blue-500'
-                                                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                                                ]">
-                                                {{ formatTime(slot.start_time) }}
-                                            </button>
+                                    <!-- Data e Hora -->
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Data *</label>
+                                            <select v-model="form.date" required
+                                                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                                <option value="" disabled>Selecione uma data</option>
+                                                <option v-for="date in availableTimes" :key="date" :value="date.date">
+                                                    {{ date.date }}
+                                                </option>
+                                            </select>
                                         </div>
-                                    </div>
 
-                                    <div v-else-if="form.date && !loadingSlots" class="text-sm text-gray-500">
-                                        Nenhum horário disponível para esta data.
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Horário
+                                                *</label>
+                                            <select v-model="form.slot_id" required
+                                                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                                <option value="" disabled>Horários Disponíveis</option>
+                                                <option
+                                                    v-for="slot in availableTimes"
+                                                    :key="slot.id" :value="slot.id">
+                                                    {{ slot.start_time }} - {{ slot.end_time }}
+                                                </option>
+                                            </select>
+                                        </div>
                                     </div>
 
                                     <!-- Transporte -->
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Transporte *</label>
-                                        <div class="flex space-x-4">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Transporte</label>
+                                        <div class="mt-5 space-x-3">
                                             <label class="inline-flex items-center">
-                                                <input v-model="form.transport_option" type="radio" value="pickup"
+                                                <input v-model="form.transport" type="radio" value="brings"
                                                     class="text-blue-600" />
-                                                <span class="ml-2">Vou buscar o pet</span>
+                                                <span class="ml-2">Eu mesmo levarei</span>
                                             </label>
                                             <label class="inline-flex items-center">
-                                                <input v-model="form.transport_option" type="radio" value="bring"
+                                                <input v-model="form.transport" type="radio" value="delivery"
                                                     class="text-blue-600" />
-                                                <span class="ml-2">Levar o pet até vocês</span>
+                                                <span class="ml-2">Quero que busquem</span>
                                             </label>
-                                        </div>
-                                    </div>
-
-                                    <!-- Dados do cliente -->
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700">Nome completo
-                                                *</label>
-                                            <input v-model="form.client_name" type="text" required
-                                                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" />
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700">Telefone *</label>
-                                            <input v-model="form.client_phone" type="tel" required
-                                                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" />
-                                        </div>
-                                    </div>
-
-                                    <!-- Dados do pet -->
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700">Nome do Pet *</label>
-                                            <input v-model="form.pet_name" type="text" required
-                                                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" />
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700">Raça</label>
-                                            <input v-model="form.pet_breed" type="text"
-                                                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" />
                                         </div>
                                     </div>
 
                                     <!-- Observações -->
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700">Observações</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Observações</label>
                                         <textarea v-model="form.notes" rows="3"
-                                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"></textarea>
+                                            placeholder="Alguma informação adicional sobre o serviço?"
+                                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"></textarea>
                                     </div>
                                 </div>
                             </div>
@@ -103,9 +101,9 @@
                     </div>
 
                     <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                        <button type="submit" :disabled="loading || !isFormValid"
-                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50">
-                            {{ loading ? 'Agendando...' : 'Confirmar Agendamento' }}
+                        <button type="submit" :disabled="isSubmitting"
+                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50">
+                            {{ isSubmitting ? 'Agendando...' : 'Confirmar Agendamento' }}
                         </button>
                         <button type="button" @click="$emit('close')"
                             class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
@@ -119,84 +117,83 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
-import { useAppointmentStore } from '@/stores/appointments'
+import { ref, computed, onMounted } from 'vue'
+import { useAuthStore } from '@/store/modules/useAuthStore'
+import { useAppointmentStore } from '@/store/modules/useAppointmentStore'
+import { useServiceAvailabilityStore } from '@/store/modules/useServiceAvailabilityStore'
+import { useToast } from 'vue-toastification'
 
 const props = defineProps({
-    show: { type: Boolean, required: true },
-    selectedService: { type: Object, default: null }
+    show: {
+        type: Boolean,
+        required: true
+    },
+    selectedService: {
+        type: Object,
+        default: null
+    }
 })
 
 const emit = defineEmits(['close', 'scheduled'])
 
+const toast = useToast()
+const authStore = useAuthStore()
 const appointmentStore = useAppointmentStore()
-const loading = ref(false)
-const loadingSlots = ref(false)
-const availableSlots = ref([])
-const today = ref(new Date().toISOString().split('T')[0])
+const availableTimesStore = useServiceAvailabilityStore()
 
 const form = ref({
-    service_id: '',
     slot_id: '',
-    date: '',
-    transport_option: 'pickup',
-    client_name: '',
-    client_phone: '',
-    client_email: '',
     pet_name: '',
-    pet_breed: '',
+    date: '',
+    time: '',
+    transport: 'brings',
     notes: ''
 })
 
-watch(() => props.selectedService, (newService) => {
-    if (newService) {
-        form.value.service_id = newService.id
-    }
-})
-
-const isFormValid = computed(() => {
-    return form.value.service_id &&
-        form.value.slot_id &&
-        form.value.date &&
-        form.value.client_name &&
-        form.value.client_phone &&
-        form.value.pet_name
-})
-
-const loadAvailableSlots = async () => {
-    if (!form.value.date || !props.selectedService) return
-
-    loadingSlots.value = true
-    try {
-        const response = await fetch(`/api/services/${props.selectedService.id}/available-slots?date=${form.value.date}`)
-        const slots = await response.json()
-        availableSlots.value = slots
-        form.value.slot_id = ''
-    } catch (err) {
-        console.error('Erro ao carregar slots:', err)
-    } finally {
-        loadingSlots.value = false
-    }
-}
-
-const selectSlot = (slot) => {
-    form.value.slot_id = slot.id
-}
-
-const formatTime = (timeString) => {
-    return timeString.substring(0, 5)
-}
+const isSubmitting = ref(false)
+const slots = ref([])
+const availableTimes = ref([])
 
 const submitBooking = async () => {
-    loading.value = true
+    if (!props.selectedService) return
+
+    isSubmitting.value = true
+
     try {
-        await appointmentStore.createAppointment(form.value)
+        const selectedSlot = availableTimes.value.find(s => s.id === form.value.slot_id)
+              
+        const payload = {
+            slot_id: form.value.slot_id,
+            service_id: props.selectedService.id,
+            pet_name: form.value.pet_name,
+            scheduled_at: selectedSlot
+                ? `${selectedSlot.date} ${selectedSlot.start_time}`
+                : null,
+            transport_option: form.value.transport,
+            notes: form.value.notes
+        }
+        await appointmentStore.createAppointment(payload)
+
         emit('scheduled')
+
         emit('close')
-    } catch (err) {
-        alert('Erro ao agendar serviço')
+
+    } catch (error) {    
+        toast.error('Ocorreu um erro ao agendar o serviço. Por favor, tente novamente.', error)
     } finally {
-        loading.value = false
+        isSubmitting.value = false
     }
 }
+
+onMounted(async () => {
+    slots.value = await availableTimesStore.getFreeSlots(props.selectedService.id)
+    availableTimes.value = (Array.isArray(slots.value) ? slots.value : [])
+        .filter(s => s.is_booked === 1)
+        .map(s => ({
+            id: s.id,
+            date: s.date,
+            start_time: s.start_time,
+            end_time: s.end_time
+        }))
+})
 </script>

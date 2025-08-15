@@ -77,6 +77,16 @@ export const useServiceAvailabilityStore = defineStore('serviceAvailability', {
                 throw err
             }
         },
+        async getFreeSlots($id) {
+            try {
+                const response = await api.get(`/api/availability-slots/${$id}/free-time`)
+                return response.data
+            } catch (err) {
+                this.error = err.response?.data?.message || 'Erro ao buscar slots'
+                console.error('Erro em getFreeSlots:', err)
+                throw err
+            }
+        },
 
         async bookSlot(slotId) {
             try {

@@ -255,12 +255,17 @@ async function submitForm() {
         email: form.email,
         password: form.password
       }
+    const response = await authStore.login({ url, credentials })
 
-    // Usa o método login da Pinia direto
-    await authStore.login({ url, credentials })
+    if (response.data.role_id === 1) {
+      console.log('response', response)
+      router.push('/painel-administrador')
+      window.location.reload()
+    } else {
+      router.push('/minha-conta')
+      window.location.reload()
+    }
 
-    await router.push('/minha-conta')
-    window.location.reload()
   } catch (error) {
     console.error('Erro detalhado:', {
       status: error.response?.status,

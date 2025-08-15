@@ -17,7 +17,7 @@ return new class extends Migration
             $table->date('date');
             $table->time('start_time');
             $table->time('end_time');
-            $table->boolean('is_booked')->default(false);
+            $table->boolean('is_booked')->default(true);
             $table->timestamps();
 
             $table->unique(['service_id', 'date', 'start_time']);

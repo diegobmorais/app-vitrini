@@ -105,4 +105,12 @@ class AvailabilitySlotController extends Controller
         $slot->update(['is_booked' => false]);
         return response()->json($slot);
     }
+    public function freeTime($slotId)
+    {  
+        $slot = AvailabilitySlot::where('service_id', $slotId)
+        ->where('is_booked', true)
+        ->get();
+     
+        return response()->json($slot);
+    }
 }

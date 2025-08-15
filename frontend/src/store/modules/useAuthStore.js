@@ -14,7 +14,7 @@ export const useAuthStore = defineStore('auth', () => {
   const getUser = computed(() => ({ ...user.value }))
   const getSessionId = computed(() => session_id.value)
   const isInitialized = computed(() => initialized.value)
-
+  
   // Actions
   async function login(data) {
     try {
@@ -25,8 +25,7 @@ export const useAuthStore = defineStore('auth', () => {
       session_id.value = response.data.session_id
       token.value = response.data.token ?? null
 
-      axios.defaults.headers.common['X-Session-ID'] = response.data.session_id
-
+      axios.defaults.headers.common['X-Session-ID'] = response.data.session_id     
       return response
     } catch (error) {
       logout()

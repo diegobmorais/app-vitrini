@@ -11,7 +11,7 @@
           <span v-if="isAuthenticated" class="hidden sm:inline">
             Olá, {{ userName }}
           </span>
-          <router-link to="/minha-conta" class="hover:text-primary-200 transition">
+          <router-link :to="accountRoute" class="hover:text-primary-200 transition">
             Minha Conta
           </router-link>
           <button v-if="isAuthenticated" @click="logout" class="hover:text-primary-dark transition underline">
@@ -111,8 +111,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-
-import axios from 'axios'
 import { useAuthStore } from '@/store/modules/useAuthStore'
 
 const props = defineProps({
@@ -163,6 +161,10 @@ const navItems = [
 // Computed
 const userName = computed(() => authStore.getUser.user.name || 'Visitante')
 const isAuthenticated = computed(() => authStore.isAuthenticated)
+const accountRoute = computed(() => {
+  if (!authStore.user) return '/minha-conta'  
+  return authStore.user.user.role_id === 1 ? '/painel-administrador' : '/minha-conta'
+})
 
 // Lifecycle
 onMounted(() => {

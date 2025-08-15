@@ -53,9 +53,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/availability-slots', [AvailabilitySlotController::class, 'getAvailableSlots']);
     Route::post('/availability-slots/{slot}/book', [AvailabilitySlotController::class, 'bookSlot']);
     Route::post('/availability-slots/{slot}/unbook', [AvailabilitySlotController::class, 'unbookSlot']);
+    Route::get('/availability-slots/{slot}/free-time', [AvailabilitySlotController::class, 'freeTime']);
 
     //appointments
-    Route::apiResource('appointments', AppointmentController::class)->only(['index', 'update']);
+    Route::apiResource('appointments', AppointmentController::class);
     Route::patch('/appointments/{appointment}/status', [AppointmentController::class, 'updateStatus']);
 
     //address
