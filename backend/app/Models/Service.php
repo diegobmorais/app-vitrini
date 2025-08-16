@@ -21,11 +21,15 @@ class Service extends Model
     public function category()
     {
         return $this->belongsTo(Category::class);
-    }
-   
+    }   
 
     public function getImageUrlAttribute()
     {
         return $this->image ? Storage::url($this->image) : null;
+    }  
+
+    public function appointments()
+    {
+        return $this->hasMany(Appointment::class);
     }
 }

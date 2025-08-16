@@ -4,16 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class AvailabilitySlot extends Model
+class AvailabilityException extends Model
 {
-    protected $table = 'availability_slots';
-
     protected $fillable = [
         'service_id',
         'date',
         'start_time',
         'end_time',
-        'is_booked',
+        'type'
     ];
 
     public function service()

@@ -27,10 +27,10 @@
                                     <!-- Dados do cliente (já logado) -->
                                     <div class="bg-gray-50 p-3 rounded-md">
                                         <p class="text-sm font-medium old text-gray-700">
-                                            Cliente: {{ authStore.getUser.user.name }}
+                                            Cliente: {{ authStore.getUser.name }}
                                         </p>
                                         <p class="text-xs text-gray-500">
-                                            {{ authStore.getUser.user.email }}
+                                            {{ authStore.getUser.email }}
                                         </p>
                                     </div>
 

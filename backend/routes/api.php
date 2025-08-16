@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\AddressController;
 use App\Http\Controllers\AppointmentController;
-use App\Http\Controllers\AvailabilitySlotController;
+use App\Http\Controllers\AvailabilityController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\Auth\AuthController;
@@ -48,16 +48,13 @@ Route::middleware('auth:sanctum')->group(function () {
     //products
     Route::apiResource('product', ProductController::class)->except(['index']);
 
-    //servies
-    Route::post('/availability-slots', [AvailabilitySlotController::class, 'createSlots']);
-    Route::get('/availability-slots', [AvailabilitySlotController::class, 'getAvailableSlots']);
-    Route::post('/availability-slots/{slot}/book', [AvailabilitySlotController::class, 'bookSlot']);
-    Route::post('/availability-slots/{slot}/unbook', [AvailabilitySlotController::class, 'unbookSlot']);
-    Route::get('/availability-slots/{slot}/free-time', [AvailabilitySlotController::class, 'freeTime']);
+    //servies    
+    Route::post('availability-rules', [AvailabilityController::class, 'storeRule']);
+    Route::post('availability-exceptions', [AvailabilityController::class, 'storeException']);
+    Route::get('availability-exceptions', [AvailabilityController::class, 'index']);
 
     //appointments
     Route::apiResource('appointments', AppointmentController::class);
-    Route::patch('/appointments/{appointment}/status', [AppointmentController::class, 'updateStatus']);
 
     //address
     Route::apiResource('address', AddressController::class);

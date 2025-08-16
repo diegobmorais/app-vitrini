@@ -32,7 +32,7 @@ export const useAppointmentStore = defineStore('appointments', {
       this.loading = true
       try {
         const response = await api.get('/api/appointments', { params })
-        this.appointments = response.data.data
+        this.appointments = response.data
         this.pagination = {
           current_page: response.data.current_page,
           last_page: response.data.last_page,

@@ -19,4 +19,12 @@ class Appointment extends Model
     protected $casts = [
         'scheduled_at' => 'datetime',
     ];
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+    public function service()
+    {
+        return $this->belongsTo(Service::class);
+    }
 }
