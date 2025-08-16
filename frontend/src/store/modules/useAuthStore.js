@@ -1,91 +1,113 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
 import axios from 'axios'
 
-export const useAuthStore = defineStore('auth', () => {
-  // State
-  const user = ref(null)
-  const token = ref(null)
-  const session_id = ref(null)
-  const initialized = ref(false)
+export const useAuthStore = defineStore('auth', {
+  state: () => ({
+    user: null,
+    token: null,
+    session_id: null,
+    initialized: false,
+    authenticated: false
+  }),
 
-  // Getters (computed)
-  const isAuthenticated = computed(() => !!user.value)
-  const getUser = computed(() => ({ ...user.value }))
-  const getSessionId = computed(() => session_id.value)
-  const isInitialized = computed(() => initialized.value)
-  
-  // Actions
-  async function login(data) {
-    try {
-      await axios.get('sanctum/csrf-cookie')
-      const response = await axios.post(data.url, data.credentials)
+  getters: {
+    isAuthenticated: (state) => !!state.authenticated,
+    getUser: (state) => state.user,
+    getSessionId: (state) => state.session_id,
+    isInitialized: (state) => state.initialized,
+    userRole: (state) => state.user?.role_id || null,
+    isAdmin: (state) => state.user?.role_id === 1
+  },
 
-      user.value = response.data.user
-      session_id.value = response.data.session_id
-      token.value = response.data.token ?? null
+  actions: {
+    /**
+     * Realiza login do usuário
+     * @param {{url: string, credentials: object}} data
+     */
+    async login(data) {
+      try {
+        await axios.get('sanctum/csrf-cookie')
 
-      axios.defaults.headers.common['X-Session-ID'] = response.data.session_id     
-      return response
-    } catch (error) {
-      logout()
-      throw error
-    }
-  }
+        const response = await axios.post(data.url, data.credentials)
 
-  async function logout() {
-    try {
-      await axios.post('/api/logout')
-    } catch (error) {
-      console.warn('Erro ao chamar /api/logout:', error)
-    }
-    clearSession()
-  }
+        this.user = response.data.user
+        this.session_id = response.data.session_id
+        this.token = response.data.token ?? null
+        this.initialized = true
+        this.authenticated = true
 
-  function clearSession() {
-    user.value = null
-    token.value = null
-    session_id.value = null
-  }
+        localStorage.setItem('token', this.token)
+        localStorage.setItem('session_id', this.session_id)
 
-  async function checkAuth() {
-    try {
-      if (initialized.value) {
-        return !!user.value
+        axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`
+        axios.defaults.headers.common['X-Session-ID'] = response.data.session_id
+
+        return response.data
+      } catch (error) {
+        this.logout()
+        throw error
+      }
+    },
+
+    /**
+     * Realiza logout do usuário
+     */
+    async logout() {
+      try {
+        await axios.post('/api/logout')
+      } catch (error) {
+        console.warn('Erro ao chamar /api/logout:', error)
+      } finally {
+        this.clearSession()
+      }
+    },
+
+    /**
+     * Limpa os dados da sessão
+     */
+    clearSession() {
+      this.user = null
+      this.token = null
+      this.session_id = null
+      this.authenticated = false
+      this.initialized = false
+
+      localStorage.removeItem('token')
+      localStorage.removeItem('session_id')
+
+      delete axios.defaults.headers.common['Authorization']
+      delete axios.defaults.headers.common['X-Session-ID']
+    },
+
+    /**
+     * Verifica se o usuário já está autenticado
+     */
+    async checkAuth() {     
+      if (this.initialized) return this.authenticated
+
+      const token = localStorage.getItem('token')
+      const session_id = localStorage.getItem('session_id')
+
+      if (token) {
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+      }
+      if (session_id) {
+        axios.defaults.headers.common['X-Session-ID'] = session_id
       }
 
-      const response = await axios.get('/api/check-auth')
-      user.value = response.data
-      initialized.value = true
-
-      return true
-    } catch (error) {
-      if (error.response?.status === 401) {
-        initialized.value = true
-        return false
+      try {
+        const { data } = await axios.get('/api/check-auth')
+        this.user = data.user
+        this.authenticated = true
+        this.token = token
+        this.session_id = session_id
+      } catch (error) {
+        this.clearSession()
+      } finally {
+        this.initialized = true
       }
-      console.error('Erro inesperado no checkAuth:', error)
-      initialized.value = true
-      return false
+
+      return this.authenticated
     }
-  }
-
-  return {
-    // state
-    user,
-    token,
-    session_id,
-    initialized,
-
-    // getters
-    isAuthenticated,
-    getUser,
-    getSessionId,
-    isInitialized,
-
-    // actions
-    login,
-    logout,
-    checkAuth,
   }
 })

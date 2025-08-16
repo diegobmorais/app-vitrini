@@ -23,9 +23,9 @@ class AuthController extends Controller
         }
 
         $user = $request->user();
-        
+
         $user->tokens()->delete();
-   
+
         $token = $user->createToken('api-token')->plainTextToken;
 
         return response()->json([
@@ -64,17 +64,14 @@ class AuthController extends Controller
     }
     public function checkAuth(Request $request)
     {
-        if (!Auth::check()) {
-            return response()->json([
-                'authenticated' => false,
-                'user' => null,
-                'session_id' => session()->getId()
-            ], 401);
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json(['message' => 'Não autenticado'], 401);
         }
+
         return response()->json([
-            'authenticated' => Auth::check(),
-            'user' => Auth::user() ?? null,
-            'session_id' => session()->getId()
+            'user' => $user->load('role'),
         ]);
     }
 }

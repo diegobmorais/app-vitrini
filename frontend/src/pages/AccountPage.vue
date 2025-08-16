@@ -333,13 +333,13 @@ import Swal from 'sweetalert2'
 import axios from 'axios'
 import addressService from '@/services/addressService.js'
 import AddressForm from '@/components/address/AddressForm.vue'
-import { useUserStore } from '@/store/modules/useUserStore'
+import { useAuthStore } from '@/store/modules/useAuthStore'
 
 
-const userStore = useUserStore()
+const authStore = useAuthStore()
 
 // Refs locais
-const user = ref({})
+const user = computed(() => authStore.user)
 const isSubmitting = ref(false)
 const addresses = ref([])
 const showAddressForm = ref(false)
@@ -562,10 +562,8 @@ function getStatusClass(status) {
   return classMap[status] || 'bg-gray-100 text-gray-800'
 }
 
-// Lifecycle hook
 onMounted(async () => {
-  try {
-    user.value = await userStore.getAuthenticatedUser()
+  try {    
     await loadAddresses()
   } catch (error) {
     console.error('Erro ao buscar usuário:', error)

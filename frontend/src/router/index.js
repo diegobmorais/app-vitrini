@@ -221,21 +221,17 @@ const router = createRouter({
   },
 })
 
-// router/index.js
 router.beforeEach(async (to, from, next) => {
   document.title = `${to.meta.title || 'Pet Shop'} | Pet Shop`
 
   const authStore = useAuthStore();
-  let isAuthenticated = authStore.isAuthenticated
 
   if (!authStore.isInitialized) {
-    isAuthenticated = await authStore.checkAuth()
+    await authStore.checkAuth()
   }
-
-  if (to.meta.requiresAuth && !isAuthenticated) {
+  if (to.meta.requiresAuth && !authStore.isAuthenticated) { 
     return next({ name: 'login', query: { redirect: to.fullPath } })
   }
-
   return next()
 })
 

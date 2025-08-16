@@ -159,11 +159,11 @@ const navItems = [
 ]
 
 // Computed
-const userName = computed(() => authStore.getUser.user.name || 'Visitante')
+const userName = computed(() => authStore.getUser?.name || 'Visitante')
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 const accountRoute = computed(() => {
   if (!authStore.user) return '/minha-conta'  
-  return authStore.user.user.role_id === 1 ? '/painel-administrador' : '/minha-conta'
+  return authStore.getUser.role_id === 1 ? '/painel-administrador' : '/minha-conta'
 })
 
 // Lifecycle

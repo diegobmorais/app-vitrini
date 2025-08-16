@@ -255,15 +255,12 @@ async function submitForm() {
         email: form.email,
         password: form.password
       }
-    const response = await authStore.login({ url, credentials })
-
-    if (response.data.role_id === 1) {
-      console.log('response', response)
+    const response = await authStore.login({ url, credentials })   
+      
+    if (authStore.user.role_id === 1) {
       router.push('/painel-administrador')
-      window.location.reload()
     } else {
       router.push('/minha-conta')
-      window.location.reload()
     }
 
   } catch (error) {
@@ -272,7 +269,7 @@ async function submitForm() {
       data: error.response?.data,
       headers: error.response?.headers
     })
-    // Exiba notificação ou mensagem de erro para usuário aqui
+ 
   } finally {
     isLoading.value = false
   }
