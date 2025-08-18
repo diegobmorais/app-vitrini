@@ -51,7 +51,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //servies    
     Route::post('availability-rules', [AvailabilityController::class, 'storeRule']);
     Route::post('availability-exceptions', [AvailabilityController::class, 'storeException']);
-    Route::get('availability-exceptions', [AvailabilityController::class, 'index']);
+    Route::get('availability-slots', [AvailabilityController::class, 'index']);   
 
     //appointments
     Route::apiResource('appointments', AppointmentController::class);

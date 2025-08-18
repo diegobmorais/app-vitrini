@@ -3,7 +3,7 @@ import api from '@/main'
 
 export const useServiceAvailabilityStore = defineStore('serviceAvailability', {
     state: () => ({
-        slots: [],        
+        slots: [],
         loading: false,
         error: null,
         rules: [],
@@ -18,12 +18,15 @@ export const useServiceAvailabilityStore = defineStore('serviceAvailability', {
                 const { data } = await api.get('/api/appointments', {
                     params: { service_id: serviceId, start_date: startDate, end_date: endDate }
                 })
-                this.slots = data.map(dt => ({
-                    date: dt.split(' ')[0],
-                    start_time: dt.split(' ')[1],
-                    end_time: dt.split(' ')[1],
-                    is_booked: false, 
-                }))
+                this.slots = data.map(appt => {
+                    const [date, time] = appt.scheduled_at.split(' ')
+                    return {
+                        date,
+                        start_time: time,
+                        end_time: time,
+                        is_booked: true,
+                    }
+                })
             } catch (err) {
                 this.error = 'Erro ao buscar horários disponíveis'
             } finally {
@@ -41,14 +44,16 @@ export const useServiceAvailabilityStore = defineStore('serviceAvailability', {
             this.fetchExceptions(exceptionData.service_id)
         },
 
-        async fetchRules(serviceId) {
-            const { data } = await api.get('/api/availability-rules', { params: { service_id: serviceId } })
-            this.rules = data
-        },
-
-        async fetchExceptions(serviceId) {
-            const { data } = await api.get('/api/availability-exceptions', { params: { service_id: serviceId } })
+        async fetchFreeSlots(serviceId, startDate, endDate) {
+            const { data } = await api.get('/api/availability-slots', {
+                params: {
+                    service_id: serviceId,
+                    start_date: startDate,
+                    end_date: endDate
+                }
+            })
             this.exceptions = data
+            return data
         },
 
         async bookSlot(dateTime, userId, serviceId, petName) {

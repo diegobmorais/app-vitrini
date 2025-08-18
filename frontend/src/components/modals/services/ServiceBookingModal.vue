@@ -62,9 +62,7 @@
                                             <select v-model="form.slot_id" required
                                                 class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                                                 <option value="" disabled>Horários Disponíveis</option>
-                                                <option
-                                                    v-for="slot in availableTimes"
-                                                    :key="slot.id" :value="slot.id">
+                                                <option v-for="slot in availableTimes" :key="slot.id" :value="slot.id">
                                                     {{ slot.start_time }} - {{ slot.end_time }}
                                                 </option>
                                             </select>
@@ -76,7 +74,7 @@
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Transporte</label>
                                         <div class="mt-5 space-x-3">
                                             <label class="inline-flex items-center">
-                                                <input v-model="form.transport" type="radio" value="brings"
+                                                <input v-model="form.transport" type="radio" value="pickup"
                                                     class="text-blue-600" />
                                                 <span class="ml-2">Eu mesmo levarei</span>
                                             </label>
@@ -122,6 +120,7 @@ import { useAuthStore } from '@/store/modules/useAuthStore'
 import { useAppointmentStore } from '@/store/modules/useAppointmentStore'
 import { useServiceAvailabilityStore } from '@/store/modules/useServiceAvailabilityStore'
 import { useToast } from 'vue-toastification'
+import dayjs from 'dayjs'
 
 const props = defineProps({
     show: {
@@ -146,7 +145,7 @@ const form = ref({
     pet_name: '',
     date: '',
     time: '',
-    transport: 'brings',
+    transport: 'pickup',
     notes: ''
 })
 
@@ -161,7 +160,7 @@ const submitBooking = async () => {
 
     try {
         const selectedSlot = availableTimes.value.find(s => s.id === form.value.slot_id)
-              
+
         const payload = {
             slot_id: form.value.slot_id,
             service_id: props.selectedService.id,
@@ -178,7 +177,7 @@ const submitBooking = async () => {
 
         emit('close')
 
-    } catch (error) {    
+    } catch (error) {
         toast.error('Ocorreu um erro ao agendar o serviço. Por favor, tente novamente.', error)
     } finally {
         isSubmitting.value = false
@@ -186,14 +185,22 @@ const submitBooking = async () => {
 }
 
 onMounted(async () => {
-    slots.value = await availableTimesStore.getFreeSlots(props.selectedService.id)
+    if (!props.selectedService) return
+
+    const startDate = dayjs().format('YYYY-MM-DD')
+    const endDate = dayjs().add(7, 'day').format('YYYY-MM-DD')
+
+    slots.value = await availableTimesStore.fetchFreeSlots(
+        props.selectedService.id,
+        startDate,
+        endDate
+    )
+
     availableTimes.value = (Array.isArray(slots.value) ? slots.value : [])
-        .filter(s => s.is_booked === 1)
-        .map(s => ({
-            id: s.id,
-            date: s.date,
-            start_time: s.start_time,
-            end_time: s.end_time
+        .map((s, index) => ({          
+            date: dayjs(s).format('YYYY-MM-DD'),
+            start_time: dayjs(s).format('HH:mm'),
+            end_time: dayjs(s).add(30, 'minute').format('HH:mm')
         }))
 })
 </script>

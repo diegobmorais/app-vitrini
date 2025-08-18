@@ -14,14 +14,13 @@ class AppointmentController extends Controller
         if ($request->filled('service_id')) {
             $query->where('service_id', $request->service_id);
         }
-
+           
         if ($request->filled('start_date') && $request->filled('end_date')) {
             $query->whereBetween('scheduled_at', [$request->start_date, $request->end_date]);
         }
 
         $appointments = $query->with('service', 'user')
-            ->orderBy('scheduled_at')
-            ->get();
+            ->orderBy('scheduled_at')->pluck('scheduled_at');
 
         return response()->json($appointments);
     }

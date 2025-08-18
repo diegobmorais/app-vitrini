@@ -100,7 +100,7 @@
                   :class="appointment.transport_option === 'pickup' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'"
                   class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
                 >
-                  {{ appointment.transport_option === 'pickup' ? 'Buscar' : 'Levar' }}
+                  {{ appointment.transport_option === 'pickup' ? 'Loja buscará o pet' : 'Cliente levará o pet' }}
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
@@ -219,7 +219,7 @@
                     <div>
                       <label class="block text-sm font-medium text-gray-700">Transporte</label>
                       <p class="mt-1 text-sm text-gray-900">
-                        {{ selectedAppointment?.transport_option === 'pickup' ? 'Cliente buscará o pet' : 'Loja levará o pet' }}
+                        {{ selectedAppointment?.transport_option === 'pickup' ? 'Loja buscará o pet' : 'Cliente levará o pet' }}
                       </p>
                     </div>
                     <div>

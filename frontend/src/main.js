@@ -8,15 +8,15 @@ import { useAuthStore } from "./store/modules/useAuthStore"
 import Toast from 'vue-toastification'
 import 'vue-toastification/dist/index.css'
 
-// FontAwesome
-import '@fortawesome/fontawesome-free/css/all.min.css'
-import { library } from '@fortawesome/fontawesome-svg-core'
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-
 // Ícones que você deseja usar
 import { faUser, faShoppingCart } from '@fortawesome/free-solid-svg-icons'
 import { faHeart } from '@fortawesome/free-regular-svg-icons'
 import { faGithub } from '@fortawesome/free-brands-svg-icons'
+
+// FontAwesome
+import '@fortawesome/fontawesome-free/css/all.min.css'
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 library.add(faUser, faShoppingCart, faHeart, faGithub)
 

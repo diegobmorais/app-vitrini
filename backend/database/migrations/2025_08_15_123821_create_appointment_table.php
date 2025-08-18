@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('service_id')->constrained()->onDelete('cascade');
             $table->string('pet_name')->nullable();
             $table->dateTime('scheduled_at');
-            $table->enum('transport_option',['brings', 'delivery'])->default('brings');
+            $table->enum('transport_option',allowed: ['pickup', 'delivery'])->default('pickup');
             $table->text('notes')->nullable();
             $table->enum('status', ['pending', 'confirmed', 'completed', 'cancelled'])->default('pending');
             $table->timestamps();

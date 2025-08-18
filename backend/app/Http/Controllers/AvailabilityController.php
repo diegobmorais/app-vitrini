@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 class AvailabilityController extends Controller
 {
     public function index(Request $request)
-    { 
+    {   
         $service_id = $request->service_id;
         $start = Carbon::parse($request->start_date);
         $end = Carbon::parse($request->end_date);

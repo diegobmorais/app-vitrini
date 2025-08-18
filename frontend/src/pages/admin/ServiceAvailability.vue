@@ -156,7 +156,8 @@ const calendarOptions = {
         month: 'Mês',
         week: 'Semana',
         day: 'Dia',
-        list: 'Lista'
+        list: 'Lista',
+
     }
 }
 
@@ -193,10 +194,11 @@ const handleCreate = async () => {
         }
 
         toast.success('Configuração criada com sucesso!')
-        localForm.value = { service_id: '', date: '', start_time: '', end_time: '', mode: 'single', interval_minutes: 30 }
 
-        if (localForm.value.service_id)
+        if (localForm.value.service_id) {
             await availabilityStore.fetchAvailableSlots(localForm.value.service_id, today.value, today.value)
+        }
+        localForm.value = { service_id: '', date: '', start_time: '', end_time: '', mode: 'single', interval_minutes: 30 }
     } catch (err) {
         toast.error('Erro ao criar configuração')
     }
@@ -205,6 +207,6 @@ const handleCreate = async () => {
 // Carregar serviços e slots iniciais
 onMounted(async () => {
     await serviceStore.fetchServices()
-    await availabilityStore.fetchAvailableSlots('', today.value = '', today.value='')
+    await availabilityStore.fetchAvailableSlots('', today.value, today.value)
 })
 </script>
