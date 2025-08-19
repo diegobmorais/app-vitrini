@@ -44,28 +44,32 @@
                                     </div>
 
                                     <!-- Data e Hora -->
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">Data *</label>
-                                            <select v-model="form.date" required
-                                                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                                                <option value="" disabled>Selecione uma data</option>
-                                                <option v-for="date in availableTimes" :key="date" :value="date.date">
-                                                    {{ date.date }}
-                                                </option>
-                                            </select>
-                                        </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Data *</label>
+                                        <select v-model="selectedDate" @change="loadSlotsForDate"
+                                            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                            <option value="">Selecione uma data</option>
+                                            <option v-for="date in availableDates" :key="date" :value="date">
+                                                {{ formatDateDisplay(date) }}
+                                            </option>
+                                        </select>
+                                    </div>
 
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-1">Horário
-                                                *</label>
-                                            <select v-model="form.slot_id" required
-                                                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                                                <option value="" disabled>Horários Disponíveis</option>
-                                                <option v-for="slot in availableTimes" :key="slot.id" :value="slot.id">
-                                                    {{ slot.start_time }} - {{ slot.end_time }}
-                                                </option>
-                                            </select>
+                                    <!-- Horários -->
+                                    <div v-if="selectedDate">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Horário *</label>
+                                        <div class="grid grid-cols-3 gap-2 max-h-40 overflow-y-auto">
+                                            <button v-for="slot in slotsForSelectedDate" :key="slot.id"
+                                                @click="selectSlot(slot)" :class="[
+                                                    'px-3 py-2 text-sm rounded border',
+                                                    selectedSlot?.id === slot.id
+                                                        ? 'bg-blue-500 text-white border-blue-500'
+                                                        : slot.is_booked
+                                                            ? 'bg-red-100 text-red-800 border-red-300 cursor-not-allowed'
+                                                            : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                                                ]" :disabled="slot.is_booked">
+                                                {{ slot.start_time }} - {{ slot.end_time }}
+                                            </button>
                                         </div>
                                     </div>
 
@@ -115,12 +119,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useAuthStore } from '@/store/modules/useAuthStore'
 import { useAppointmentStore } from '@/store/modules/useAppointmentStore'
+import { useAuthStore } from '@/store/modules/useAuthStore'
 import { useServiceAvailabilityStore } from '@/store/modules/useServiceAvailabilityStore'
-import { useToast } from 'vue-toastification'
-import dayjs from 'dayjs'
+import { ref, computed, onMounted, watch } from 'vue'
+
 
 const props = defineProps({
     show: {
@@ -129,78 +132,95 @@ const props = defineProps({
     },
     selectedService: {
         type: Object,
-        default: null
+        required: true
     }
 })
 
 const emit = defineEmits(['close', 'scheduled'])
 
-const toast = useToast()
 const authStore = useAuthStore()
 const appointmentStore = useAppointmentStore()
-const availableTimesStore = useServiceAvailabilityStore()
+const availabilityStore = useServiceAvailabilityStore()
+
+// Estados
+const selectedDate = ref('')
+const selectedSlot = ref(null)
+const isSubmitting = ref(false)
 
 const form = ref({
-    slot_id: '',
     pet_name: '',
-    date: '',
-    time: '',
-    transport: 'pickup',
+    transport_option: 'pickup',
     notes: ''
 })
 
-const isSubmitting = ref(false)
-const slots = ref([])
-const availableTimes = ref([])
+// Dados reativos
+const availableDates = computed(() => {    
+    const dates = availabilityStore.slots
+        .filter(s => !s.is_booked)
+        .map(s => s.date)
+    return [...new Set(dates)].sort()
+})
+
+const slotsForSelectedDate = computed(() => {
+    if (!selectedDate.value) return []
+    return availabilityStore.slots
+        .filter(s => s.date === selectedDate.value)
+        .sort((a, b) => a.start_time.localeCompare(b.start_time))
+})
+
+const isFormValid = computed(() => {
+    return selectedSlot.value &&
+        form.value.pet_name.trim() &&
+        props.service.id
+})
+
+// Métodos
+const formatDateDisplay = (dateString) => {
+    const date = new Date(dateString)
+    const weekdays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+    return `${date.toLocaleDateString('pt-BR')} (${weekdays[date.getDay()]})`
+}
+
+const loadSlotsForDate = () => {
+    selectedSlot.value = null
+}
+
+const selectSlot = (slot) => {
+    if (!slot.is_booked) {
+        selectedSlot.value = slot
+    }
+}
 
 const submitBooking = async () => {
-    if (!props.selectedService) return
+    if (!isFormValid.value) return
 
     isSubmitting.value = true
-
     try {
-        const selectedSlot = availableTimes.value.find(s => s.id === form.value.slot_id)
-
         const payload = {
-            slot_id: form.value.slot_id,
-            service_id: props.selectedService.id,
+            service_id: props.service.id,
+            slot_id: selectedSlot.value.id,
             pet_name: form.value.pet_name,
-            scheduled_at: selectedSlot
-                ? `${selectedSlot.date} ${selectedSlot.start_time}`
-                : null,
-            transport_option: form.value.transport,
+            transport_option: form.value.transport_option,
             notes: form.value.notes
         }
+
         await appointmentStore.createAppointment(payload)
-
         emit('scheduled')
-
         emit('close')
-
-    } catch (error) {
-        toast.error('Ocorreu um erro ao agendar o serviço. Por favor, tente novamente.', error)
+    } catch (err) {
+        alert('Erro ao agendar serviço')
     } finally {
         isSubmitting.value = false
     }
 }
 
+// Carrega slots ao abrir o modal
 onMounted(async () => {
-    if (!props.selectedService) return
-
-    const startDate = dayjs().format('YYYY-MM-DD')
-    const endDate = dayjs().add(7, 'day').format('YYYY-MM-DD')
-
-    slots.value = await availableTimesStore.fetchFreeSlots(
-        props.selectedService.id,
-        startDate,
-        endDate
-    )
-
-    availableTimes.value = (Array.isArray(slots.value) ? slots.value : [])
-        .map((s, index) => ({          
-            date: dayjs(s).format('YYYY-MM-DD'),
-            start_time: dayjs(s).format('HH:mm'),
-            end_time: dayjs(s).add(30, 'minute').format('HH:mm')
-        }))
+    if (props.selectedService.id) {
+        await availabilityStore.fetchAvailableSlots(
+            props.selectedService.id,
+            new Date().toISOString().split('T')[0]
+        )
+    }
 })
 </script>

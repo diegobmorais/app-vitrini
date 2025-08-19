@@ -11,24 +11,19 @@ export const useServiceAvailabilityStore = defineStore('serviceAvailability', {
     }),
 
     actions: {
-        async fetchAvailableSlots(serviceId, startDate, endDate) {
+        async fetchAvailableSlots(serviceId, startDate) {
             this.loading = true
             this.error = null
+
             try {
-                const { data } = await api.get('/api/appointments', {
-                    params: { service_id: serviceId, start_date: startDate, end_date: endDate }
-                })
-                this.slots = data.map(appt => {
-                    const [date, time] = appt.scheduled_at.split(' ')
-                    return {
-                        date,
-                        start_time: time,
-                        end_time: time,
-                        is_booked: true,
-                    }
-                })
+                const params = {
+                    service_id: serviceId,
+                    start: startDate
+                }
+                const response = await api.get('/api/availability', { params })
+                this.slots = response.data
             } catch (err) {
-                this.error = 'Erro ao buscar horários disponíveis'
+                this.error = err.response?.data?.message || 'Erro ao carregar slots'
             } finally {
                 this.loading = false
             }
@@ -43,17 +38,14 @@ export const useServiceAvailabilityStore = defineStore('serviceAvailability', {
             await api.post('/api/availability-exceptions', exceptionData)
             this.fetchExceptions(exceptionData.service_id)
         },
+        async fetchRules(service_id) {
+            const { data } = await api.get(`/api/availability-rules?service_id=${service_id}`)
+            this.rules = data
+        },
 
-        async fetchFreeSlots(serviceId, startDate, endDate) {
-            const { data } = await api.get('/api/availability-slots', {
-                params: {
-                    service_id: serviceId,
-                    start_date: startDate,
-                    end_date: endDate
-                }
-            })
+        async fetchExceptions(service_id) {
+            const { data } = await api.get(`/api/availability-exceptions?service_id=${service_id}`)
             this.exceptions = data
-            return data
         },
 
         async bookSlot(dateTime, userId, serviceId, petName) {

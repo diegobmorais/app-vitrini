@@ -108,6 +108,9 @@ const isFormValid = computed(() => {
 // FullCalendar setup
 const calendarRef = ref(null)
 
+// Transform slots em eventos para FullCalendar
+const calendarEvents = ref([])
+
 // Reservar horário
 const handleEventClick = async (info) => {
     const slot = info.event.extendedProps.slot
@@ -122,18 +125,11 @@ const handleEventClick = async (info) => {
     }
 }
 
-// Transform slots em eventos para FullCalendar
-const calendarEvents = computed(() => {
-    return availabilityStore.slots.map(slot => ({
-        id: slot.id,
-        title: slot.is_booked ? 'Reservado' : 'Disponível',
-        start: `${slot.date}T${slot.start_time}`,
-        end: `${slot.date}T${slot.end_time}`,
-        backgroundColor: slot.is_booked ? '#F87171' : '#34D399',
-        borderColor: slot.is_booked ? '#F87171' : '#34D399',
-        extendedProps: { slot }
-    }))
-})
+const handleDatesSet = async (arg) => {
+    const start = arg.startStr.split('T')[0]
+    const end = arg.endStr.split('T')[0]
+    await availabilityStore.fetchAvailableSlots('', start, end)
+}
 
 const calendarOptions = {
     plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
@@ -147,6 +143,7 @@ const calendarOptions = {
     slotMaxTime: '20:00:00',
     events: calendarEvents.value,
     eventClick: handleEventClick,
+    datesSet: handleDatesSet,
     height: 'auto',
     editable: false,
     selectable: true,
@@ -161,7 +158,7 @@ const calendarOptions = {
     }
 }
 
-watch(calendarEvents, (newEvents) => {
+watch(() => availabilityStore.slots, (newEvents) => {
     if (calendarRef.value) {
         const calendarApi = calendarRef.value.getApi()
         calendarApi.removeAllEvents()

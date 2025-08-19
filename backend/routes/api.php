@@ -51,10 +51,13 @@ Route::middleware('auth:sanctum')->group(function () {
     //servies    
     Route::post('availability-rules', [AvailabilityController::class, 'storeRule']);
     Route::post('availability-exceptions', [AvailabilityController::class, 'storeException']);
-    Route::get('availability-slots', [AvailabilityController::class, 'index']);   
+    Route::get('/availability', [AvailabilityController::class, 'getAvailability']);
+    Route::get('availability-rules', [AvailabilityController::class, 'getAvailabilityRules']);
+    Route::get('availability-exceptions', [AvailabilityController::class, 'getAvailabilityExceptions']);
 
     //appointments
     Route::apiResource('appointments', AppointmentController::class);
+    Route::post('/appointments/manual', [AppointmentController::class, 'manualStore']);
 
     //address
     Route::apiResource('address', AddressController::class);
