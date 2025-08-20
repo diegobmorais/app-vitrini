@@ -1,75 +1,28 @@
 <template>
-    <div class="p-6">
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold text-gray-900">Disponibilidade de Serviços</h1>
+    <div class="p-3">
+        <div class="flex justify-center items-center mb-2">
+            <h1 class="text-2xl font-bold text-gray-900">Sistema de Agenda Inteligente</h1>
         </div>
-
         <!-- Formulário de criação de regras / exceções -->
-        <div class="bg-white p-6 rounded-lg shadow mb-6">
-            <h2 class="text-lg font-medium text-gray-900 mb-4">Criar Configuração de Disponibilidade</h2>
-
-            <div class="grid grid-cols-1 md:grid-cols-7 gap-3">
-                <div class="md:col-span-2">
-                    <label class="block text-xs font-medium text-gray-700 mb-1">Serviço</label>
-                    <select v-model="localForm.service_id"
-                        class="w-full border rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
-                        <option value="">Selecione</option>
-                        <option v-for="service in serviceStore.services" :key="service.id" :value="service.id">{{
-                            service.name }}</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 mb-1">Data</label>
-                    <input type="date" v-model="localForm.date" :min="today"
-                        class="w-full border rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500" />
-                </div>
-
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 mb-1">Início</label>
-                    <input type="time" v-model="localForm.start_time"
-                        class="w-full border rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500" />
-                </div>
-
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 mb-1">Fim</label>
-                    <input type="time" v-model="localForm.end_time"
-                        class="w-full border rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500" />
-                </div>
-
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 mb-1">Modo</label>
-                    <select v-model="localForm.mode"
-                        class="w-full border rounded px-2 py-2 text-sm focus:ring-2 focus:ring-blue-500">
-                        <option value="single">Exceção única</option>
-                        <option value="recurring">Regra recorrente</option>
-                    </select>
-                </div>
-
-                <div v-if="localForm.mode === 'recurring'">
-                    <label class="block text-xs font-medium text-gray-700 mb-1">Intervalo (min)</label>
-                    <select v-model="localForm.interval_minutes"
-                        class="w-full border rounded px-2 py-2 text-sm focus:ring-2 focus:ring-blue-500">
-                        <option value="15">15 min</option>
-                        <option value="30">30 min</option>
-                        <option value="60">60 min</option>
-                    </select>
-                </div>
-
-                <div>
-                    <button @click="handleCreate" :disabled="!isFormValid"
-                        class="w-full px-2 py-2 mt-5 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition">
-                        Criar
+        <div class="bg-white p-6 rounded-lg shadow mb-2">
+            <div>
+                <div class="flex justify-end mb-4">
+                    <button @click="openAgendaModal"
+                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+                        Abrir Agenda
                     </button>
                 </div>
             </div>
         </div>
-
+    </div>
+    <div>
         <!-- Calendário FullCalendar -->
         <div class="bg-white rounded-lg shadow p-4">
             <FullCalendar ref="calendarRef" :options="calendarOptions" />
         </div>
     </div>
+    <ServiceAgendaModal v-if="showAgendaModal" :show="showAgendaModal" :initial-data="selectedDateInfo"
+        @close="closeAgendaModal" @saved="handleCreate" />
 </template>
 
 <script setup>
@@ -82,36 +35,19 @@ import FullCalendar from '@fullcalendar/vue3'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import interactionPlugin from '@fullcalendar/interaction'
+import ServiceAgendaModal from '@/components/modals/services/ServiceAgendaModal.vue'
 
 const toast = useToast()
 const serviceStore = useServiceStore()
 const availabilityStore = useServiceAvailabilityStore()
+const showAgendaModal = ref(false)
+const selectedDateInfo = ref(null)
 
 const today = ref(new Date().toISOString().split('T')[0])
 
-const localForm = ref({
-    service_id: '',
-    date: '',
-    start_time: '',
-    end_time: '',
-    mode: 'single',
-    interval_minutes: 30
-})
-
-const isFormValid = computed(() => {
-    return localForm.value.service_id &&
-        localForm.value.date &&
-        localForm.value.start_time &&
-        localForm.value.end_time
-})
-
-// FullCalendar setup
 const calendarRef = ref(null)
-
-// Transform slots em eventos para FullCalendar
 const calendarEvents = ref([])
 
-// Reservar horário
 const handleEventClick = async (info) => {
     const slot = info.event.extendedProps.slot
     if (slot.is_booked) return
@@ -128,7 +64,11 @@ const handleEventClick = async (info) => {
 const handleDatesSet = async (arg) => {
     const start = arg.startStr.split('T')[0]
     const end = arg.endStr.split('T')[0]
-    await availabilityStore.fetchAvailableSlots('', start, end)
+    await availabilityStore.fetchAvailableSlots({
+        start_date: start,
+        end_date: end,
+        service_ids: availabilityStore.selectedServiceIds
+    })
 }
 
 const calendarOptions = {
@@ -141,9 +81,10 @@ const calendarOptions = {
     },
     slotMinTime: '08:00:00',
     slotMaxTime: '20:00:00',
-    events: calendarEvents.value,
+    events: () => availabilityStore.slots,
     eventClick: handleEventClick,
     datesSet: handleDatesSet,
+    eventClassNames: (info) => [`svc-${info.event.extendedProps.service_id}`],
     height: 'auto',
     editable: false,
     selectable: true,
@@ -167,38 +108,51 @@ watch(() => availabilityStore.slots, (newEvents) => {
 })
 
 // Criar regra ou exceção
-const handleCreate = async () => {
-    if (!isFormValid.value) return
-
+const handleCreate = async (formData) => {
     try {
-        if (localForm.value.mode === 'single') {
+        if (formData.value.mode === 'extra') {
             await availabilityStore.createException({
-                service_id: localForm.value.service_id,
-                date: localForm.value.date,
-                start_time: localForm.value.start_time,
-                end_time: localForm.value.end_time,
+                ...formData.value,
                 type: 'extra'
+            })
+        } else if (formData.value.mode === 'block') {
+            await availabilityStore.createException({
+                ...formData.value,
+                type: 'block'
             })
         } else {
             await availabilityStore.createRule({
-                service_id: localForm.value.service_id,
-                day_of_week: new Date(localForm.value.date).getDay(),
-                start_time: localForm.value.start_time,
-                end_time: localForm.value.end_time,
-                slot_duration: localForm.value.interval_minutes,
-                valid_from: localForm.value.date
+                service_id: formData.value.service_id,
+                day_of_week: new Date(formData.value.date).getDay(),
+                start_time: formData.value.start_time,
+                end_time: formData.value.end_time,
+                slot_duration: formData.value.interval_minutes,
+                valid_from: formData.value.date
             })
         }
-
         toast.success('Configuração criada com sucesso!')
 
-        if (localForm.value.service_id) {
-            await availabilityStore.fetchAvailableSlots(localForm.value.service_id, today.value, today.value)
-        }
-        localForm.value = { service_id: '', date: '', start_time: '', end_time: '', mode: 'single', interval_minutes: 30 }
+        const api = calendarRef.value.getApi()
+        const range = api.view.activeStart.toISOString().slice(0, 10)
+        const rangeEnd = api.view.activeEnd.toISOString().slice(0, 10)
+
+        await availabilityStore.fetchAvailableSlots({
+            start_date: range,
+            end_date: rangeEnd,
+            service_ids: availabilityStore.selectedServiceIds
+        })
+        formData.value = { service_id: '', date: '', start_time: '', end_time: '', mode: 'single', interval_minutes: 30 }
     } catch (err) {
         toast.error('Erro ao criar configuração')
     }
+}
+function openAgendaModal() {
+    showAgendaModal.value = true
+    selectedDateInfo.value = null
+}
+function closeAgendaModal() {
+    showAgendaModal.value = false
+    selectedDateInfo.value = null
 }
 
 // Carregar serviços e slots iniciais

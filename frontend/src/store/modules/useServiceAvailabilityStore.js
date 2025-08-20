@@ -4,6 +4,7 @@ import api from '@/main'
 export const useServiceAvailabilityStore = defineStore('serviceAvailability', {
     state: () => ({
         slots: [],
+        selectedServiceIds: [], 
         loading: false,
         error: null,
         rules: [],
@@ -11,22 +12,11 @@ export const useServiceAvailabilityStore = defineStore('serviceAvailability', {
     }),
 
     actions: {
-        async fetchAvailableSlots(serviceId, startDate) {
-            this.loading = true
-            this.error = null
-
-            try {
-                const params = {
-                    service_id: serviceId,
-                    start: startDate
-                }
-                const response = await api.get('/api/availability', { params })
-                this.slots = response.data
-            } catch (err) {
-                this.error = err.response?.data?.message || 'Erro ao carregar slots'
-            } finally {
-                this.loading = false
-            }
+        async fetchAvailableSlots({ start_date, end_date, service_ids = [] }) {
+            const { data } = await api.get('/api/availability/slots', {
+                params: { start_date, end_date, service_ids }
+            })
+            this.slots = data
         },
 
         async createRule(ruleData) {

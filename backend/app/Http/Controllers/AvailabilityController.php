@@ -5,119 +5,189 @@ namespace App\Http\Controllers;
 use App\Models\Appointment;
 use App\Models\AvailabilityException;
 use App\Models\AvailabilityRule;
+use App\Models\Service;
 use Carbon\Carbon;
-use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
 
 class AvailabilityController extends Controller
 {
-    public function index(Request $request)
+    public function slots(Request $request)
     {
-        $service_id = $request->service_id;
-        $start = Carbon::parse($request->start_date);
-        $end = Carbon::parse($request->end_date);
+        $start = Carbon::parse($request->query('start_date'));
+        $end   = Carbon::parse($request->query('end_date'));
 
-        $rulesQuery = AvailabilityRule::query();
-        $exceptionsQuery = AvailabilityException::query();
-        $appointmentsQuery = Appointment::query();
+        $services = Service::all();
+        $rules = AvailabilityRule::all();
+        $exceptions = AvailabilityException::whereBetween('date', [$start->toDateString(), $end->toDateString()])->get();
+        $appointments = Appointment::whereBetween('scheduled_at', [$start->toDateString(), $end->toDateString()])
+            ->get();
 
-        if ($service_id) {
-            $rulesQuery->where('service_id', $service_id);
-            $exceptionsQuery->where('service_id', $service_id);
-            $appointmentsQuery->where('service_id', $service_id);
-        }
+        $slots = $this->generateSlotsForAllServices($services, $rules, $exceptions, $appointments, $start, $end);
 
-        $rules = $rulesQuery->get();
-        $exceptions = $exceptionsQuery->whereBetween('date', [$start, $end])->get();
-        $appointments = $appointmentsQuery->whereBetween('scheduled_at', [$start->copy()->startOfDay(), $end->copy()->endOfDay()])->get();
-
-        $events = [];
-
-        $period = CarbonPeriod::create($start, $end);
-        foreach ($period as $date) {
-            $dayOfWeek = $date->dayOfWeek;
-
-            foreach ($rules as $rule) {
-                if ($rule->day_of_week != $dayOfWeek) continue;
-
-                $slotStart = Carbon::parse($rule->start_time);
-                $slotEnd = Carbon::parse($rule->end_time);
-
-                while ($slotStart < $slotEnd) {
-                    $slotTime = $date->copy()->setTimeFrom($slotStart);
-
-                    $slotDateTime = $date->copy()
-                        ->hour($slotStart->hour)
-                        ->minute($slotStart->minute)
-                        ->second($slotStart->second);
-
-                    // Exceções bloqueadas
-                    $blocked = $exceptions->where('type', 'block')
-                        ->where('date', $date->toDateString())
-                        ->filter(fn($ex) => $slotTime->between(Carbon::parse($ex->start_time), Carbon::parse($ex->end_time)))
-                        ->count();
-
-                    if ($blocked) {
-                        $slotStart->addMinutes($rule->slot_duration);
-                        continue;
-                    }
-
-                    // Já agendado?
-                    $alreadyBooked = $appointments->filter(fn($a) => Carbon::parse($a->scheduled_at)->eq($slotTime))->count();
-
-                    $events[] = [
-                        'id' => uniqid(),
-                        'title' => $alreadyBooked ? 'Reservado' : 'Disponível',
-                        'start' => $slotDateTime->toDateTimeString(),
-                        'end'   => $slotDateTime->copy()->addMinutes($rule->slot_duration)->toDateTimeString(),
-                        'backgroundColor' => $alreadyBooked ? '#F87171' : '#34D399',
-                        'borderColor'     => $alreadyBooked ? '#F87171' : '#34D399',
-                        'extendedProps'   => [
-                            'service_id' => $rule->service_id,
-                            'is_booked' => $alreadyBooked,
-                        ]
-                    ];
-
-                    $slotStart->addMinutes($rule->slot_duration);
-                }
-            }
-
-            // Horários extras
-            $extras = $exceptions->where('type', 'extra')->where('date', $date->toDateString());
-            foreach ($extras as $extra) {
-                $startExtra = Carbon::parse($extra->start_time);
-                $endExtra = Carbon::parse($extra->end_time);
-
-                while ($startExtra < $endExtra) {
-                    $slotTime = $date->copy()->setTimeFrom($startExtra);
-
-                    $slotDateTime = $date->copy()
-                        ->hour($slotStart->hour)
-                        ->minute($slotStart->minute)
-                        ->second($slotStart->second);
-
-                    $alreadyBooked = $appointments->where('scheduled_at', $slotTime->toDateTimeString())->count();
-
-                    $events[] = [
-                        'id' => uniqid(),
-                        'title' => $alreadyBooked ? 'Reservado' : 'Disponível',
-                        'start' => $slotDateTime->toDateTimeString(),
-                        'end'   => $slotDateTime->copy()->addMinutes(30)->toDateTimeString(),
-                        'backgroundColor' => $alreadyBooked ? '#F87171' : '#34D399',
-                        'borderColor'     => $alreadyBooked ? '#F87171' : '#34D399',
-                        'extendedProps'   => [
-                            'service_id' => $extra->service_id,
-                            'is_booked' => $alreadyBooked,
-                        ]
-                    ];
-
-                    $startExtra->addMinutes(30);
-                }
-            }
-        }
-
-        return response()->json($events);
+        return response()->json($slots);
     }
+
+    protected function generateSlotsForAllServices($services, $rules, $exceptions, $appointments, Carbon $start, Carbon $end)
+    {
+        $allSlots = [];
+
+        foreach ($services as $service) {
+            $serviceSlots = $this->generateSlotsForService($service, $rules, $exceptions, $appointments, $start, $end);
+            $allSlots = array_merge($allSlots, $serviceSlots);
+        }
+
+        return $allSlots;
+    }
+
+    protected function generateSlotsForService($service, $rules, $exceptions, $appointments, Carbon $start, Carbon $end)
+    {
+        $slots = [];
+        $serviceRules = $rules->where('service_id', $service->id);
+
+        // Agrupa exceções por data
+        $exceptionsByDate = $exceptions->where('service_id', $service->id)
+            ->groupBy(fn($ex) => $ex->date);
+
+        for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
+            $daySlots = $this->generateSlotsForDay(
+                $service,
+                $date,
+                $serviceRules,
+                $exceptionsByDate->get($date->toDateString(), collect()),
+                $appointments
+            );
+
+            $slots = array_merge($slots, $daySlots);
+        }
+
+        return $slots;
+    }
+
+    protected function generateSlotsForDay($service, Carbon $date, $rules, $exceptions, $appointments)
+    {
+        $slots = [];
+
+        // Filtra regras válidas para o dia
+        $dayRules = $rules->filter(function ($rule) use ($date) {
+            $fromOk = empty($rule->valid_from) || $date->toDateString() >= $rule->valid_from;
+            $toOk   = empty($rule->valid_to)   || $date->toDateString() <= $rule->valid_to;
+            $dowOk  = (int)$rule->day_of_week === $date->dayOfWeek;
+            return $fromOk && $toOk && $dowOk;
+        });
+
+        // 1️⃣ Gera slots a partir das regras
+        foreach ($dayRules as $rule) {
+            $slots = array_merge($slots, $this->generateSlotsFromRule($service, $date, $rule));
+        }
+
+        // 2️⃣ Aplica exceções: block remove, extra adiciona
+        $slots = $this->applyExceptions($slots, $date, $exceptions, $service);
+
+        // 3️⃣ Marca slots ocupados pelos appointments
+        $slots = $this->markOccupiedSlots($slots, $appointments, $date, $service);
+
+        return $slots;
+    }
+
+    protected function generateSlotsFromRule($service, Carbon $date, $rule)
+    {
+        $slots = [];
+        $duration = (int)($rule->slot_duration ?? 30);
+
+        // Normaliza o horário de início e fim da regra
+        $startTime = Carbon::parse($date->format('Y-m-d') . ' ' . $rule->start_time)
+            ->minute(floor(Carbon::parse($rule->start_time)->minute / $duration) * $duration);
+        $endTime = Carbon::parse($date->format('Y-m-d') . ' ' . $rule->end_time);
+
+        for ($t = $startTime->copy(); $t->lt($endTime); $t->addMinutes($duration)) {
+            $slots[] = [
+                'id' => implode('-', [$service->id, str_replace('-', '', $date->toDateString()), str_replace(':', '', $t->format('H:i'))]),
+                'title' => $service->name,
+                'start' => $t->format('Y-m-d\TH:i:00'),
+                'end' => $t->copy()->addMinutes($duration)->format('Y-m-d\TH:i:00'),
+                'allDay' => false,
+                'extendedProps' => [
+                    'service_id' => $service->id,
+                    'service_name' => $service->name,
+                    'available' => true,
+                ],
+            ];
+        }
+
+        return $slots;
+    }
+
+
+    protected function applyExceptions(array $slots, Carbon $date, $exceptions, $service)
+    {
+        $collection = collect($slots);
+
+        // 1️⃣ Remove slots bloqueados
+        foreach ($exceptions->where('type', 'block') as $ex) {
+            $startBlock = Carbon::parse($date->format('Y-m-d') . ' ' . $ex->start_time);
+            $endBlock   = Carbon::parse($date->format('Y-m-d') . ' ' . $ex->end_time);
+
+            $collection = $collection->reject(function ($slot) use ($startBlock, $endBlock) {
+                $slotStart = Carbon::parse($slot['start']);
+                return $slotStart->gte($startBlock) && $slotStart->lt($endBlock);
+            });
+        }
+
+        // 2️⃣ Adiciona slots extras
+        foreach ($exceptions->where('type', 'extra') as $ex) {
+            $duration   = 30; // Pode ajustar se quiser dinamicamente
+            $startExtra = Carbon::parse($date->format('Y-m-d') . ' ' . $ex->start_time);
+            $endExtra   = Carbon::parse($date->format('Y-m-d') . ' ' . $ex->end_time);
+
+            for ($t = $startExtra->copy(); $t->lt($endExtra); $t->addMinutes($duration)) {
+                // Evita duplicidade
+                if (!$collection->first(fn($s) => $s['start'] === $t->format('Y-m-d\TH:i:00'))) {
+                    $collection->push([
+                        'id'    => implode('-', [$service->id, str_replace('-', '', $date->toDateString()), str_replace(':', '', $t->format('H:i'))]),
+                        'title' => $service->name,
+                        'start' => $t->format('Y-m-d\TH:i:00'),
+                        'end'   => $t->copy()->addMinutes($duration)->format('Y-m-d\TH:i:00'),
+                        'allDay' => false,
+                        'extendedProps' => [
+                            'service_id'   => $service->id,
+                            'service_name' => $service->name,
+                            'available'    => true,
+                        ],
+                    ]);
+                }
+            }
+        }
+
+        return $collection->values()->all();
+    }
+
+    protected function markOccupiedSlots(array $slots, $appointments, Carbon $date, $service)
+    {
+        $collection = collect($slots);
+
+        $serviceAppointments = $appointments->where('service_id', $service->id)
+            ->where('date', $date->toDateString())
+            ->where('is_available', false);
+
+        foreach ($serviceAppointments as $app) {
+            $appStart = Carbon::parse($date->format('Y-m-d') . ' ' . $app->start_time);
+            $appEnd   = Carbon::parse($date->format('Y-m-d') . ' ' . $app->end_time);
+
+            $collection = $collection->map(function ($slot) use ($appStart, $appEnd) {
+                $slotStart = Carbon::parse($slot['start']);
+                $slotEnd   = Carbon::parse($slot['end']);
+
+                if ($slotStart->lt($appEnd) && $slotEnd->gt($appStart)) {
+                    $slot['extendedProps']['available'] = false;
+                }
+
+                return $slot;
+            });
+        }
+
+        return $collection->values()->all();
+    }
+
 
     public function storeRule(Request $request)
     {
@@ -161,6 +231,7 @@ class AvailabilityController extends Controller
 
         return response()->json($query->get());
     }
+
     public function getAvailabilityExceptions(Request $request)
     {
         $query = AvailabilityException::query();
@@ -171,102 +242,59 @@ class AvailabilityController extends Controller
 
         return response()->json($query->get());
     }
-    public function getAvailability(Request $request)
+
+    public function getAvailableSlots(Request $request)
     {
-        $serviceId = $request->service_id;
-        $date = Carbon::parse($request->start)->setTimezone('America/Sao_Paulo');
+        $serviceId = $request->input('service_id');
+        $today = Carbon::today();
+        $endDate = $today->copy()->addDays(7);
 
-        $dayOfWeek = $date->dayOfWeek;
+        $availableSlots = [];
+
+        // Busca regras de disponibilidade
         $rules = AvailabilityRule::where('service_id', $serviceId)
-            ->where('day_of_week', $dayOfWeek)
+            ->where(function ($q) use ($today, $endDate) {
+                $q->whereBetween('valid_from', [$today, $endDate])
+                    ->orWhereNull('valid_from');
+            })
             ->get();
-       
-        // 2️⃣ Buscar exceções para essa data
+
+        // Busca exceções (bloqueios ou horários extras)
         $exceptions = AvailabilityException::where('service_id', $serviceId)
-            ->where('date', $date->toDateString())
+            ->whereBetween('date', [$today, $endDate])
             ->get();
 
-        // 3️⃣ Buscar agendamentos já existentes
-        $appointments = Appointment::where('service_id', $serviceId)
-            ->whereDate('scheduled_at', $date->toDateString())
-            ->get();
+        // Gera slots baseados nas regras
+        for ($date = $today; $date->lte($endDate); $date->addDay()) {
+            $dayOfWeek = $date->dayOfWeek;
+            $rule = $rules->firstWhere('day_of_week', $dayOfWeek);
 
-        $events = [];
+            if (!$rule) continue;
 
-        // 4️⃣ Gerar slots a partir das regras
-        foreach ($rules as $rule) {
-            $startTime = Carbon::parse($rule->start_time)->setTimezone('America/Sao_Paulo');
-            $endTime = Carbon::parse($rule->end_time)->setTimezone('America/Sao_Paulo');
-            $slotDuration = $rule->slot_duration ?: 30;
+            $start = Carbon::parse($rule->start_time);
+            $end = Carbon::parse($rule->end_time);
+            $slotDuration = $rule->slot_duration ?? 30;
 
-            while ($startTime < $endTime) {
-                $slotStart = $date->copy()->setTimeFrom($startTime);
-                $slotEnd = $slotStart->copy()->addMinutes($slotDuration);
+            while ($start->lt($end)) {
+                $slotTime = $start->format('H:i');
+                $isBlocked = $exceptions->first(function ($ex) use ($date, $slotTime) {
+                    return $ex->date === $date->format('Y-m-d') &&
+                        $slotTime >= $ex->start_time &&
+                        $slotTime < $ex->end_time;
+                });
 
-                // Checar se já está agendado
-                $alreadyBooked = $appointments->filter(function ($a) use ($slotStart) {
-                    return Carbon::parse($a->scheduled_at)->eq($slotStart);
-                })->isNotEmpty();
-
-                // Checar se há bloqueio na exception
-                $isBlocked = $exceptions->where('type', 'block')
-                    ->filter(function ($ex) use ($slotStart, $slotEnd) {
-                        $exStart = Carbon::parse($ex->start_time);
-                        $exEnd = Carbon::parse($ex->end_time);
-                        return $slotStart->between($exStart, $exEnd) || $slotEnd->between($exStart, $exEnd);
-                    })->isNotEmpty();
-
-                if (!$alreadyBooked && !$isBlocked) {
-                    $events[] = [
-                        'id' => uniqid(),
-                        'title' => 'Disponível',
-                        'start' => $slotStart->toDateTimeString(),
-                        'end' => $slotEnd->toDateTimeString(),
-                        'backgroundColor' => '#34D399',
-                        'borderColor' => '#34D399',
-                        'classNames' => ['available'],
-                        'extendedProps' => [
-                            'service_id' => $serviceId,
-                            'is_booked' => false,
-                            'type' => 'slot'
-                        ]
+                if (!$isBlocked) {
+                    $availableSlots[] = [
+                        'date' => $date->format('Y-m-d'),
+                        'start_time' => $slotTime,
+                        'end_time' => $start->copy()->addMinutes($slotDuration)->format('H:i'),
                     ];
                 }
 
-                $startTime->addMinutes($slotDuration);
+                $start->addMinutes($slotDuration);
             }
         }
 
-        // 5️⃣ Adicionar slots unitários ou extras da exception
-        foreach ($exceptions as $ex) {
-            if ($ex->type === 'extra') {
-                $slotStart = Carbon::parse($ex->start_time);
-                $slotEnd = Carbon::parse($ex->end_time);
-
-                // Checar agendamento
-                $alreadyBooked = $appointments->filter(function ($a) use ($slotStart) {
-                    return Carbon::parse($a->scheduled_at)->eq($slotStart);
-                })->isNotEmpty();
-
-                if (!$alreadyBooked) {
-                    $events[] = [
-                        'id' => uniqid(),
-                        'title' => 'Disponível',
-                        'start' => $slotStart->toDateTimeString(),
-                        'end' => $slotEnd->toDateTimeString(),
-                        'backgroundColor' => '#34D399',
-                        'borderColor' => '#34D399',
-                        'classNames' => ['available'],
-                        'extendedProps' => [
-                            'service_id' => $serviceId,
-                            'is_booked' => false,
-                            'type' => 'slot'
-                        ]
-                    ];
-                }
-            }
-        }
-
-        return response()->json($events);
+        return response()->json($availableSlots);
     }
 }
