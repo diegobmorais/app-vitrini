@@ -12,8 +12,7 @@ class AvailabilityRule extends Model
         'start_time',
         'end_time',
         'slot_duration',
-        'valid_from',
-        'valid_to'
+        'is_active',
     ];
 
     public function service()

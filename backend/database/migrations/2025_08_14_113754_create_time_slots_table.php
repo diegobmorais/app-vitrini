@@ -11,19 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('availability_rules', function (Blueprint $table) {
+        Schema::create('time_slots', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('service_id');
-            $table->tinyInteger('day_of_week');
+            $table->date('slot_date');
             $table->time('start_time');
             $table->time('end_time');
-            $table->integer('slot_duration')->default(60);
-            $table->boolean('is_active')->default(true);                  
+            $table->enum('status', ['open', 'blocked', 'booked'])->default('open');
+            $table->foreign('service_id')->references('id')->on('services');
+            $table->unique(['service_id', 'slot_date', 'start_time'], 'unique_service_slot');
             $table->timestamps();
-
-            $table->foreign('service_id')
-                ->references('id')->on('services')
-                ->cascadeOnDelete();
         });
     }
 
@@ -32,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('availability_rules');
+        Schema::dropIfExists('time_slots');
     }
 };

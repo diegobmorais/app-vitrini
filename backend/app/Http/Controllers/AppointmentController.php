@@ -30,7 +30,7 @@ class AppointmentController extends Controller
         $data = $request->validate([
             'user_id' => 'required|exists:users,id',
             'service_id' => 'required|exists:services,id',
-            'scheduled_at' => 'required|date',
+            'slot_id' => 'required|exists:time_slots,id',
             'pet_name' => 'nullable|string',
             'transport_option' => 'nullable|string',
             'notes' => 'nullable|string',

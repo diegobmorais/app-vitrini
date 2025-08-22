@@ -3,6 +3,8 @@
 use App\Http\Controllers\AddressController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AvailabilityController;
+use App\Http\Controllers\AvailabilityRuleController;
+use App\Http\Controllers\AvailabilitySlotController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\Auth\AuthController;
@@ -13,6 +15,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductImageController;
 use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\SlotController;
 use App\Http\Controllers\StockMovementController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\TagController;
@@ -49,16 +52,20 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('product', ProductController::class)->except(['index']);
 
     //servies    
-    Route::get('availability/slots', [AvailabilityController::class, 'slots']);
-    Route::post('availability-rules', [AvailabilityController::class, 'storeRule']);
-    Route::post('availability-exceptions', [AvailabilityController::class, 'storeException']);
-    Route::get('/availability', [AvailabilityController::class, 'getAvailableSlots']);
-    Route::get('availability-rules', [AvailabilityController::class, 'getAvailabilityRules']);
-    Route::get('availability-exceptions', [AvailabilityController::class, 'getAvailabilityExceptions']);
+    Route::post('/generate-slots', [SlotController::class, 'generateSlot']);
+    Route::patch('/slots/{id}/toggle', [SlotController::class, 'toggleSlot']);
+    Route::get('/availability', [AvailabilitySlotController::class, 'index']);
 
+    //rules
+    Route::prefix('availability-rules')->group(function () {
+        Route::get('/{serviceId}', [AvailabilityRuleController::class, 'index']); 
+        Route::post('/', [AvailabilityRuleController::class, 'store']);
+        Route::put('/{id}', [AvailabilityRuleController::class, 'update']);
+        Route::delete('/{id}', [AvailabilityRuleController::class, 'destroy']);
+    });
     //appointments
     Route::apiResource('appointments', AppointmentController::class);
-    Route::post('/appointments/manual', [AppointmentController::class, 'manualStore']);
+
 
     //address
     Route::apiResource('address', AddressController::class);
