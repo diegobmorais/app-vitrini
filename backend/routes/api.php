@@ -5,6 +5,7 @@ use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AvailabilityController;
 use App\Http\Controllers\AvailabilityRuleController;
 use App\Http\Controllers\AvailabilitySlotController;
+use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\Auth\AuthController;
@@ -54,11 +55,17 @@ Route::middleware('auth:sanctum')->group(function () {
     //servies    
     Route::post('/generate-slots', [SlotController::class, 'generateSlot']);
     Route::patch('/slots/{id}/toggle', [SlotController::class, 'toggleSlot']);
-    Route::get('/availability', [AvailabilitySlotController::class, 'index']);
+    Route::get('/availability', [AvailabilitySlotController::class, 'index']);  
 
+    //calendario
+    Route::prefix('calendar')->group(function () {
+        Route::get('/slots', [CalendarController::class, 'getSlots']);
+        Route::post('/book', [CalendarController::class, 'bookSlot']);
+        Route::post('/block', [CalendarController::class, 'blockSlot']);
+    });
     //rules
     Route::prefix('availability-rules')->group(function () {
-        Route::get('/{serviceId}', [AvailabilityRuleController::class, 'index']); 
+        Route::get('/{serviceId}', [AvailabilityRuleController::class, 'index']);
         Route::post('/', [AvailabilityRuleController::class, 'store']);
         Route::put('/{id}', [AvailabilityRuleController::class, 'update']);
         Route::delete('/{id}', [AvailabilityRuleController::class, 'destroy']);

@@ -32,4 +32,8 @@ class Service extends Model
     {
         return $this->hasMany(Appointment::class);
     }
+    public function timeSlots()
+    {
+        return $this->hasMany(TimeSlot::class);
+    }
 }

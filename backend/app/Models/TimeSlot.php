@@ -14,8 +14,12 @@ class TimeSlot extends Model
         'end_time',
         'status',
     ];
-    public function appointments()
+    public function appointment()
     {
         return $this->hasMany(Appointment::class, 'slot_id');
+    }
+    public function service()
+    {
+        return $this->belongsTo(Service::class);
     }
 }

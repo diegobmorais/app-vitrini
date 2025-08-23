@@ -58,11 +58,13 @@ const today = ref(new Date().toISOString().split('T')[0])
 
 const form = ref({
     service_id: '',
+    slot_id: null,
     date: '',
     start_time: '',
     end_time: '',
     mode: 'single',
-    interval_minutes: 30
+    interval_minutes: 30,
+    reason: ''
 })
 
 const isFormValid = computed(() => {
@@ -76,14 +78,24 @@ const isFormValid = computed(() => {
 watch(
     () => props.initialData,
     (newData) => {
-        if (newData) {
-            Object.assign(form.value, newData)
+        if (newData && newData.extendedProps?.slot) {
+            const slot = newData.extendedProps.slot
+            form.value.service_id = slot.service_id
+            form.value.slot_id = slot.id
+            form.value.date = slot.slot_date
+            form.value.start_time = slot.start_time
+            form.value.end_time = slot.end_time
+            form.value.mode = slot.status === 'blocked' ? 'block' : 'single'
+            form.value.reason = ''
         } else {
             form.value = {
-                mode: 'period',
+                service_id: '',
+                slot_id: null,
                 date: '',
                 start_time: '',
                 end_time: '',
+                mode: 'single',
+                interval_minutes: 30,
                 reason: ''
             }
         }
@@ -92,7 +104,7 @@ watch(
 )
 
 const handleSubmit = () => {
-    if (!isFormValid.value) return    
+    if (!isFormValid.value) return
     emit('saved', { ...form.value })
 }
 </script>

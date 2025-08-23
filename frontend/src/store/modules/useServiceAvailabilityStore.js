@@ -13,13 +13,28 @@ export const useServiceAvailabilityStore = defineStore('serviceAvailability', {
     }),
 
     actions: {
-        async fetchAvailableSlots({ start_date, end_date, service_ids = [] }) {
-            const { data } = await api.get('/api/availability', {
+        async fetchAvailableSlots({ start_date, end_date, service_ids }) {
+            const { data } = await api.get('api/calendar/slots', {
                 params: { start_date, end_date, service_ids }
             })
             this.slots = data
+            return data
         },
-        async fetchAvailableSlotsByService({ service_id, start_date }) {  
+
+        async bookSlot(dateTime, user_id, service_id, pet_name) {
+            const slot = this.slots.find(s => s.start === dateTime)
+            if (!slot) throw new Error('Slot não encontrado')
+            await api.post('api/calendar/book', { slot_id: slot.slot_id, user_id, pet_name })
+            slot.is_booked = true
+        },
+
+        async blockSlot(slot_id) {
+            await api.post('api/calendar/block', { slot_id })
+            const slot = this.slots.find(s => s.slot_id === slot_id)
+            if (slot) slot.status = 'blocked'
+        },
+
+        async fetchAvailableSlotsByService({ service_id, start_date }) {
             const { data } = await api.get('/api/availability', {
                 params: { service_id, start_date }
             })
@@ -39,16 +54,6 @@ export const useServiceAvailabilityStore = defineStore('serviceAvailability', {
         async fetchRules(service_id) {
             const { data } = await api.get(`/api/availability-rules?service_id=${service_id}`)
             this.rules = data
-        },
-
-        async bookSlot(dateTime, userId, serviceId, petName) {
-            await api.post('/api/appointments', {
-                scheduled_at: dateTime,
-                user_id: userId,
-                service_id: serviceId,
-                pet_name: petName,
-            })
-            this.appointments = this.appointments.map(s => s.start_time === dateTime ? { ...s, is_booked: true } : s)
-        }
+        },       
     }
 })
