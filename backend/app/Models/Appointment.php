@@ -10,15 +10,13 @@ class Appointment extends Model
     protected $fillable = [
         'user_id',
         'service_id',
-        'pet_name',
-        'scheduled_at',
+        'slot_id',
+        'pet_name',      
         'transport_option',
         'notes',
         'status',
-    ];
-    protected $casts = [
-        'scheduled_at' => 'datetime',
-    ];
+        'is_available'
+    ];  
     public function user()
     {
         return $this->belongsTo(User::class);

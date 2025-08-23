@@ -20,6 +20,7 @@ return new class extends Migration
             $table->enum('transport_option',allowed: ['pickup', 'delivery'])->default('pickup');
             $table->text('notes')->nullable();
             $table->enum('status', ['pending', 'confirmed', 'completed', 'cancelled'])->default('pending');
+            $table->boolean('is_available')->default(true);
             $table->timestamps();
         });
     }

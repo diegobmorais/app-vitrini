@@ -45,31 +45,44 @@
 
                                     <!-- Data e Hora -->
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Data *</label>
-                                        <select v-model="selectedDate" @change="loadSlotsForDate"
-                                            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                            <option value="">Selecione uma data</option>
-                                            <option v-for="date in availableDates" :key="date" :value="date">
-                                                {{ formatDateDisplay(date) }}
-                                            </option>
-                                        </select>
-                                    </div>
+                                        <div class="space-y-4">
+                                            <!-- seleciona a data -->
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">Datas
+                                                    Disponíveis *</label>
+                                                <select v-model="selectedDate"
+                                                    class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                                    <option value="">Selecione uma data</option>
+                                                    <option v-for="day in availabilityStore.slots" :key="day.date"
+                                                        :value="day.date">
+                                                        {{ formatDate(day.date) }}
+                                                    </option>
+                                                </select>
+                                            </div>
 
-                                    <!-- Horários -->
-                                    <div v-if="selectedDate">
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Horário *</label>
-                                        <div class="grid grid-cols-3 gap-2 max-h-40 overflow-y-auto">
-                                            <button v-for="slot in slotsForSelectedDate" :key="slot.id"
-                                                @click="selectSlot(slot)" :class="[
-                                                    'px-3 py-2 text-sm rounded border',
-                                                    selectedSlot?.id === slot.id
-                                                        ? 'bg-blue-500 text-white border-blue-500'
-                                                        : slot.is_booked
-                                                            ? 'bg-red-100 text-red-800 border-red-300 cursor-not-allowed'
-                                                            : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                                                ]" :disabled="slot.is_booked">
-                                                {{ slot.start_time }} - {{ slot.end_time }}
-                                            </button>
+                                            <!-- horarios -->
+                                            <div v-if="selectedDate">
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Horários
+                                                    Disponíveis *</label>
+
+                                                <div
+                                                    class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 max-h-64 overflow-y-auto p-2 border border-gray-300 rounded-md shadow-sm">
+                                                    <button type="button" v-for="(time, index) in availableTimes" :key="index"
+                                                        @click="selectTime(time)" :class="[
+                                                            'px-4 py-2 rounded-lg text-center font-medium transition-all duration-200',
+                                                            selectedTime === time
+                                                                ? 'bg-blue-600 text-white shadow-lg'
+                                                                : 'bg-gray-100 hover:bg-blue-100 text-gray-700'
+                                                        ]">
+                                                        {{ time }}
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <!-- exibe msg de seleção -->
+                                            <div v-if="selectedTime" class="text-blue-500 font-semibold mt-3">
+                                                Selecionado: {{ formatDate(selectedDate) }} - {{ selectedTime }}hs
+                                            </div>
                                         </div>
                                     </div>
 
@@ -143,67 +156,45 @@ const appointmentStore = useAppointmentStore()
 const availabilityStore = useServiceAvailabilityStore()
 
 // Estados
-const selectedDate = ref('')
-const selectedSlot = ref(null)
+const selectedDate = ref("")
+const selectedTime = ref("")
 const isSubmitting = ref(false)
 
 const form = ref({
-    pet_name: '',
+    pet_name: '',  
     transport_option: 'pickup',
     notes: ''
 })
 
-// Dados reativos
-const availableDates = computed(() => {    
-    const dates = availabilityStore.slots
-        .filter(s => !s.is_booked)
-        .map(s => s.date)
-    return [...new Set(dates)].sort()
+const availableTimes = computed(() => {
+    const day = availabilityStore.slots.find(d => d.date === selectedDate.value)
+    return day ? day.slots.map(slot => slot.start) : []
 })
 
-const slotsForSelectedDate = computed(() => {
-    if (!selectedDate.value) return []
-    return availabilityStore.slots
-        .filter(s => s.date === selectedDate.value)
-        .sort((a, b) => a.start_time.localeCompare(b.start_time))
-})
-
-const isFormValid = computed(() => {
-    return selectedSlot.value &&
-        form.value.pet_name.trim() &&
-        props.service.id
-})
-
-// Métodos
-const formatDateDisplay = (dateString) => {
-    const date = new Date(dateString)
-    const weekdays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
-    return `${date.toLocaleDateString('pt-BR')} (${weekdays[date.getDay()]})`
+const selectTime = (time) => {
+    selectedTime.value = time
 }
 
-const loadSlotsForDate = () => {
-    selectedSlot.value = null
+const formatDate = (dateStr) => {
+    const [year, month, day] = dateStr.split("-")
+    return `${day}/${month}/${year}`
 }
 
-const selectSlot = (slot) => {
-    if (!slot.is_booked) {
-        selectedSlot.value = slot
-    }
-}
 
-const submitBooking = async () => {
-    if (!isFormValid.value) return
+const submitBooking = async () => { 
 
     isSubmitting.value = true
+    console.log('aqui 2');
     try {
         const payload = {
-            service_id: props.service.id,
-            slot_id: selectedSlot.value.id,
+            service_id: props.selectedService.id,
+            start_date: selectedDate.value,
+            start_time: selectedTime.value,
             pet_name: form.value.pet_name,
             transport_option: form.value.transport_option,
             notes: form.value.notes
         }
-
+         console.log('payload', payload);
         await appointmentStore.createAppointment(payload)
         emit('scheduled')
         emit('close')
@@ -217,9 +208,11 @@ const submitBooking = async () => {
 // Carrega slots ao abrir o modal
 onMounted(async () => {
     if (props.selectedService.id) {
-        await availabilityStore.fetchAvailableSlots(
-            props.selectedService.id,
-            new Date().toISOString().split('T')[0]
+        await availabilityStore.fetchAvailableSlotsByService(
+            {
+                service_id: props.selectedService.id,
+                start_date: new Date().toISOString().split('T')[0]
+            }
         )
     }
 })

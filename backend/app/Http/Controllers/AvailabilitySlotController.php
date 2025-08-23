@@ -9,16 +9,15 @@ use Illuminate\Http\Request;
 class AvailabilitySlotController extends Controller
 {
     public function index(Request $request)
-    {
+    {   
         $request->validate([
             'service_id' => 'required|exists:services,id',
-            'start_date' => 'required|date',
-            'end_date'   => 'required|date|after_or_equal:start_date',
+            'start_date' => 'required|date',           
         ]);
 
         $slots = TimeSlot::query()
             ->where('service_id', $request->service_id)
-            ->whereBetween('slot_date', [$request->start_date, $request->end_date])
+            ->where('slot_date' , '>=', $request->start_date)
             ->where('status', 'open')
             ->orderBy('slot_date')
             ->orderBy('start_time')

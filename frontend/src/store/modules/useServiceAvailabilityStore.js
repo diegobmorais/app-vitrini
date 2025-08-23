@@ -4,7 +4,8 @@ import api from '@/main'
 export const useServiceAvailabilityStore = defineStore('serviceAvailability', {
     state: () => ({
         slots: [],
-        selectedServiceIds: [], 
+        appointments: [],
+        selectedServiceIds: [],
         loading: false,
         error: null,
         rules: [],
@@ -13,10 +14,17 @@ export const useServiceAvailabilityStore = defineStore('serviceAvailability', {
 
     actions: {
         async fetchAvailableSlots({ start_date, end_date, service_ids = [] }) {
-            const { data } = await api.get('/api/availability/slots', {
+            const { data } = await api.get('/api/availability', {
                 params: { start_date, end_date, service_ids }
             })
             this.slots = data
+        },
+        async fetchAvailableSlotsByService({ service_id, start_date }) {  
+            const { data } = await api.get('/api/availability', {
+                params: { service_id, start_date }
+            })
+            this.slots = data.days || []
+            return data.days
         },
 
         async createRule(ruleData) {
@@ -33,11 +41,6 @@ export const useServiceAvailabilityStore = defineStore('serviceAvailability', {
             this.rules = data
         },
 
-        async fetchExceptions(service_id) {
-            const { data } = await api.get(`/api/availability-exceptions?service_id=${service_id}`)
-            this.exceptions = data
-        },
-
         async bookSlot(dateTime, userId, serviceId, petName) {
             await api.post('/api/appointments', {
                 scheduled_at: dateTime,
@@ -45,7 +48,7 @@ export const useServiceAvailabilityStore = defineStore('serviceAvailability', {
                 service_id: serviceId,
                 pet_name: petName,
             })
-            this.slots = this.slots.map(s => s.start_time === dateTime ? { ...s, is_booked: true } : s)
+            this.appointments = this.appointments.map(s => s.start_time === dateTime ? { ...s, is_booked: true } : s)
         }
     }
 })
