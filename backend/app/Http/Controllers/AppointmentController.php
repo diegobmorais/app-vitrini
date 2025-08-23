@@ -37,14 +37,28 @@ class AppointmentController extends Controller
         ]);
         $data['user_id'] = $request->user()->id;
 
-        $slotId =  TimeSlot::where('slot_date', $request->start_date)
+        $slot =  TimeSlot::where('slot_date', $request->start_date)
             ->where('start_time', $request->start_time)
             ->where('service_id', $request->service_id)
-            ->value('id');
+            ->first();
 
-        $data['slot_id'] = $slotId;
+        $data['slot_id'] = $slot->id;
 
+        if (!$slot) {
+            return response()->json([
+                'error' => 'Horário não encontrado.'
+            ], 404);
+        }
+        if ($slot->status === 'booked') {
+            return response()->json([
+                'error' => 'Horário já reservado.'
+            ], 422);
+        }     
+              
         $appointment = Appointment::create($data);
+
+        $slot->status = 'booked';
+        $slot->save();
 
         return response()->json([
             'message' => 'Agendamento realizado com sucesso',
