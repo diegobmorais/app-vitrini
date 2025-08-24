@@ -66,13 +66,12 @@ const handleEventClick = async (info) => {
 }
 // Funções de renderização personalizada
 const renderMonthEvent = (eventInfo) => {
-    const slot = eventInfo.event.extendedProps.slot
-    log
-    // ✅ Estilo personalizado para eventos mensais
+    const slot = eventInfo.event.extendedProps.slot    
+    console.log('Rendering month event for slot:', slot);  
     return {
         html: `
       <div class="fc-event-month" style="
-        background-color: ${slot.is_booked ? '#EF4444' : '#10B981'};
+        background-color: ${slot.status === 'open' ? '#EF4444' : '#10B981'};
         color: white;
         border-radius: 4px;
         padding: 2px 4px;
@@ -83,7 +82,8 @@ const renderMonthEvent = (eventInfo) => {
         white-space: nowrap;
         cursor: pointer;
       ">
-        ${slot.is_booked ? '🔒' : '🔓'} ${slot.service?.name || 'Serviço'}
+        ${slot.status === 'open' ? '🔒' : '🔓'} 
+        ${slot.service?.name || 'Serviço'}
       </div>
     `
     }
@@ -122,8 +122,9 @@ const calendarOptions = {
                     backgroundColor: slot.is_booked ? '#EF4444' : '#10B981',
                     borderColor: slot.is_booked ? '#EF4444' : '#10B981',
                     textColor: '#FFFFFF',
-                    title: slot.is_booked ? 'Reservado' : 'Disponível'
+                    title: slot.is_booked  ? 'Reservado' : 'Disponível'
                 }))
+                console.log('formattedEvents', formattedEvents);
                 successCallback(formattedEvents)
             })
             .catch((err) => {
@@ -231,17 +232,7 @@ onMounted(async () => {
 <style scoped>
 /* Estilos personalizados para o calendário */
 .fc-event-month,
-.fc-event-week,
-.fc-event-day {
-    transition: all 0.2s ease;
-}
-
 .fc-event-month:hover,
-.fc-event-week:hover,
-.fc-event-day:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
 
 /* Melhora a aparência dos dias do mês */
 .fc-daygrid-day-frame {
