@@ -34,6 +34,12 @@ export const useServiceAvailabilityStore = defineStore('serviceAvailability', {
             if (slot) slot.status = 'blocked'
         },
 
+        async unblockSlot(slot_id) {
+            await api.post('api/calendar/unblock', { slot_id })
+            const slot = this.slots.find(s => s.slot_id === slot_id)
+            if (slot) slot.status = 'open'
+        },
+
         async fetchAvailableSlotsByService({ service_id, start_date }) {
             const { data } = await api.get('/api/availability', {
                 params: { service_id, start_date }

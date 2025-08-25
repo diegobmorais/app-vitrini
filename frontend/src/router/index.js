@@ -25,7 +25,7 @@ import Services from "../pages/admin/Services.vue"
 import ServicePage from "../pages/ServicePage.vue"
 import { useAuthStore } from "@/store/modules/useAuthStore"
 import CustomerDetails from "../pages/admin/CustomerDetails.vue"
-import ServiceAvailability from "../pages/admin/ServiceAvailability.vue"
+import AgendaView from "../pages/admin/AgendaView.vue"
 import ServiceAppointments from "@/pages/admin/ServiceAppointments.vue"
 
 const routes = [
@@ -196,7 +196,7 @@ const routes = [
       {
         path: '/painel-administrador/servicos/disponibilidade',
         name: 'admin-service-availability',
-        component: ServiceAvailability,
+        component: AgendaView,
         meta: { title: 'Disponibilidade de Serviços' }
       },
       {

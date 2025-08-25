@@ -62,6 +62,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/slots', [CalendarController::class, 'getSlots']);
         Route::post('/book', [CalendarController::class, 'bookSlot']);
         Route::post('/block', [CalendarController::class, 'blockSlot']);
+        Route::post('/unblock', [CalendarController::class, 'unblockSlot']);
     });
     //rules
     Route::prefix('availability-rules')->group(function () {

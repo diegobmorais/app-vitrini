@@ -87,4 +87,22 @@ class CalendarController extends Controller
 
         return response()->json(['message' => 'Slot bloqueado com sucesso']);
     }
+    // Desbloquear um slot
+    public function unblockSlot(Request $request)
+    {
+        $request->validate([
+            'slot_id' => 'required|exists:time_slots,id'
+        ]);
+
+        $slot = TimeSlot::findOrFail($request->slot_id);
+
+        if ($slot->status !== 'blocked' || $slot->status === 'booked') {
+            return response()->json(['error' => 'O slot não está bloqueado'], 422);
+        }
+
+        $slot->status = 'available';
+        $slot->save();
+
+        return response()->json(['message' => 'Slot desbloqueado com sucesso']);
+    }
 }
