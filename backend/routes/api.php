@@ -59,8 +59,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //calendario
     Route::prefix('calendar')->group(function () {
-        Route::get('/slots', [CalendarController::class, 'getSlots']);
-        Route::post('/book', [CalendarController::class, 'bookSlot']);
+        Route::get('/slots', [CalendarController::class, 'getSlots']);  
+        Route::post('/book-by-admin', [CalendarController::class, 'bookSlotByAdmin']);
         Route::post('/block', [CalendarController::class, 'blockSlot']);
         Route::post('/unblock', [CalendarController::class, 'unblockSlot']);
     });

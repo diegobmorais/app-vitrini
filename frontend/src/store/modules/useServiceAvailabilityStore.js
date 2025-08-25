@@ -21,15 +21,27 @@ export const useServiceAvailabilityStore = defineStore('serviceAvailability', {
             return data
         },
 
-        async bookSlot(dateTime, user_id, service_id, pet_name) {
-            const slot = this.slots.find(s => s.start === dateTime)
-            if (!slot) throw new Error('Slot não encontrado')
-            await api.post('api/calendar/book', { slot_id: slot.slot_id, user_id, pet_name })
-            slot.is_booked = true
+        async bookSlotByAdmin(slot_id, pet_name, notes, transport_option) {
+            try {
+                console.log('Enviando requisição para API...')
+                const response = await api.post('api/calendar/book-by-admin', {
+                    slot_id: slot_id,
+                    pet_name: pet_name,
+                    notes: notes,
+                    transport_option: transport_option
+                })          
+       
+                return response
+            } catch (error) {
+                console.error('Erro na requisição:', error)
+                throw error
+            }
         },
 
         async blockSlot(slot_id) {
-            await api.post('api/calendar/block', { slot_id })
+            await api.post('api/calendar/block',
+                { slot_id: slot_id },
+            )
             const slot = this.slots.find(s => s.slot_id === slot_id)
             if (slot) slot.status = 'blocked'
         },
@@ -60,6 +72,6 @@ export const useServiceAvailabilityStore = defineStore('serviceAvailability', {
         async fetchRules(service_id) {
             const { data } = await api.get(`/api/availability-rules?service_id=${service_id}`)
             this.rules = data
-        },       
+        },
     }
 })

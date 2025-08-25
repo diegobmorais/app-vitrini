@@ -24,13 +24,19 @@ class CalendarController extends Controller
         }
 
         $slots = $query->get()->map(function ($slot) {
+            $title = match ($slot->status) {
+                'booked' => 'Reservado',
+                'blocked' => 'Bloqueado',
+                default => 'Disponível'
+            };
             return [
-                'title' => $slot->status === 'booked' ? 'Reservado' : 'Disponível',
+                'title' => $title,
                 'start' => $slot->slot_date . 'T' . $slot->start_time,
                 'end' => $slot->slot_date . 'T' . $slot->end_time,
                 'service_id' => $slot->service_id,
                 'slot_id' => $slot->id,
-                'is_booked' => $slot->status === 'booked',
+                'status' => $slot->status,
+                'is_booked' => $slot->status === 'booked',   
                 'extendedProps' => [
                     'slot' => $slot
                 ]
@@ -39,36 +45,6 @@ class CalendarController extends Controller
 
         return response()->json($slots);
     }
-
-    // Reservar um slot
-    public function bookSlot(Request $request)
-    {
-        $request->validate([
-            'slot_id' => 'required|exists:time_slots,id',
-            'user_id' => 'required|exists:users,id',
-            'pet_name' => 'nullable|string'
-        ]);
-
-        $slot = TimeSlot::findOrFail($request->slot_id);
-
-        if ($slot->status === 'booked') {
-            return response()->json(['error' => 'Slot já reservado'], 422);
-        }
-
-        $slot->status = 'booked';
-        $slot->save();
-
-        $appointment = Appointment::create([
-            'service_id' => $slot->service_id,
-            'slot_id' => $slot->id,
-            'user_id' => $request->user_id,
-            'pet_name' => $request->pet_name ?? null,
-            'status' => 'pending'
-        ]);
-
-        return response()->json($appointment);
-    }
-
     // Bloquear um slot
     public function blockSlot(Request $request)
     {
@@ -87,6 +63,7 @@ class CalendarController extends Controller
 
         return response()->json(['message' => 'Slot bloqueado com sucesso']);
     }
+
     // Desbloquear um slot
     public function unblockSlot(Request $request)
     {
@@ -96,13 +73,59 @@ class CalendarController extends Controller
 
         $slot = TimeSlot::findOrFail($request->slot_id);
 
-        if ($slot->status !== 'blocked' || $slot->status === 'booked') {
-            return response()->json(['error' => 'O slot não está bloqueado'], 422);
+        if ($slot->status === 'booked') {
+            $appointment = Appointment::where('slot_id', $slot->id)->first();
+
+            if ($appointment) {
+                $appointment->delete();
+            }
+
+            $slot->status = 'open';
+            $slot->save();
+
+            return response()->json([
+                'message' => 'Agendamento cancelado e horário liberado com sucesso!'
+            ]);
         }
 
-        $slot->status = 'available';
+        if ($slot->status !== 'blocked' || $slot->status === 'booked') {
+            return response()->json([
+                'error' => 'O slot não está bloqueado'
+            ], 422);
+        }
+
+        $slot->status = 'open';
         $slot->save();
 
         return response()->json(['message' => 'Slot desbloqueado com sucesso']);
+    }
+    public function bookSlotByAdmin(Request $request)
+    {
+        $request->validate([
+            'slot_id' => 'required|exists:time_slots,id',
+            'pet_name' => 'nullable|string',
+            'notes' => 'nullable|string'            
+        ]);
+
+        $slot = TimeSlot::findOrFail($request->slot_id);
+
+        if ($slot->status === 'booked') {
+            return response()->json(['error' => 'Slot já reservado'], 422);
+        }
+
+        $slot->status = 'booked';
+        $slot->save();
+
+        $appointment = Appointment::create([
+            'service_id' => $slot->service_id,
+            'slot_id' => $slot->id,
+            'user_id' => auth()->id(),
+            'pet_name' => $request->pet_name ?? null,
+            "transport_option" => $request->transport_option ?? null,
+            'notes' => $request->notes ?? null,
+            'status' => 'pending'
+        ]);
+
+        return response()->json($appointment);
     }
 }
