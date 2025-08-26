@@ -30,9 +30,9 @@ export const useSupplierStore = defineStore('suppliers', () => {
   const filteredSuppliers = computed(() => {
     let result = suppliers.value
 
-    if (status.value === 'active') {
+    if (filters.status.value === '1') {
       result = result.filter(supplier => supplier.active)
-    } else if (status.value === 'inactive') {
+    } else if (filters.status.value === '0') {
       result = result.filter(supplier => !supplier.active)
     }
 
@@ -88,6 +88,8 @@ export const useSupplierStore = defineStore('suppliers', () => {
   async function createSupplier(payload) {
     try {
       const response = await api.post("api/suppliers", payload)
+      console.log('response', response, 'payload', payload);
+      
       return response.data
     } catch (error) {
       console.error('Erro ao cria fornecedor', error.response?.data)

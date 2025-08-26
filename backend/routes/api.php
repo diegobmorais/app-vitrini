@@ -52,7 +52,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //products
     Route::apiResource('product', ProductController::class)->except(['index']);
 
-     //rules
+    //rules
     Route::prefix('availability-rules')->group(function () {
         Route::get('/{serviceId}', [AvailabilityRuleController::class, 'index']);
         Route::post('/', [AvailabilityRuleController::class, 'store']);
@@ -63,11 +63,11 @@ Route::middleware('auth:sanctum')->group(function () {
     //generate-slots    
     Route::post('/generate-slots', [SlotController::class, 'generateSlot']);
     Route::patch('/slots/{id}/toggle', [SlotController::class, 'toggleSlot']);
-    Route::get('/availability', [AvailabilitySlotController::class, 'index']);  
+    Route::get('/availability', [AvailabilitySlotController::class, 'index']);
 
     //calendario
     Route::prefix('calendar')->group(function () {
-        Route::get('/slots', [CalendarController::class, 'getSlots']);  
+        Route::get('/slots', [CalendarController::class, 'getSlots']);
         Route::post('/book-by-admin', [CalendarController::class, 'bookSlotByAdmin']);
         Route::post('/block', [CalendarController::class, 'blockSlot']);
         Route::post('/unblock', [CalendarController::class, 'unblockSlot']);
@@ -83,6 +83,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //customers
     Route::apiResource('customer', CustomerController::class);
+
+    //supplier
+    Route::apiResource('suppliers', SupplierController::class);
 
     //image
     Route::delete('images/{id}', [ProductImageController::class, 'destroy']);
@@ -119,9 +122,6 @@ Route::prefix('products/{product}')->group(function () {
     Route::get('images', [ProductImageController::class, 'index']);
     Route::post('images', [ProductImageController::class, 'store']);
 });
-
-//supplier
-Route::apiResource('suppliers', SupplierController::class);
 
 //oders
 Route::apiResource('orders', OrderController::class);

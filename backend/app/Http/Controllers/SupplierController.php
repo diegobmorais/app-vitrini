@@ -42,7 +42,7 @@ class SupplierController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(StoreSupplierRequest $request)
-    {
+    {  
         if (Auth::user()->role_id !== 1) {
             return response()->json(['message' => 'Access Danied'], 403);
         }
@@ -68,7 +68,7 @@ class SupplierController extends Controller
      * Update the specified resource in storage.
      */
     public function update(StoreSupplierRequest $request, Supplier $supplier)
-    {   dd(Auth::user());
+    {   
         if (Auth::user()->role_id !== 1) {
             return response()->json(['message' => 'Access Danied'], 403);
         }

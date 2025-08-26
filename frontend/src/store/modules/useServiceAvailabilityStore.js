@@ -12,6 +12,15 @@ export const useServiceAvailabilityStore = defineStore('serviceAvailability', {
         exceptions: [],
     }),
 
+    getters: {
+        filteredSlots: (state) => {
+            return state.slots.filter(slot =>
+                state.selectedServiceIds.length === 0 ||
+                state.selectedServiceIds.includes(slot.service_id)
+            )
+        },
+    },      
+
     actions: {
         async fetchAvailableSlots({ start_date, end_date, service_ids }) {
             const { data } = await api.get('api/calendar/slots', {
@@ -29,8 +38,8 @@ export const useServiceAvailabilityStore = defineStore('serviceAvailability', {
                     pet_name: pet_name,
                     notes: notes,
                     transport_option: transport_option
-                })          
-       
+                })
+
                 return response
             } catch (error) {
                 console.error('Erro na requisição:', error)
@@ -58,8 +67,8 @@ export const useServiceAvailabilityStore = defineStore('serviceAvailability', {
             })
             this.slots = data.days || []
             return data.days
-        }, 
-        
+        },
+
         async createTimeSlots(payload) {
             try {
                 this.loading = true
@@ -71,6 +80,6 @@ export const useServiceAvailabilityStore = defineStore('serviceAvailability', {
                 this.loading = false
                 throw error
             }
-        },       
+        },
     }
 })

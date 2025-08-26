@@ -16,7 +16,7 @@
         <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
           <div class="sm:col-span-3">
             <label for="name" class="block text-sm font-medium text-gray-700">Nome da Empresa</label>
-            <input id="name" v-model="supplier.company_name" type="text" required
+            <input id="name" v-model="form.company_name" type="text" required
               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" />
           </div>
           <p v-if="formErrors.company_name"
@@ -25,7 +25,7 @@
           </p>
           <div class="sm:col-span-3">
             <label for="cnpj" class="block text-sm font-medium text-gray-700">CNPJ</label>
-            <input id="cnpj" v-model="supplier.cnpj" type="text" required
+            <input id="cnpj" v-model="form.cnpj" type="text" required
               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" />
           </div>
           <p v-if="formErrors.cnpj"
@@ -35,19 +35,19 @@
 
           <div class="sm:col-span-3">
             <label for="contact_name" class="block text-sm font-medium text-gray-700">Nome do Contato</label>
-            <input id="contact_name" v-model="supplier.contact_name" type="text" required
+            <input id="contact_name" v-model="form.contact_name" type="text" required
               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" />
           </div>
 
           <div class="sm:col-span-3">
             <label for="email" class="block text-sm font-medium text-gray-700">E-mail</label>
-            <input id="email" v-model="supplier.email" type="email" required
+            <input id="email" v-model="form.email" type="email" required
               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" />
           </div>
 
           <div class="sm:col-span-3">
             <label for="phone" class="block text-sm font-medium text-gray-700">Telefone</label>
-            <input id="phone" v-model="supplier.phone" type="text" required
+            <input id="phone" v-model="form.phone" type="text" required
               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" />
           </div>
           <p v-if="formErrors.phone"
@@ -56,37 +56,37 @@
           </p>
           <div class="sm:col-span-3">
             <label for="website" class="block text-sm font-medium text-gray-700">Website</label>
-            <input id="website" v-model="supplier.website" type="url"
+            <input id="website" v-model="form.website" type="url"
               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" />
           </div>
 
           <div class="sm:col-span-6">
             <label for="address" class="block text-sm font-medium text-gray-700">Endereço</label>
-            <input id="address" v-model="supplier.address" type="text" required
+            <input id="address" v-model="form.address" type="text" required
               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" />
           </div>
 
           <div class="sm:col-span-2">
             <label for="city" class="block text-sm font-medium text-gray-700">Cidade</label>
-            <input id="city" v-model="supplier.city" type="text" required
+            <input id="city" v-model="form.city" type="text" required
               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" />
           </div>
 
           <div class="sm:col-span-2">
             <label for="state" class="block text-sm font-medium text-gray-700">Estado</label>
-            <input id="state" v-model="supplier.state" type="text" required
+            <input id="state" v-model="form.state" type="text" required
               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" />
           </div>
 
           <div class="sm:col-span-2">
             <label for="zipcode" class="block text-sm font-medium text-gray-700">CEP</label>
-            <input id="zipcode" v-model="supplier.zipcode" type="text" required
+            <input id="zipcode" v-model="form.zipcode" type="text" required
               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" />
           </div>
 
           <div class="sm:col-span-6">
             <label for="notes" class="block text-sm font-medium text-gray-700">Observações</label>
-            <textarea id="notes" v-model="supplier.notes" rows="3"
+            <textarea id="notes" v-model="form.notes" rows="3"
               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"></textarea>
           </div>
 
@@ -110,7 +110,7 @@
           <div class="sm:col-span-6">
             <div class="flex items-start">
               <div class="flex items-center h-5">
-                <input id="status" v-model="supplier.status" type="checkbox"
+                <input id="status" v-model="form.status" type="checkbox"
                   class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded" />
               </div>
               <div class="ml-3 text-sm">
@@ -151,8 +151,7 @@ const route = useRoute()
 const router = useRouter()
 const suppliersStore = useSupplierStore()
 const formErrors = ref({})
-const supplier = ref({
-  id: null,
+const form = ref({
   company_name: '',
   cnpj: '',
   contact_name: '',
@@ -163,8 +162,7 @@ const supplier = ref({
   city: '',
   state: '',
   zipcode: '',
-  notes: '',
-  active: true
+  notes: '', 
 })
 const isEditing = computed(() => !!route.params.id)
 const supplierStore = useSupplierStore()
@@ -173,18 +171,22 @@ async function saveSupplier() {
   formErrors.value = {}
 
   const payload = {
-    ...supplier,
+    ...form.value,
   }
+  console.log('payload antes do envio', payload);
+  
   try {
     if (isEditing.value) {
       await supplierStore.updateSupplier({
-        id: supplier.value.id,
+        id: form.value.id,
         data: payload
       })
-      toast.success(`Produto "${supplier.value.company_name}" atualizado com sucesso!`)
+      toast.success(`Fornecedor "${form.value.company_name}" atualizado com sucesso!`)
     } else {
+      console.log('payload form', payload);
+      
       await supplierStore.createSupplier(payload)
-      toast.success(`Produto "${supplier.value.company_name}" criado com sucesso!`)
+      toast.success(`Fornecedor "${form.value.company_name}" criado com sucesso!`)
     }
     router.push('/painel-administrador/fornecedores')
   } catch (error) {
@@ -193,7 +195,7 @@ async function saveSupplier() {
       formErrors.value = error.response.data.errors
       toast.error('Por favor, corrija os erros do formulário.')
     } else {
-      toast.error('Erro ao salvar produto!')
+      toast.error('Erro ao salvar Fornecedor!')
     }
   }
 }
@@ -205,7 +207,7 @@ onMounted(async () => {
     isEditing.value = true
     const data = await suppliersStore.fetchSupplier(route.params.id)
     if (data) {
-      supplier.value = { ...data }
+      form.value = { ...data }
     }
   }
 })

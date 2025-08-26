@@ -11,7 +11,7 @@ class StoreSupplierRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -26,10 +26,9 @@ class StoreSupplierRequest extends FormRequest
             'cnpj' => 'required|string|max:100|unique:suppliers,cnpj',
             'contact_name' => 'nullable|string|max:190',
             'email' => 'nullable|email|max:255',
-            'phone' => 'required|string|max:20',
-            'website' => 'nullable|url|max:255',
+            'phone' => 'required|string|max:20',     
             'notes' => 'nullable|string',
-            'status' => 'required|in:active,inactive',
+            'status' => 'required|boolean',
             'address' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:100',
             'state' => 'nullable|string|size:2',
@@ -41,8 +40,7 @@ class StoreSupplierRequest extends FormRequest
         return [
             'company_name.required' => 'O nome da empresa é obrigatório.',
             'cnpj.required' => 'O CNPJ é obrigatório.',
-            'phone.required' => 'O telefone é obrigatório.',
-            'status.required' => 'O status é obrigatório.',
+            'phone.required' => 'O telefone é obrigatório.',          
         ];
     }
 }
