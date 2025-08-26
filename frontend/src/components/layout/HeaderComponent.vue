@@ -17,7 +17,7 @@
           <button v-if="isAuthenticated" @click="logout" class="hover:text-primary-dark transition underline">
             Sair
           </button>
-          <cart-button :cart-items="cartItems" :cart-total="cartTotal" />
+          <!-- <cart-button :cart-items="cartItems" :cart-total="cartTotal" /> -->
         </div>
 
       </div>

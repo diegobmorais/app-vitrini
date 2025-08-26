@@ -10,29 +10,20 @@ export const useServiceAvailabilityStore = defineStore('serviceAvailability', {
         error: null,
         rules: [],
         exceptions: [],
-    }),
-
-    getters: {
-        filteredSlots: (state) => {
-            return state.slots.filter(slot =>
-                state.selectedServiceIds.length === 0 ||
-                state.selectedServiceIds.includes(slot.service_id)
-            )
-        },
-    },      
+    }),       
 
     actions: {
         async fetchAvailableSlots({ start_date, end_date, service_ids }) {
-            const { data } = await api.get('api/calendar/slots', {
+            const response = await api.get('api/calendar/slots', {
                 params: { start_date, end_date, service_ids }
             })
-            this.slots = data
-            return data
+            this.slots = response.data         
+                     
+            return response.data
         },
 
         async bookSlotByAdmin(slot_id, pet_name, notes, transport_option) {
-            try {
-                console.log('Enviando requisição para API...')
+            try {              
                 const response = await api.post('api/calendar/book-by-admin', {
                     slot_id: slot_id,
                     pet_name: pet_name,
