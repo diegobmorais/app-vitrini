@@ -59,7 +59,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/{id}', [AvailabilityRuleController::class, 'update']);
         Route::delete('/{id}', [AvailabilityRuleController::class, 'destroy']);
     });
-    
+
     //generate-slots    
     Route::post('/generate-slots', [SlotController::class, 'generateSlot']);
     Route::patch('/slots/{id}/toggle', [SlotController::class, 'toggleSlot']);
@@ -75,6 +75,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //appointments
     Route::apiResource('appointments', AppointmentController::class);
+    Route::patch('appointments/{id}/status', [AppointmentController::class, 'updateStatus']);
 
 
     //address

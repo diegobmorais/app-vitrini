@@ -62,4 +62,20 @@ class AppointmentController extends Controller
             'data' => $appointment
         ], 201);
     }
+
+    public function updateStatus(Request $request, $id)
+    {
+        $data = $request->validate([
+            'status' => 'required|in:pending,confirmed,cancelled,completed'
+        ]);
+
+        $appointment = Appointment::findOrFail($id);
+        $appointment->status = $data['status'];
+        $appointment->save();
+
+        return response()->json([
+            'message' => 'Status atualizado com sucesso',
+            'data' => $appointment
+        ], 200);
+    }
 }

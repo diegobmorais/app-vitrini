@@ -18,7 +18,7 @@ export const useAppointmentStore = defineStore('appointments', {
     async createAppointment(appointmentData) {
       try {
         const response = await api.post('/api/appointments', appointmentData)
-  
+
         this.appointments.unshift(response.data)
 
         return response.data
@@ -50,7 +50,23 @@ export const useAppointmentStore = defineStore('appointments', {
     async updateAppointmentStatus(id, status) {
       try {
         const response = await api.patch(`/api/appointments/${id}/status`, { status })
-   
+
+        const index = this.appointments.findIndex(a => a.id === id)
+        if (index !== -1) {
+          this.appointments[index] = response.data
+        }
+
+        return response.data
+      } catch (error) {
+        console.error('Erro ao atualizar status:', error)
+        throw error
+      }
+    },
+
+    async updateStatus(id, status) {
+      try {
+        const response = await api.patch(`/api/appointments/${id}/status`, { status })
+
         const index = this.appointments.findIndex(a => a.id === id)
         if (index !== -1) {
           this.appointments[index] = response.data

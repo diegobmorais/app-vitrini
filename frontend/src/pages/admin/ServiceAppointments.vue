@@ -81,7 +81,7 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <select :value="appointment.status" @change="updateStatus(appointment.id, $event.target.value)"
-                  class="text-sm border border-gray-300 rounded px-4 py-1" :class="getStatusClass(appointment.status)">
+                  class="text-sm border border-gray-300 rounded px-10 py-1" :class="getStatusClass(appointment.status)">
                   <option value="pending">Pendente</option>
                   <option value="confirmed">Confirmado</option>
                   <option value="completed">Concluído</option>
@@ -199,9 +199,11 @@ import { useAppointmentStore } from '@/store/modules/useAppointmentStore'
 import { useServiceStore } from '@/store/modules/useServiceStore'
 import { ref, computed, onMounted, watch } from 'vue'
 import { formatDate, formatTime } from '@/utils/date'
+import { useToast } from 'vue-toastification'
 
 const appointmentStore = useAppointmentStore()
 const serviceStore = useServiceStore()
+const toast = useToast()
 
 // Estados
 const currentPage = ref(1)
@@ -231,7 +233,6 @@ onMounted(async () => {
   ])
 })
 
-// Métodos
 const applyFilters = () => {
   appointmentStore.filters = { ...filters.value }
   appointmentStore.fetchAppointments()
@@ -246,9 +247,10 @@ const resetFilters = () => {
 const updateStatus = async (id, status) => {
   try {
     await appointmentStore.updateStatus(id, status)
-    // Atualiza localmente sem recarregar tudo
+    toast.success('O cliente será notificado sobre o status do pedido.')
+    appointmentStore.fetchAppointments()
   } catch (err) {
-    alert('Erro ao atualizar status')
+    toast.error('Erro ao atualizar status')
   }
 }
 
@@ -262,10 +264,9 @@ const closeDetailsModal = () => {
   selectedAppointment.value = null
 }
 
-const editAppointment = (appointment) => {
-  // Implementar edição (opcional)
-  alert('Função de edição não implementada')
-}
+// const editAppointment = (appointment) => {
+//   alert('Função de edição não implementada')
+// }
 const getStatusClass = (status) => {
   const classes = {
     pending: 'bg-yellow-100 text-yellow-800',
