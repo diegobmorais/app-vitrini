@@ -21,16 +21,24 @@ class SlotController extends Controller
             'end_date' => 'required',
         ]);
 
-        $result = $this->generationSlotService->generateForRange(
-            $data['service_id'],
-            $data['start_date'],
-            $data['end_date'],
-        );
+        try {
+            $result = $this->generationSlotService->generateForRange(
+                $data['service_id'],
+                $data['start_date'],
+                $data['end_date'],
+            );
 
-        return response()->json([
-            'message' => "Gerados {$result} horários com sucesso!",
-            'slots_criados' => $result
-        ]);
+            return response()->json([
+                'status' => 'success',
+                'message' => "Gerados {$result} horários com sucesso!",
+                'slots_criados' => $result
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 'warning',
+                'message' => $e->getMessage()
+            ]);
+        }
     }
 
     public function toggleSlot(Request $request, $id)

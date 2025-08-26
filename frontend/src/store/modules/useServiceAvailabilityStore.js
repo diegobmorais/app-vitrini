@@ -58,20 +58,19 @@ export const useServiceAvailabilityStore = defineStore('serviceAvailability', {
             })
             this.slots = data.days || []
             return data.days
-        },
-
-        async createRule(ruleData) {
-            await api.post('/api/availability-rules', ruleData)
-            this.fetchRules(ruleData.service_id)
-        },
-
-        async createException(exceptionData) {
-            await api.post('/api/availability-exceptions', exceptionData)
-            this.fetchExceptions(exceptionData.service_id)
-        },
-        async fetchRules(service_id) {
-            const { data } = await api.get(`/api/availability-rules?service_id=${service_id}`)
-            this.rules = data
-        },
+        }, 
+        
+        async createTimeSlots(payload) {
+            try {
+                this.loading = true
+                const response = await api.post('/api/generate-slots', payload)
+                this.loading = false
+                return response.data
+            } catch (error) {
+                this.error = error
+                this.loading = false
+                throw error
+            }
+        },       
     }
 })

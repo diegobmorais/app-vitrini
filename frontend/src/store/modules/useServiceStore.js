@@ -34,7 +34,7 @@ export const useServiceStore = defineStore('service', () => {
       const response = await api.post('/api/service', payload)
       services.value.push(response.data)
       await fetchServices()
-      
+
       return response.data
     } catch (err) {
       error.value = err
@@ -68,13 +68,25 @@ export const useServiceStore = defineStore('service', () => {
     }
   }
 
-
   async function deleteService(serviceId) {
     try {
       await api.delete(`/api/service/${serviceId}`)
       await fetchServices()
     } catch (error) {
       error.value = error
+    }
+  }
+
+  async function createServiceRule(payload) {
+    try {
+      this.loading = true
+      const response = await api.post('/api/availability-rules', payload)
+      this.loading = false
+      return response.data
+    } catch (error) {
+      this.error = error
+      this.loading = false
+      throw error
     }
   }
 
@@ -86,6 +98,7 @@ export const useServiceStore = defineStore('service', () => {
     updateService,
     deleteService,
     fetchServices,
-    getImageUrl
+    getImageUrl,
+    createServiceRule
   }
 })

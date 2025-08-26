@@ -81,7 +81,7 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <select :value="appointment.status" @change="updateStatus(appointment.id, $event.target.value)"
-                  class="text-sm border border-gray-300 rounded px-2 py-1" :class="getStatusClass(appointment.status)">
+                  class="text-sm border border-gray-300 rounded px-4 py-1" :class="getStatusClass(appointment.status)">
                   <option value="pending">Pendente</option>
                   <option value="confirmed">Confirmado</option>
                   <option value="completed">Concluído</option>

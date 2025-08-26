@@ -6,8 +6,8 @@
 
         <!-- Botão para abrir modal -->
         <div class="flex justify-end mb-4">
-            <button @click="openAgendaModal"
-                class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+            <button @click="createAgendaModal"
+                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
                 Abrir Agenda
             </button>
         </div>
@@ -25,11 +25,15 @@
 import { ref } from "vue"
 import CalendarWrapper from "@/components/calendar/CalendarWrapper.vue"
 import ServiceAgendaModal from "@/components/modals/services/ServiceAgendaModal.vue"
+import { useServiceAvailabilityStore } from "@/store/modules/useServiceAvailabilityStore"
+import { useToast } from "vue-toastification"
 
+const toast = useToast()
 const showAgendaModal = ref(false)
 const selectedDateInfo = ref(null)
+const useAvailabilityStore = useServiceAvailabilityStore()
 
-const openAgendaModal = () => {
+const createAgendaModal = () => {
     showAgendaModal.value = true
     selectedDateInfo.value = null
 }
@@ -37,5 +41,21 @@ const openAgendaModal = () => {
 const closeAgendaModal = () => {
     showAgendaModal.value = false
     selectedDateInfo.value = null
+}
+
+const handleCreate = async (data) => {
+    try {
+        const response = await useAvailabilityStore.createTimeSlots(data)
+        if (response.status === 'warning') {
+            toast.warning(response.message); 
+        } else if (response.status === 'success') {
+            toast.success(response.message);
+            closeAgendaModal();
+        } else {
+            toast.error(response.message);
+        }
+    } catch (error) {
+        console.error('Erro ao criar agenda', error)
+    }
 }
 </script>

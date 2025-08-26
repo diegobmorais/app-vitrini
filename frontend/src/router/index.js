@@ -197,7 +197,7 @@ const routes = [
         path: '/painel-administrador/servicos/disponibilidade',
         name: 'admin-service-availability',
         component: AgendaView,
-        meta: { title: 'Disponibilidade de Serviços' }
+        meta: { title: 'Agenda Inteligente' }
       },
       {
         path: '/painel-administrador/servicos/agendamentos',

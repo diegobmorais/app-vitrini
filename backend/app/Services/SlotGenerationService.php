@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\Service;
 use App\Models\AvailabilityRule;
 use App\Models\TimeSlot;
-use App\Models\SlotOverride;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Facades\DB;
@@ -27,14 +26,22 @@ class SlotGenerationService
             throw new \Exception("Nenhuma regra de disponibilidade encontrada para este serviço.");
         }
 
+        $existSlots = TimeSlot::where('service_id', $serviceId)
+            ->whereBetween('slot_date', [$startDate, $endDate])
+            ->exists();
+        
+        if ($existSlots) {
+            throw new \Exception("Já existem horários registrados para este serviço nesta data.");
+        }
+
         DB::transaction(function () use ($period, $rules, $service, &$created) {
             foreach ($period as $day) {
                 $dow = (int) $day->dayOfWeek;
 
-                foreach ($rules[$dow] ?? [] as $rule) {                    
+                foreach ($rules[$dow] ?? [] as $rule) {
                     $step = $rule['slot_duration'];
                     $duration = $step;
-                    // dd($duration);
+
                     $cursor = Carbon::parse($day->toDateString() . ' ' . $rule['start_time']);
                     $end    = Carbon::parse($day->toDateString() . ' ' . $rule['end_time']);
 
@@ -42,14 +49,6 @@ class SlotGenerationService
                         $slotStart = $cursor->copy();
                         $slotEnd   = $slotStart->copy()->addMinutes($duration);
 
-                        // Verifica se há bloqueios
-                        $blocked = SlotOverride::where('service_id', $service->id)
-                            ->whereDate('slot_date', $day->toDateString())
-                            ->where('start_time', '<', $slotEnd->format('H:i:s'))
-                            ->where('end_time', '>', $slotStart->format('H:i:s'))
-                            ->where('action', 'blocked')
-                            ->exists();
-                      
                         // Upsert do slot
                         TimeSlot::updateOrCreate(
                             [
@@ -59,7 +58,7 @@ class SlotGenerationService
                             ],
                             [
                                 'end_time' => $slotEnd->format('H:i:s'),
-                                'status'   => $blocked ? 'blocked' : 'open',
+                                'status'   => 'open',
                             ]
                         );
 

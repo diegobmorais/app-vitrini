@@ -52,7 +52,15 @@ Route::middleware('auth:sanctum')->group(function () {
     //products
     Route::apiResource('product', ProductController::class)->except(['index']);
 
-    //servies    
+     //rules
+    Route::prefix('availability-rules')->group(function () {
+        Route::get('/{serviceId}', [AvailabilityRuleController::class, 'index']);
+        Route::post('/', [AvailabilityRuleController::class, 'store']);
+        Route::put('/{id}', [AvailabilityRuleController::class, 'update']);
+        Route::delete('/{id}', [AvailabilityRuleController::class, 'destroy']);
+    });
+    
+    //generate-slots    
     Route::post('/generate-slots', [SlotController::class, 'generateSlot']);
     Route::patch('/slots/{id}/toggle', [SlotController::class, 'toggleSlot']);
     Route::get('/availability', [AvailabilitySlotController::class, 'index']);  
@@ -64,13 +72,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/block', [CalendarController::class, 'blockSlot']);
         Route::post('/unblock', [CalendarController::class, 'unblockSlot']);
     });
-    //rules
-    Route::prefix('availability-rules')->group(function () {
-        Route::get('/{serviceId}', [AvailabilityRuleController::class, 'index']);
-        Route::post('/', [AvailabilityRuleController::class, 'store']);
-        Route::put('/{id}', [AvailabilityRuleController::class, 'update']);
-        Route::delete('/{id}', [AvailabilityRuleController::class, 'destroy']);
-    });
+
     //appointments
     Route::apiResource('appointments', AppointmentController::class);
 

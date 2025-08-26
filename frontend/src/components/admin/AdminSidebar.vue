@@ -62,7 +62,7 @@
           <router-link to="/painel-administrador/servicos/disponibilidade"
             class="block py-2 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center text-sm"
             active-class="bg-gray-700">
-            <span class="ml-6">Disponibilidade</span>
+            <span class="ml-6">Agenda Inteligente</span>
           </router-link>
           <router-link to="/painel-administrador/servicos/agendamentos"
             class="block py-2 px-4 rounded transition duration-200 hover:bg-gray-700 flex items-center text-sm"
