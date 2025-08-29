@@ -16,7 +16,7 @@ class CalendarController extends Controller
             'service_ids' => 'nullable|array'
         ]);
 
-        $query = TimeSlot::with('service', 'appointment')
+        $query = TimeSlot::with('service', 'appointment.user')
             ->whereBetween('slot_date', [$request->start_date, $request->end_date]);
 
         if ($request->service_ids) {

@@ -10,8 +10,8 @@
             </div>
 
             <div class="mb-3">
-                <p>Serviço: <strong>{{ slotData.service.name }}</strong></p>
-                <p>Horário: <strong>{{ slotData.start_time.slice(0, 5) }} - {{ slotData.end_time.slice(0, 5) }}</strong>
+                <p>Serviço: <strong>{{ slotData.extendedProps.slot.service.name }}</strong></p>
+                <p>Horário: <strong>{{ slotData.extendedProps.slot.slot_date }} - {{ slotData.extendedProps.slot.start_time }}</strong>
                 </p>
             </div>
             <div class="mb-3">
@@ -50,7 +50,6 @@ const props = defineProps({
     show: Boolean,
     slotData: Object
 })
-
 const emit = defineEmits(['close', 'saved'])
 
 const toast = useToast()
@@ -62,10 +61,8 @@ const form = reactive({
 })
 
 // Dispara o agendamento
-const submit = async () => {
-    console.log(props.slotData.id, form.pet_name, form.notes, form.transport_option);
-
-    if (!props.slotData.id) {
+const submit = async () => {      
+    if (!props.slotData.extendedProps.slot.id) {
         toast.error("Dados do slot não encontrados")
         return
     }
@@ -76,10 +73,8 @@ const submit = async () => {
     }
 
     try {
-        await useServiceStore.bookSlotByAdmin(props.slotData.id, form.pet_name, form.notes, form.transport_option)
-        console.log(props.slotData.id, form.pet_name, form.notes);
+        await useServiceStore.bookSlotByAdmin(props.slotData.extendedProps.slot.id, form.pet_name, form.notes, form.transport_option)
 
-        toast.success("Horário agendado com sucesso!")
         emit('saved')
         emit('close')
     } catch (err) {

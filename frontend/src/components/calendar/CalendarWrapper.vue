@@ -1,25 +1,25 @@
 <template>
     <div class="flex h-full">
-
-        <!-- Sidebar: mini calendário -->
-        <div class="w-64 border-r border-gray-200 p-4">
-            <h3 class="font-bold mb-2">Calendário</h3>
-            <FullCalendar ref="miniCalendarRef" :options="miniCalendarOptions" class="w-full mini-calendar" />
-        </div>
-
         <!-- Conteúdo principal -->
         <div class="flex-1 p-4">
 
             <!-- Toolbar -->
             <div class="flex justify-between items-center mb-4">
                 <div class="flex items-center gap-2">
-                </div>
-                <div>
-                    <select v-model="currentView" @change="changeView" class="p-1 px-10 border rounded">
-                        <option value="dayGridMonth">Mensal</option>
-                        <option value="timeGridWeek">Semana</option>
-                        <option value="timeGridDay">Dia</option>
-                    </select>
+                    <div class="flex gap-4 mb-4">
+                        <div class="flex items-center gap-1">
+                            <span class="w-3 h-3 rounded-full bg-blue-500"></span>
+                            <span class="text-sm">Disponível</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <span class="w-3 h-3 rounded-full bg-red-400"></span>
+                            <span class="text-sm">Bloqueado</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <span class="w-3 h-3 rounded-full bg-green-500"></span>
+                            <span class="text-sm">Agendado</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -31,7 +31,7 @@
 
 
 <script setup>
-import { ref, defineEmits, watch, nextTick } from "vue"
+import { ref, defineEmits } from "vue"
 import FullCalendar from "@fullcalendar/vue3"
 import dayGridPlugin from "@fullcalendar/daygrid"
 import timeGridPlugin from "@fullcalendar/timegrid"
@@ -42,9 +42,6 @@ import { useToast } from "vue-toastification"
 const toast = useToast()
 const availabilityStore = useServiceAvailabilityStore()
 const calendarRef = ref(null)
-const currentView = ref('timeGridWeek')
-const miniCalendarRef = ref(null)
-const selectedDate = ref('')
 
 const emit = defineEmits(['slot-click'])
 
@@ -52,31 +49,72 @@ defineExpose({
     getApi: () => calendarRef.value?.getApi()
 });
 
-//navegação para calendario
-const changeView = () => {
-    if (calendarRef.value) {
-        calendarRef.value.getApi().changeView(currentView.value)
-    }
-}
-
 // Clique no evento
 const handleEventClick = (info) => {
-    const slot = info.event.extendedProps.slot
-    console.log('slot', slot);
+    const { slots, service, date } = info.event.extendedProps;
 
     emit('slot-click', {
-        slot,
+        slots,
+        service,
+        date,
         x: info.jsEvent.clientX,
         y: info.jsEvent.clientY
-    })
-}
+    });
+};
 
 // Renderização customizada
 const renderEventContent = (eventInfo) => {
-    const slot = eventInfo.event.extendedProps.slot || {}
-    const statusColor = slot.status === 'booked' ? '#EF4444'
-        : slot.status === 'blocked' ? '#CA8A04'
-            : '#10B981'
+    const { counts } = eventInfo.event.extendedProps;
+
+    const circles = `
+    <div style="
+      display: flex;
+      gap: 6px;
+      margin-left: 4px;
+      font-size: 9px;
+      line-height: 1;
+    ">   
+      <div style="
+        width: 14px;
+        height: 14px;
+        background: #3B82F6;
+        border-radius: 50%;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: ${counts.openCount > 0 ? 1 : 0.5};
+      ">
+        ${counts.openCount > 0 ? counts.openCount : ''}
+      </div>   
+      <div style="
+        width: 14px;
+        height: 14px;
+        background: #3AAB42;
+        border-radius: 50%;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: ${counts.bookedCount > 0 ? 1 : 0.5};
+      ">
+        ${counts.bookedCount > 0 ? counts.bookedCount : ''}
+      </div>
+      <div style="
+        width: 14px;
+        height: 14px;
+        background: #FC3232;
+        border-radius: 50%;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: ${counts.blockedCount > 0 ? 1 : 0.5};
+      ">
+        ${counts.blockedCount > 0 ? counts.blockedCount : ''}
+      </div>
+    </div>
+  `;
 
     return {
         html: `
@@ -84,194 +122,132 @@ const renderEventContent = (eventInfo) => {
         padding: 2px 6px;
         border-radius: 4px;
         font-size: 12px;
-        color: white;
+        color: #1f2937;
         font-family: system-ui, sans-serif;
         display: flex;
-        flex-direction: column;
+        align-items: center;
         overflow: hidden;
+        background: #F5AE8C; /* Cor neutra: cinza claro */
+        border: 1px solid #e5e7eb;
+        width: 100%;
+        box-sizing: border-box;
       ">
-        <div style="font-weight:600; white-space: nowrap; overflow:hidden; text-overflow:ellipsis;">
-          ${slot.service?.name || 'Serviço'}
+        <div style="
+          font-weight: 600;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          flex: 1;
+        ">
+          ${eventInfo.event.title}
         </div>
-        <div style="font-size:11px; opacity:0.9;">
-          ${slot.start_time || ''} – ${slot.end_time || ''}
-        </div>
-        ${slot.client_name ? `<div style="font-size:11px; opacity:0.8;">${slot.client_name}</div>` : ''}
+        ${circles}
       </div>
     `,
-        backgroundColor: statusColor
-    }
-}
-
+    };
+};
 
 // Opções do calendário
 const calendarOptions = {
     plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
-    initialView: currentView.value,
+    initialView: 'dayGridMonth',
+    contentHeight: 'auto',
     buttonText: {
-        today: 'Hoje',
-        month: 'Mensal',
-        week: 'Semana',
-        day: 'Dia'
+        today: 'Mês atual',
+        month: 'Mensal'      
     },
-    headerToolbar: false,
+    headerToolbar: {
+        left: 'prev,next,today',
+        center: 'title',
+        right: ''
+    },
+    allDaySlot: true,
     locale: 'pt-br',
     nowIndicator: true,
     slotMinTime: '07:00:00',
     slotMaxTime: '21:00:00',
     selectable: true,
     editable: false,
-    eventContent: renderEventContent,
-    dayMaxEventRows: 3,
+    dayMaxEventRows: 2,
     moreLinkClick: 'popover',
     eventClick: handleEventClick,
     eventContent: renderEventContent,
+    scrollTime: '08:00:00',
     events: async (fetchInfo, successCallback, failureCallback) => {
         try {
-            const start_date = fetchInfo.startStr.split('T')[0]
-            const end_date = fetchInfo.endStr.split('T')[0]
+            const start_date = fetchInfo.startStr.split('T')[0];
+            const end_date = fetchInfo.endStr.split('T')[0];
 
-            const events = await availabilityStore.fetchAvailableSlots({
+            const slots = await availabilityStore.fetchAvailableSlots({
                 start_date,
                 end_date,
                 service_ids: availabilityStore.selectedServiceIds || []
-            })
+            });
 
-            successCallback(events)
+            const grouped = new Map();
 
+            slots.forEach(slot => {
+                const date = slot.extendedProps.slot.slot_date;
+                const serviceId = slot.extendedProps.slot.service.id;
+                const key = `${date}-${serviceId}`;
+
+                if (!grouped.has(key)) {
+                    grouped.set(key, {
+                        date,
+                        service: slot.extendedProps.slot.service,
+                        slots: []
+                    });
+                }
+
+                grouped.get(key).slots.push(slot);
+            });
+
+            // Gera os eventos
+            const events = Array.from(grouped.values()).map(group => {
+                const { date, service, slots } = group;
+
+                const openCount = slots.filter(s => s.status === 'open').length;
+                const bookedCount = slots.filter(s => s.status === 'booked').length;
+                const blockedCount = slots.filter(s => s.status === 'blocked').length;
+
+                return {
+                    id: `group-${date}-${service.id}`,
+                    title: service.name,
+                    start: date,
+                    allDay: true,
+                    extendedProps: {
+                        service,
+                        date,
+                        slots,
+                        counts: { openCount, bookedCount, blockedCount }
+                    },
+                    backgroundColor: '#E0D6D3',
+                    borderColor: '#e5e7eb',
+                    display: 'block'
+                };
+            });
+
+            successCallback(events);
         } catch (err) {
-            console.error('Erro ao carregar eventos:', err)
-            toast.error('Falha ao carregar agenda')
-            failureCallback(err)
+            console.error('Erro ao carregar eventos:', err);
+            toast.error('Falha ao carregar agenda');
+            failureCallback(err);
         }
     }
 
 }
-
-const miniCalendarOptions = {
-    plugins: [dayGridPlugin, interactionPlugin],
-    initialView: 'dayGridMonth',
-    height: 'auto',
-    buttonText: {
-        today: 'Hoje',
-        month: 'Mensal',
-        week: 'Semana',
-        day: 'Dia'
-    },
-    locale: 'pt-br',
-    headerToolbar: { left: '', center: 'title', right: 'prev,next' },
-    selectable: true,
-    dateClick: (info) => {
-        selectedDate.value = info.dateStr
-        calendarRef.value.getApi().gotoDate(info.dateStr)
-        nextTick(() => {
-            miniCalendarRef.value.getApi().render()
-        })
-    },
-    dayCellClassNames: (arg) => {
-        return arg.dateStr === selectedDate.value ? ['selected-day', 'fc-day-selected'] : []
-    },
-    dayHeaderContent: (arg) => {
-        const map = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D']
-        return { html: map[arg.date.getDay()] }
-    },
-    dayMaxEventRows: 1,
-    showNonCurrentDates: false,
-    fixedWeekCount: false
-}
-
-watch(selectedDate, () => {
-    if (miniCalendarRef.value) {
-        miniCalendarRef.value.getApi().render()
-    }
-})
 </script>
 
 <style scoped>
-/* Mini calendário compacto */
-.mini-calendar ::v-deep(.fc-header-toolbar) {
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    font-size: 0.75rem !important;
-    margin-bottom: 0.25rem !important;
-    padding: 0 0.25rem !important;
-
+.fc-daygrid-event {
+    padding: 1px 2px !important;
+    font-size: 10px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
 }
 
-/* Título do mês capitalizado e centralizado */
-.mini-calendar ::v-deep(.fc-toolbar-title) {
-    text-transform: capitalize !important;
-    font-size: 1rem !important;
-    flex: 1;
-    text-align: center !important;
-    margin-right: 1.15rem !important;
-}
-
-/* Botões de navegação à direita do título */
-.mini-calendar ::v-deep(.fc-header-toolbar > .fc-toolbar-chunk:first-child) {
-    order: 2 !important;
-}
-
-.mini-calendar ::v-deep(.fc-toolbar-chunk) {
-    display: flex !important;
-    align-items: center !important;
-    gap: 0.25rem !important;
-}
-
-.mini-calendar ::v-deep(.fc-col-header-cell) {
-    font-size: 0.60rem !important;
-    font-weight: 500 !important;
-}
-
-/* Botões da toolbar (setas) */
-.mini-calendar ::v-deep(.fc-button) {
-    font-size: 0.65rem !important;
-    padding: 0.15rem 0.4rem !important;
-    min-width: auto !important;
-}
-
-/* Remove bordas da tabela, células e cabeçalho */
-.mini-calendar ::v-deep(.fc-scrollgrid),
-.mini-calendar ::v-deep(.fc-scrollgrid table),
-.mini-calendar ::v-deep(.fc-daygrid-day),
-.mini-calendar ::v-deep(.fc-col-header-cell),
-.mini-calendar ::v-deep(.fc-daygrid-day-frame),
-.mini-calendar ::v-deep(.fc-daygrid-day-top) {
-    border: none !important;
-    padding: 2px !important;
-    background-color: transparent !important;
-}
-
-/* Diminuir altura das células do calendário */
-.mini-calendar ::v-deep(.fc-daygrid-day-frame) {
-    height: 1.8rem !important;
-}
-
-/* Dias da semana - números menores */
-.mini-calendar ::v-deep(.fc-daygrid-day-top) {
-    font-size: 0.7rem !important;
-}
-
-/* Dia atual (hoje) - azul claro */
-.mini-calendar ::v-deep(.fc-day-today) {
-    background-color: #5aa2f4 !important;
-    color: black !important;
-    border-radius: 50% !important;
-}
-
-/* Dia selecionado - azul escuro */
-.mini-calendar ::v-deep(.selected-day .fc-daygrid-day-number),
-.mini-calendar ::v-deep(.fc-day-selected .fc-daygrid-day-number) {
-    background-color: #05388a !important;
-    color: white !important;
-    border-radius: 50% !important;
-    padding: 2px 6px !important;
-    font-weight: bold !important;
-    display: inline-flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-    min-width: 1.2rem !important;
-    height: 1.2rem !important;
+.fc-daygrid-event-content {
+    padding: 0 !important;
 }
 </style>

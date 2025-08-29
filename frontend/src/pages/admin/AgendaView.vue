@@ -13,12 +13,7 @@
         </div>
 
         <!-- Calendário -->
-        <CalendarWrapper ref="calendarRef" @slot-click="handleSlotClick" />
-
-        <!-- Dropdown de Ações -->
-        <SlotActionsDropdown v-if="showDropdown" :slot="selectedSlot" :x="dropdownPosition.x" :y="dropdownPosition.y"
-            @book="openBookingModal" @block="blockSelectedSlot" @unblock="unblockSelectedSlot"
-            @cancel="showDropdown = false" />
+        <CalendarWrapper ref="calendarRef" @slot-click="handleSlotClick" />      
 
         <!-- Modal de geerenciamento -->
         <ServiceAgendaModal v-if="showAgendaModal" :show="showAgendaModal" @close="showAgendaModal = false"
@@ -27,6 +22,11 @@
         <!-- Modal para agendar horario pelo admin -->
         <AdminBookSlotModal v-if="showBookingModal" :show="showBookingModal" :slot-data="selectedSlot"
             @close="showBookingModal = false" @saved="handleBookingCreate" />
+
+        <!-- Modal para ver detalhes do slot -->
+        <CalendarServiceModal v-if="showalendarServiceModal" :show="showalendarServiceModal" :service="agendaModalData.service"
+            :date="agendaModalData.date" :slots="agendaModalData.slots" @close="showalendarServiceModal = false"
+            @book="openBookingModal" @block="blockSelectedSlot" @unblock="unblockSelectedSlot" />
     </div>
 </template>
 
@@ -35,10 +35,9 @@ import { ref } from "vue"
 import CalendarWrapper from "@/components/calendar/CalendarWrapper.vue"
 import ServiceAgendaModal from "@/components/modals/services/ServiceAgendaModal.vue"
 import { useServiceAvailabilityStore } from "@/store/modules/useServiceAvailabilityStore"
-import SlotActionsDropdown from "@/components/ui/SlotActionsDropdown.vue"
 import { useToast } from "vue-toastification"
 import AdminBookSlotModal from "@/components/modals/settings-modals/AdminBookSlotModal.vue"
-
+import CalendarServiceModal from "@/components/modals/calendar/CalendarServiceModal.vue"
 
 
 const toast = useToast()
@@ -46,15 +45,18 @@ const showAgendaModal = ref(false)
 const selectedDateInfo = ref(null)
 const serviceAvailabilityStore = useServiceAvailabilityStore()
 const selectedSlot = ref(null)
-const showDropdown = ref(false)
-const dropdownPosition = ref({ x: 0, y: 0 })
 const calendarRef = ref(null);
 const showBookingModal = ref(false)
+const showalendarServiceModal = ref(false)
+const agendaModalData = ref({
+    service: null,
+    date: null,
+    slots: []
+})
 
-
-const openBookingModal = () => {
+const openBookingModal = (slot) => {
+    selectedSlot.value = slot;
     showBookingModal.value = true
-    showDropdown.value = false
 }
 
 const createAgendaModal = () => {
@@ -62,41 +64,41 @@ const createAgendaModal = () => {
     selectedDateInfo.value = null
 }
 
-const handleSlotClick = ({ slot, x, y }) => {
-    selectedSlot.value = slot
-    dropdownPosition.value = { x, y }
-    showDropdown.value = true
-}
+const handleSlotClick = (data) => {
+    selectedSlot.value = data.slots[0];
+    showalendarServiceModal.value = true;
+
+    agendaModalData.value = {
+        service: data.service,
+        date: data.date,
+        slots: data.slots
+    };
+};
 
 const handleBookingCreate = () => {
-    selectedDateInfo.value = {
-        service_id: selectedSlot.value.service.id,
-        pet_name: '',
-        notes: '',
-        transport_option: 'none',
-    }
-    showBookingModal.value = true
-    showDropdown.value = false
+    showBookingModal.value = false
+    calendarRef.value.getApi().refetchEvents()
+
+    toast.success("Horário agendado com sucesso!")
 }
 
-const blockSelectedSlot = async () => {
+const blockSelectedSlot = async (slot) => {      
     try {
-        await serviceAvailabilityStore.blockSlot(selectedSlot.value.id)
+        await serviceAvailabilityStore.blockSlot(slot.slot_id)
         toast.success("Horário bloqueado!")
-        showDropdown.value = false
+
         calendarRef.value.getApi().refetchEvents()
     } catch (err) {
         toast.error("Erro ao bloquear horário, verifique se já não está reservado")
-        console.log('err', err);
 
     }
 }
 
-const unblockSelectedSlot = async () => {
+const unblockSelectedSlot = async (slot) => {
     try {
-        await serviceAvailabilityStore.unblockSlot(selectedSlot.value.id)
+        await serviceAvailabilityStore.unblockSlot(slot.slot_id)
         toast.success("Horário liberado!")
-        showDropdown.value = false
+
         calendarRef.value.getApi().refetchEvents()
     } catch (err) {
         toast.error("Erro ao liberar horário")
