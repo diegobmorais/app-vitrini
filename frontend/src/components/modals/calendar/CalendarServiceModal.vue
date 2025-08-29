@@ -103,7 +103,7 @@
 
                                 <!-- Botão de ação -->
                                 <div class="mt-auto flex justify-end pt-3">
-                                    <button @click="handleBlockSlot(slot)"
+                                    <button @click="handleUnblockSlot(slot)"
                                         class="mt-3 flex items-center gap-1 text-xs text-red-500 hover:text-red-700 transition font-medium">
                                         <TrashIcon class="w-4 h-4" />
                                         Cancelar e Excluir
@@ -202,13 +202,11 @@ const allSlots = computed(() => [...openSlots.value, ...bookedSlots.value, ...bl
 
 // Funções
 const handleBookSlot = (slot) => {
-    emit('book', slot);
-    emit('close');
+    emit('book', slot);    
 };
 
 const handleUnblockSlot = (slot) => {
-    emit('unblock', slot);
-    emit('close');
+    emit('unblock', slot);  
 };
 
 const openBlockPrompt = (slot) => {

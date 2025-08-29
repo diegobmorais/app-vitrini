@@ -30,7 +30,7 @@
             </div>
 
             <div class="flex justify-end gap-2 mt-4">
-                <button @click="$emit('close')"
+                <button @click="closeModal"
                     class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400">Cancelar</button>
                 <button @click="submit"
                     class="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700">Agendar</button>
@@ -43,6 +43,7 @@
 import { useServiceAvailabilityStore } from '@/store/modules/useServiceAvailabilityStore'
 import { reactive } from 'vue'
 import { useToast } from 'vue-toastification'
+import { defineProps, defineEmits } from 'vue'
 
 const useServiceStore = useServiceAvailabilityStore()
 
@@ -50,10 +51,11 @@ const props = defineProps({
     show: Boolean,
     slotData: Object
 })
-const emit = defineEmits(['close', 'saved'])
-
+const emit = defineEmits(['update:show', 'saved'])
+const closeModal = () => {
+  emit('update:show', false)
+}
 const toast = useToast()
-
 const form = reactive({
     pet_name: '',
     notes: '',
@@ -75,8 +77,8 @@ const submit = async () => {
     try {
         await useServiceStore.bookSlotByAdmin(props.slotData.extendedProps.slot.id, form.pet_name, form.notes, form.transport_option)
 
-        emit('saved')
-        emit('close')
+        emit('saved')       
+        closeModal() 
     } catch (err) {
         toast.error("Erro ao agendar horário")
     }

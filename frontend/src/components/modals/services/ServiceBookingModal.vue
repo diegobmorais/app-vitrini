@@ -136,7 +136,7 @@ import { useAppointmentStore } from '@/store/modules/useAppointmentStore'
 import { useAuthStore } from '@/store/modules/useAuthStore'
 import { useServiceAvailabilityStore } from '@/store/modules/useServiceAvailabilityStore'
 import { ref, computed, onMounted, watch } from 'vue'
-
+import { formatDate, formatTime } from '@/utils/date'
 
 const props = defineProps({
     show: {
@@ -174,12 +174,6 @@ const availableTimes = computed(() => {
 const selectTime = (time) => {
     selectedTime.value = time
 }
-
-const formatDate = (dateStr) => {
-    const [year, month, day] = dateStr.split("-")
-    return `${day}/${month}/${year}`
-}
-
 
 const submitBooking = async () => { 
 

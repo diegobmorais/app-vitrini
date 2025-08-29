@@ -13,20 +13,20 @@
         </div>
 
         <!-- Calendário -->
-        <CalendarWrapper ref="calendarRef" @slot-click="handleSlotClick" />      
+        <CalendarWrapper ref="calendarRef" @slot-click="handleSlotClick" />
 
         <!-- Modal de geerenciamento -->
         <ServiceAgendaModal v-if="showAgendaModal" :show="showAgendaModal" @close="showAgendaModal = false"
             @saved="handleCreate" :calendar-ref="calendarRef" />
 
         <!-- Modal para agendar horario pelo admin -->
-        <AdminBookSlotModal v-if="showBookingModal" :show="showBookingModal" :slot-data="selectedSlot"
-            @close="showBookingModal = false" @saved="handleBookingCreate" />
+        <AdminBookSlotModal v-model:show="showBookingModal" :slot-data="selectedSlot" @saved="handleBookingCreate" />
 
         <!-- Modal para ver detalhes do slot -->
-        <CalendarServiceModal v-if="showalendarServiceModal" :show="showalendarServiceModal" :service="agendaModalData.service"
-            :date="agendaModalData.date" :slots="agendaModalData.slots" @close="showalendarServiceModal = false"
-            @book="openBookingModal" @block="blockSelectedSlot" @unblock="unblockSelectedSlot" />
+        <CalendarServiceModal v-if="showCalendarServiceModal" :show="showCalendarServiceModal"
+            :service="agendaModalData.service" :date="agendaModalData.date" :slots="agendaModalData.slots"
+            @close="showCalendarServiceModal = false" @book="openBookingModal" @block="blockSelectedSlot"
+            @unblock="unblockSelectedSlot" />
     </div>
 </template>
 
@@ -47,7 +47,7 @@ const serviceAvailabilityStore = useServiceAvailabilityStore()
 const selectedSlot = ref(null)
 const calendarRef = ref(null);
 const showBookingModal = ref(false)
-const showalendarServiceModal = ref(false)
+const showCalendarServiceModal = ref(false)
 const agendaModalData = ref({
     service: null,
     date: null,
@@ -66,7 +66,7 @@ const createAgendaModal = () => {
 
 const handleSlotClick = (data) => {
     selectedSlot.value = data.slots[0];
-    showalendarServiceModal.value = true;
+    showCalendarServiceModal.value = true;
 
     agendaModalData.value = {
         service: data.service,
@@ -76,13 +76,12 @@ const handleSlotClick = (data) => {
 };
 
 const handleBookingCreate = () => {
-    showBookingModal.value = false
     calendarRef.value.getApi().refetchEvents()
-
     toast.success("Horário agendado com sucesso!")
+    showCalendarServiceModal.value = false
 }
 
-const blockSelectedSlot = async (slot) => {      
+const blockSelectedSlot = async (slot) => {
     try {
         await serviceAvailabilityStore.blockSlot(slot.slot_id)
         toast.success("Horário bloqueado!")
@@ -93,13 +92,21 @@ const blockSelectedSlot = async (slot) => {
 
     }
 }
+const loadSlots = async () => {
+    const slots = await serviceAvailabilityStore.fetchAvailableSlots(selectedDate.value)
+    slotsData.value = slots
+}
 
 const unblockSelectedSlot = async (slot) => {
+    console.log('slot', slot);
+    
     try {
         await serviceAvailabilityStore.unblockSlot(slot.slot_id)
         toast.success("Horário liberado!")
 
         calendarRef.value.getApi().refetchEvents()
+
+        await loadSlots()
     } catch (err) {
         toast.error("Erro ao liberar horário")
     }
@@ -112,7 +119,6 @@ const handleCreate = async (data) => {
             toast.warning(response.message);
         } else if (response.status === 'success') {
             toast.success(response.message);
-            closeAgendaModal();
         } else {
             toast.error(response.message);
         }
