@@ -45,6 +45,7 @@ import { reactive } from 'vue'
 import { useToast } from 'vue-toastification'
 
 const useServiceStore = useServiceAvailabilityStore()
+
 const props = defineProps({
     show: Boolean,
     slotData: Object

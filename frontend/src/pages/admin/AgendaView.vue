@@ -13,16 +13,20 @@
         </div>
 
         <!-- Calendário -->
-        <CalendarWrapper  @slot-click="handleSlotClick" />
+        <CalendarWrapper ref="calendarRef" @slot-click="handleSlotClick" />
 
         <!-- Dropdown de Ações -->
         <SlotActionsDropdown v-if="showDropdown" :slot="selectedSlot" :x="dropdownPosition.x" :y="dropdownPosition.y"
-            @book="openAdminBookModal" @block="blockSelectedSlot" @unblock="unblockSelectedSlot"
+            @book="openBookingModal" @block="blockSelectedSlot" @unblock="unblockSelectedSlot"
             @cancel="showDropdown = false" />
 
         <!-- Modal de geerenciamento -->
-        <ServiceAgendaModal v-if="showAgendaModal" :show="showAgendaModal" :initial-data="selectedDateInfo"
-            @close="closeAgendaModal" @saved="handleCreate" />
+        <ServiceAgendaModal v-if="showAgendaModal" :show="showAgendaModal" @close="showAgendaModal = false"
+            @saved="handleCreate" :calendar-ref="calendarRef" />
+
+        <!-- Modal para agendar horario pelo admin -->
+        <AdminBookSlotModal v-if="showBookingModal" :show="showBookingModal" :slot-data="selectedSlot"
+            @close="showBookingModal = false" @saved="handleBookingCreate" />
     </div>
 </template>
 
@@ -33,6 +37,9 @@ import ServiceAgendaModal from "@/components/modals/services/ServiceAgendaModal.
 import { useServiceAvailabilityStore } from "@/store/modules/useServiceAvailabilityStore"
 import SlotActionsDropdown from "@/components/ui/SlotActionsDropdown.vue"
 import { useToast } from "vue-toastification"
+import AdminBookSlotModal from "@/components/modals/settings-modals/AdminBookSlotModal.vue"
+
+
 
 const toast = useToast()
 const showAgendaModal = ref(false)
@@ -41,21 +48,35 @@ const serviceAvailabilityStore = useServiceAvailabilityStore()
 const selectedSlot = ref(null)
 const showDropdown = ref(false)
 const dropdownPosition = ref({ x: 0, y: 0 })
+const calendarRef = ref(null);
+const showBookingModal = ref(false)
+
+
+const openBookingModal = () => {
+    showBookingModal.value = true
+    showDropdown.value = false
+}
 
 const createAgendaModal = () => {
     showAgendaModal.value = true
     selectedDateInfo.value = null
 }
 
-const closeAgendaModal = () => {
-    showAgendaModal.value = false
-    selectedDateInfo.value = null
+const handleSlotClick = ({ slot, x, y }) => {
+    selectedSlot.value = slot
+    dropdownPosition.value = { x, y }
+    showDropdown.value = true
 }
 
-const handleSlotClick = (slot) => {
-    selectedSlot.value = slot
-    dropdownPosition.value = { x: 0, y: 0 }
-    showDropdown.value = true
+const handleBookingCreate = () => {
+    selectedDateInfo.value = {
+        service_id: selectedSlot.value.service.id,
+        pet_name: '',
+        notes: '',
+        transport_option: 'none',
+    }
+    showBookingModal.value = true
+    showDropdown.value = false
 }
 
 const blockSelectedSlot = async () => {
@@ -66,6 +87,8 @@ const blockSelectedSlot = async () => {
         calendarRef.value.getApi().refetchEvents()
     } catch (err) {
         toast.error("Erro ao bloquear horário, verifique se já não está reservado")
+        console.log('err', err);
+
     }
 }
 

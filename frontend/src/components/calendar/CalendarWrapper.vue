@@ -48,6 +48,10 @@ const selectedDate = ref('')
 
 const emit = defineEmits(['slot-click'])
 
+defineExpose({
+    getApi: () => calendarRef.value?.getApi()
+});
+
 //navegação para calendario
 const changeView = () => {
     if (calendarRef.value) {
@@ -58,7 +62,13 @@ const changeView = () => {
 // Clique no evento
 const handleEventClick = (info) => {
     const slot = info.event.extendedProps.slot
-    emit('slot-click', slot)
+    console.log('slot', slot);
+
+    emit('slot-click', {
+        slot,
+        x: info.jsEvent.clientX,
+        y: info.jsEvent.clientY
+    })
 }
 
 // Renderização customizada
@@ -264,6 +274,4 @@ watch(selectedDate, () => {
     min-width: 1.2rem !important;
     height: 1.2rem !important;
 }
-
-
 </style>

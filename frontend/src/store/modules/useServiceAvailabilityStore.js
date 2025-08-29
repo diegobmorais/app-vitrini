@@ -1,76 +1,95 @@
-import { defineStore } from 'pinia'
-import api from '@/main'
+import { defineStore } from "pinia";
+import { ref } from "vue";
+import api from "@/main";
 
-export const useServiceAvailabilityStore = defineStore('serviceAvailability', {
-    state: () => ({
-        slots: [],
-        appointments: [],
-        selectedServiceIds: [],
-        loading: false,
-        error: null,
-        rules: [],
-        exceptions: [],
-    }),       
+export const useServiceAvailabilityStore = defineStore("serviceAvailability", () => {
+  // STATE 
+  const slots = ref([]);
+  const appointments = ref([]);
+  const selectedServiceIds = ref([]);
+  const loading = ref(false);
+  const error = ref(null);
+  const rules = ref([]);
+  const exceptions = ref([]);
 
-    actions: {
-        async fetchAvailableSlots({ start_date, end_date, service_ids }) {
-            const response = await api.get('api/calendar/slots', {
-                params: { start_date, end_date, service_ids }
-            })
-            this.slots = response.data         
-                     
-            return response.data
-        },
+  // ACTIONS  
+  const fetchAvailableSlots = async ({ start_date, end_date, service_ids }) => {
+    const response = await api.get("api/calendar/slots", {
+      params: { start_date, end_date, service_ids },
+    });
+    slots.value = response.data;
+    return response.data;
+  };
 
-        async bookSlotByAdmin(slot_id, pet_name, notes, transport_option) {
-            try {              
-                const response = await api.post('api/calendar/book-by-admin', {
-                    slot_id: slot_id,
-                    pet_name: pet_name,
-                    notes: notes,
-                    transport_option: transport_option
-                })
-
-                return response
-            } catch (error) {
-                console.error('Erro na requisição:', error)
-                throw error
-            }
-        },
-
-        async blockSlot(slot_id) {
-            await api.post('api/calendar/block',
-                { slot_id: slot_id },
-            )
-            const slot = this.slots.find(s => s.slot_id === slot_id)
-            if (slot) slot.status = 'blocked'
-        },
-
-        async unblockSlot(slot_id) {
-            await api.post('api/calendar/unblock', { slot_id })
-            const slot = this.slots.find(s => s.slot_id === slot_id)
-            if (slot) slot.status = 'open'
-        },
-
-        async fetchAvailableSlotsByService({ service_id, start_date }) {
-            const { data } = await api.get('/api/availability', {
-                params: { service_id, start_date }
-            })
-            this.slots = data.days || []
-            return data.days
-        },
-
-        async createTimeSlots(payload) {
-            try {
-                this.loading = true
-                const response = await api.post('/api/generate-slots', payload)
-                this.loading = false
-                return response.data
-            } catch (error) {
-                this.error = error
-                this.loading = false
-                throw error
-            }
-        },
+  const bookSlotByAdmin = async (slot_id, pet_name, notes, transport_option) => {
+    try {
+      const response = await api.post("api/calendar/book-by-admin", {
+        slot_id,
+        pet_name,
+        notes,
+        transport_option,
+      });
+      return response;
+    } catch (err) {
+      console.error("Erro na requisição:", err);
+      throw err;
     }
-})
+  };
+
+  const blockSlot = async (slot_id) => {
+    await api.post("api/calendar/block", { slot_id });
+    const slot = slots.value.find((s) => s.slot_id === slot_id);
+    if (slot) slot.status = "blocked";
+  };
+
+  const unblockSlot = async (slot_id) => {
+    await api.post("api/calendar/unblock", { slot_id });
+    const slot = slots.value.find((s) => s.slot_id === slot_id);
+    if (slot) slot.status = "open";
+  };
+
+  // Busca slots disponíveis por serviço
+  const fetchAvailableSlotsByService = async ({ service_id, start_date }) => {
+    const { data } = await api.get("/api/availability", {
+      params: { service_id, start_date },
+    });
+    slots.value = data.days || [];
+    return data.days;
+  };
+
+  // Cria novos slots de horários
+  const createTimeSlots = async (payload) => {
+     loading.value = true
+
+    try {     
+      const response = await api.post("/api/generate-slots", payload);
+    
+      return response.data;
+    } catch (err) {
+      error.value = err;
+      loading.value = false;
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  };
+ 
+  return {
+    // State
+    slots,
+    appointments,
+    selectedServiceIds,
+    loading,
+    error,
+    rules,
+    exceptions,
+
+    // Actions
+    fetchAvailableSlots,
+    bookSlotByAdmin,
+    blockSlot,
+    unblockSlot,
+    fetchAvailableSlotsByService,
+    createTimeSlots,
+  };
+});
