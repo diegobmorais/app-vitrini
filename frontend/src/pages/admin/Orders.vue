@@ -5,10 +5,104 @@
         <h1 class="text-2xl font-bold text-gray-900">Pedidos</h1>
         <p class="text-gray-600">Gerencie os pedidos do sistema</p>
       </div>
-      <router-link to="/admin/orders/create"
+      <!-- <router-link to="/admin/orders/create"
         class="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500">
         Novo Pedido
-      </router-link>
+      </router-link> -->
+    </div>
+
+    <!-- Resumo de Pedidos -->
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="bg-white overflow-hidden shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+          <div class="flex items-center">
+            <div class="flex-shrink-0 bg-primary-100 rounded-md p-3">
+              <svg class="h-6 w-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+              </svg>
+            </div>
+            <div class="ml-5 w-0 flex-1">
+              <dt class="text-sm font-medium text-gray-500 truncate">
+                Total de Pedidos
+              </dt>
+              <dd class="flex items-baseline">
+                <div class="text-2xl font-semibold text-gray-900">
+                  {{ orders.length }}
+                </div>
+              </dd>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white overflow-hidden shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+          <div class="flex items-center">
+            <div class="flex-shrink-0 bg-yellow-100 rounded-md p-3">
+              <svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div class="ml-5 w-0 flex-1">
+              <dt class="text-sm font-medium text-gray-500 truncate">
+                Pedidos Pendentes
+              </dt>
+              <dd class="flex items-baseline">
+                <div class="text-2xl font-semibold text-gray-900">
+                  {{ pendingOrdersCount }}
+                </div>
+              </dd>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white overflow-hidden shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+          <div class="flex items-center">
+            <div class="flex-shrink-0 bg-blue-100 rounded-md p-3">
+              <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <div class="ml-5 w-0 flex-1">
+              <dt class="text-sm font-medium text-gray-500 truncate">
+                Pedidos Concluídos
+              </dt>
+              <dd class="flex items-baseline">
+                <div class="text-2xl font-semibold text-gray-900">
+                  {{ completedOrdersCount }}
+                </div>
+              </dd>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white overflow-hidden shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+          <div class="flex items-center">
+            <div class="flex-shrink-0 bg-green-100 rounded-md p-3">
+              <svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div class="ml-5 w-0 flex-1">
+              <dt class="text-sm font-medium text-gray-500 truncate">
+                Receita Total
+              </dt>
+              <dd class="flex items-baseline">
+                <div class="text-2xl font-semibold text-gray-900">
+                  {{ formatCurrency(totalRevenue) }}
+                </div>
+              </dd>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="bg-white rounded-lg shadow overflow-hidden mb-6">
@@ -125,100 +219,6 @@
             <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
               <!-- Paginação aqui se necessário -->
             </nav>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Resumo de Pedidos -->
-    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-      <div class="bg-white overflow-hidden shadow rounded-lg">
-        <div class="px-4 py-5 sm:p-6">
-          <div class="flex items-center">
-            <div class="flex-shrink-0 bg-primary-100 rounded-md p-3">
-              <svg class="h-6 w-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-              </svg>
-            </div>
-            <div class="ml-5 w-0 flex-1">
-              <dt class="text-sm font-medium text-gray-500 truncate">
-                Total de Pedidos
-              </dt>
-              <dd class="flex items-baseline">
-                <div class="text-2xl font-semibold text-gray-900">
-                  {{ orders.length }}
-                </div>
-              </dd>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-white overflow-hidden shadow rounded-lg">
-        <div class="px-4 py-5 sm:p-6">
-          <div class="flex items-center">
-            <div class="flex-shrink-0 bg-yellow-100 rounded-md p-3">
-              <svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div class="ml-5 w-0 flex-1">
-              <dt class="text-sm font-medium text-gray-500 truncate">
-                Pedidos Pendentes
-              </dt>
-              <dd class="flex items-baseline">
-                <div class="text-2xl font-semibold text-gray-900">
-                  {{ pendingOrdersCount }}
-                </div>
-              </dd>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-white overflow-hidden shadow rounded-lg">
-        <div class="px-4 py-5 sm:p-6">
-          <div class="flex items-center">
-            <div class="flex-shrink-0 bg-blue-100 rounded-md p-3">
-              <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <div class="ml-5 w-0 flex-1">
-              <dt class="text-sm font-medium text-gray-500 truncate">
-                Pedidos Concluídos
-              </dt>
-              <dd class="flex items-baseline">
-                <div class="text-2xl font-semibold text-gray-900">
-                  {{ completedOrdersCount }}
-                </div>
-              </dd>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-white overflow-hidden shadow rounded-lg">
-        <div class="px-4 py-5 sm:p-6">
-          <div class="flex items-center">
-            <div class="flex-shrink-0 bg-green-100 rounded-md p-3">
-              <svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div class="ml-5 w-0 flex-1">
-              <dt class="text-sm font-medium text-gray-500 truncate">
-                Receita Total
-              </dt>
-              <dd class="flex items-baseline">
-                <div class="text-2xl font-semibold text-gray-900">
-                  {{ formatCurrency(totalRevenue) }}
-                </div>
-              </dd>
-            </div>
           </div>
         </div>
       </div>

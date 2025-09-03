@@ -180,26 +180,25 @@
 
           <!-- Grid View -->
           <div v-else-if="viewMode === 'grid'" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <product-card v-for="product in paginatedProducts" :key="product.id" :product="product" />
+            <product-card v-for="product in filteredProducts" :key="product.id" :product="product" />
           </div>
 
           <!-- List View -->
           <div v-else class="space-y-6">
-            <div v-for="product in paginatedProducts" :key="product.id"
+            <div v-for="product in filteredProducts" :key="product.id"
               class="bg-white rounded-lg shadow-md overflow-hidden flex flex-col sm:flex-row">
               <div class="sm:w-1/3 relative">
-                <img :src="product.images?.length ? `${baseURL}${product.images[0].url}` : '#'"
-                :alt="product.name" 
-                class="w-full h-full object-cover" />
+                <img :src="product.images?.length ? `${baseURL}${product.images[0].url}` : '#'" :alt="product.name"
+                  class="w-full h-full object-cover" />
                 <div v-if="product.discount > 0"
                   class="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
                   -{{ product.discount }}%
                 </div>
                 <div v-if="product.isNew"
                   class="absolute top-2 right-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded">
-                  Novo 
+                  Novo
                 </div>
-              </div>          
+              </div>
               <div class="p-4 flex-grow flex flex-col">
                 <div class="flex-grow">
                   <h3 class="text-lg font-semibold mb-2">{{ product.name }}</h3>
@@ -243,25 +242,28 @@
           </div>
 
           <!-- Pagination -->
-          <div v-if="filteredProducts.length > 0" class="mt-8 flex justify-center">
+          <div v-if="products.length > 0" class="mt-8 flex justify-center">
             <nav class="flex items-center space-x-2">
-              <button @click="currentPage = Math.max(1, currentPage - 1)" :disabled="currentPage === 1"
-                :class="{ 'opacity-50 cursor-not-allowed': currentPage === 1 }"
-                class="px-3 py-1 rounded-md bg-white border border-gray-300 text-gray-700 hover:bg-gray-50">
+              <!-- Botão Anterior -->
+              <button @click="goToPage(pagination.currentPage - 1)" :disabled="pagination.currentPage === 1" :class="{
+                'opacity-50 cursor-not-allowed': pagination.currentPage === 1
+              }" class="px-3 py-1 rounded-md bg-white border border-gray-300 text-gray-700 hover:bg-gray-50">
                 Anterior
               </button>
 
-              <button v-for="page in totalPages" :key="page" @click="currentPage = page" :class="{
-                'bg-blue-600 text-white': currentPage === page,
-                'bg-white text-gray-700 hover:bg-gray-50': currentPage !== page
+              <!-- Botões de páginas -->
+              <button v-for="page in pagination.totalPages" :key="page" @click="goToPage(page)" :class="{
+                'bg-blue-600 text-white': pagination.currentPage === page,
+                'bg-white text-gray-700 hover:bg-gray-50': pagination.currentPage !== page
               }" class="px-3 py-1 rounded-md border border-gray-300">
                 {{ page }}
               </button>
 
-              <button @click="currentPage = Math.min(totalPages, currentPage + 1)"
-                :disabled="currentPage === totalPages"
-                :class="{ 'opacity-50 cursor-not-allowed': currentPage === totalPages }"
-                class="px-3 py-1 rounded-md bg-white border border-gray-300 text-gray-700 hover:bg-gray-50">
+              <!-- Botão Próxima -->
+              <button @click="goToPage(pagination.currentPage + 1)"
+                :disabled="pagination.currentPage === pagination.totalPages" :class="{
+                  'opacity-50 cursor-not-allowed': pagination.currentPage === pagination.totalPages
+                }" class="px-3 py-1 rounded-md bg-white border border-gray-300 text-gray-700 hover:bg-gray-50">
                 Próxima
               </button>
             </nav>
@@ -291,8 +293,7 @@ const router = useRouter()
 const viewMode = ref('grid')
 
 // Paginação
-const currentPage = ref(1)
-const itemsPerPage = ref(9)
+const pagination = computed(() => productStore.pagination)
 
 // Ordenação
 const sortOption = ref('relevance')
@@ -380,18 +381,18 @@ const filteredProducts = computed(() => {
   return result
 })
 
-const totalPages = computed(() =>
-  Math.ceil(filteredProducts.value.length / itemsPerPage.value)
-)
-
 const paginatedProducts = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage.value
-  return filteredProducts.value.slice(start, start + itemsPerPage.value)
+  const start = (pagination.value.currentPage - 1) * pagination.value.perPage
+  return filteredProducts.value.slice(start, start + pagination.value.perPage)
 })
 
-watch(filteredProducts, () => {
-  currentPage.value = 1
-})
+
+const goToPage = async (page) => {  
+  if (page >= 1 && page <= pagination.value.totalPages) {
+    pagination.value.currentPage = page
+    await productStore.fetchProducts({page})
+  }
+}
 
 const applyFilters = () => {
   const query = {}
@@ -420,7 +421,7 @@ const resetFilters = () => {
   router.push({ query: {} })
 }
 
-onMounted(() => {  
+onMounted(() => {
   productStore.fetchProducts()
   categoryStore.fetchCategories()
 

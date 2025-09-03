@@ -261,7 +261,7 @@
     </div>
     <!-- Modal de ajuste -->
     <AjustmentStockModal v-if="showAdjustmentModal" :show-adjustment-modal="showAdjustmentModal"
-      :selected-product="selectedProduct" @close="closeAdjustmentModal" @saved="onAdjustmentSaved" />
+      :selected-product="selectedProduct" @close="closeAdjustmentModal" />
     <!-- Modal Histórico -->
     <StockHistoryModal :show="showHistoryModal" :product="selectedProductHistory" :movements="movementHistory"
       @close="closeHistoryModal" />
@@ -331,11 +331,6 @@ const closeHistoryModal = () => {
 const closeAdjustmentModal = () => {
   showAdjustmentModal.value = false
   selectedProduct.value = null
-}
-
-const onAdjustmentSaved = async () => {
-  await inventoryStore.fetchStock()
-  closeAdjustmentModal()
 }
 
 const getCategoryName = (categoryId) => {

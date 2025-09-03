@@ -4,10 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreProductRequest;
 use App\Models\Product;
-use App\Models\StockMovement;
 use App\Services\StockMovementService;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
@@ -78,25 +76,11 @@ class ProductController extends Controller
             ]);
         }
 
-        $perPage = $request->input('per_page', 10);
-        $currentPage = $request->input('page', 1);
-        $total = $products->count();
+        $perPage = $request->input('per_page', 9);
 
-        $items = $products
-            ->skip(($currentPage - 1) * $perPage)
-            ->take($perPage)
-            ->values();
+        $products = $query->paginate($perPage);
 
-        //resposta paginada
-        $paginated = new LengthAwarePaginator(
-            $items,
-            $total,
-            $perPage,
-            $currentPage,
-            ['path' => $request->url(), 'query' => $request->query()]
-        );
-
-        return response()->json($paginated);
+        return response()->json($products);
     }
     private function getSortField($sort)
     {
@@ -213,7 +197,7 @@ class ProductController extends Controller
         ]);
     }
     public function showBySlug($slug)
-    {   
+    {
         $product = Product::with('images')
             ->where('slug', $slug)
             ->first();
@@ -221,7 +205,7 @@ class ProductController extends Controller
         if (!$product) {
             return response()->json(['message' => 'Produto não encontrado.'], 404);
         }
-  
+
         $relatedProducts = Product::with('images')
             ->where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)

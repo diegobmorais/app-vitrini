@@ -295,6 +295,7 @@ const saveStockAdjustment = async () => {
             notes: ''
         }
         emit('close')
+         await inventoryStore.fetchStock()
     } catch (error) {
         toast.error('Preencha todos os campos obrigatórios')
         console.error(error)

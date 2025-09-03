@@ -50,14 +50,21 @@
                                             <div>
                                                 <label class="block text-sm font-medium text-gray-700 mb-1">Datas
                                                     Disponíveis *</label>
-                                                <select v-model="selectedDate"
-                                                    class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                                    <option value="">Selecione uma data</option>
-                                                    <option v-for="day in availabilityStore.slots" :key="day.date"
-                                                        :value="day.date">
-                                                        {{ formatDate(day.date) }}
-                                                    </option>
-                                                </select>
+                                                <div v-if="availabilityStore.slots === 0">
+
+
+                                                    <select v-model="selectedDate"
+                                                        class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                                        <option value="">Selecione uma data</option>
+                                                        <option v-for="day in availabilityStore.slots" :key="day.date"
+                                                            :value="day.date">
+                                                            {{ formatDate(day.date) }}
+                                                        </option>
+                                                    </select>
+                                                </div>
+                                                <div v-else>
+                                                    <p class="text-sm text-gray-500">Nenhuma data disponível.</p>
+                                                </div>
                                             </div>
 
                                             <!-- horarios -->
@@ -67,8 +74,8 @@
 
                                                 <div
                                                     class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 max-h-64 overflow-y-auto p-2 border border-gray-300 rounded-md shadow-sm">
-                                                    <button type="button" v-for="(time, index) in availableTimes" :key="index"
-                                                        @click="selectTime(time)" :class="[
+                                                    <button type="button" v-for="(time, index) in availableTimes"
+                                                        :key="index" @click="selectTime(time)" :class="[
                                                             'px-4 py-2 rounded-lg text-center font-medium transition-all duration-200',
                                                             selectedTime === time
                                                                 ? 'bg-blue-600 text-white shadow-lg'
@@ -161,7 +168,7 @@ const selectedTime = ref("")
 const isSubmitting = ref(false)
 
 const form = ref({
-    pet_name: '',  
+    pet_name: '',
     transport_option: 'pickup',
     notes: ''
 })
@@ -175,7 +182,7 @@ const selectTime = (time) => {
     selectedTime.value = time
 }
 
-const submitBooking = async () => { 
+const submitBooking = async () => {
 
     isSubmitting.value = true
     console.log('aqui 2');
@@ -188,7 +195,7 @@ const submitBooking = async () => {
             transport_option: form.value.transport_option,
             notes: form.value.notes
         }
-         console.log('payload', payload);
+        console.log('payload', payload);
         await appointmentStore.createAppointment(payload)
         emit('scheduled')
         emit('close')
