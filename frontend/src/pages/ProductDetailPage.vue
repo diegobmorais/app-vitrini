@@ -303,8 +303,9 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import ProductCard from '@/components/shop/ProductCard.vue'
 import { useProductStore } from '@/store/modules/useProductStore'
-import router from '@/router';
+import { useRouter, useRoute } from 'vue-router'
 import { useCartStore } from '@/store/modules/userCartStore';
+import { useAuthStore } from '@/store/modules/useAuthStore';
 
 const baseURL = import.meta.env.VITE_API_BASE_URL;
 
@@ -315,7 +316,9 @@ const props = defineProps({
     required: true
   }
 })
-
+const router = useRouter()
+const route = useRoute()
+const auth = useAuthStore()
 const productStore = useProductStore()
 const cartStore = useCartStore()
 
@@ -396,10 +399,20 @@ const decrementQuantity = () => {
 
 const addToCart = async () => {
   const currentProduct = productStore.product
-  if (currentProduct && currentProduct.stock > 0) { 
+
+  if (currentProduct && currentProduct.stock > 0) {
     try {
-      await cartStore.addItemToCart(currentProduct.id, quantity.value )
-      router.push({ name: 'cart' })
+      if (!auth.isAuthenticated) {    
+        router.push({
+          name: 'login',
+          query: { redirect: route.fullPath }
+        })
+        return
+      }
+      
+      await cartStore.addItemToCart(currentProduct.id, quantity.value)
+
+      router.push({ name: 'checkout' })
     } catch (error) {
       alert('Erro ao adicionar produto ao carrinho')
     }

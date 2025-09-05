@@ -9,7 +9,7 @@ export default {
     return axios.post('/api/address', data);
   },
   update(id, data) {
-    return axios.put(`/api/address/${id}`, data);
+    return axios.patch(`/api/address/${id}`, data);
   },
   destroy(id) {
     return axios.delete(`/api/address/${id}`);

@@ -17,7 +17,7 @@
           <button v-if="isAuthenticated" @click="logout" class="hover:text-primary-dark transition underline">
             Sair
           </button>
-          <!-- <cart-button :cart-items="cartItems" :cart-total="cartTotal" /> -->
+          <cart-button :cart-items="cartItems" :cart-total="cartTotal" />
         </div>
 
       </div>
@@ -112,6 +112,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/store/modules/useAuthStore'
+import CartButton from '@/components/ui/CartButton.vue'
 
 const props = defineProps({
   shopName: {

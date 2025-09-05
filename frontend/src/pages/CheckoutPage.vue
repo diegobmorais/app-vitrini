@@ -32,7 +32,7 @@
       <div v-if="currentStep === 0" class="bg-white rounded-lg shadow-md p-6">
         <h2 class="text-xl font-semibold mb-4">Revise seu Carrinho</h2>
 
-        <div v-if="cart.items.length === 0" class="text-center py-8">
+        <div v-if="carts.length === 0" class="text-center py-8">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400 mb-4" fill="none"
             viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -40,7 +40,7 @@
           </svg>
           <h3 class="text-lg font-medium text-gray-900 mb-2">Seu carrinho está vazio</h3>
           <p class="text-gray-600 mb-4">Adicione alguns produtos antes de finalizar a compra.</p>
-          <router-link to="/products"
+          <router-link to="/produtos"
             class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
             Continuar Comprando
           </router-link>
@@ -56,14 +56,14 @@
               <div class="sm:col-span-2 text-right">Subtotal</div>
             </div>
 
-            <div v-for="(item, index) in cart.items" :key="index"
+            <div v-for="(item, index) in carts" :key="item.id"
               class="py-4 border-t border-gray-100 first:border-t-0">
               <div class="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
                 <div class="sm:col-span-6 flex items-center">
                   <img :src="item.image" :alt="item.name" class="w-16 h-16 object-cover rounded-md mr-4" />
                   <div>
                     <h3 class="font-medium text-gray-900">{{ item.name }}</h3>
-                    <button @click="removeItem(index)"
+                    <button @click="removeItem(item.cart_item_id)"
                       class="text-sm text-red-600 hover:text-red-800 mt-1 flex items-center">
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
                         stroke="currentColor">
@@ -89,12 +89,12 @@
                 </div>
                 <div class="sm:col-span-2 flex justify-center">
                   <div class="flex items-center border border-gray-300 rounded-md">
-                    <button @click="updateQuantity(index, item.quantity - 1)" :disabled="item.quantity <= 1"
+                    <button @click="updateQuantity(item.id, item.quantity - 1)" :disabled="item.quantity <= 1"
                       class="px-2 py-1 text-gray-600 hover:text-gray-800 disabled:opacity-50">
                       -
                     </button>
                     <span class="px-2 py-1 min-w-[2rem] text-center">{{ item.quantity }}</span>
-                    <button @click="updateQuantity(index, item.quantity + 1)" :disabled="item.quantity >= item.stock"
+                    <button @click="updateQuantity(item.id, item.quantity + 1)" :disabled="item.quantity >= item.stock"
                       class="px-2 py-1 text-gray-600 hover:text-gray-800 disabled:opacity-50">
                       +
                     </button>
@@ -130,26 +130,26 @@
               <div class="space-y-2 text-sm">
                 <div class="flex justify-between">
                   <span>Subtotal</span>
-                  <span>R$ {{ cart.subtotal.toFixed(2) }}</span>
+                  <span>R$ {{ cartSumary.subtotal.toFixed(2) }}</span>
                 </div>
                 <div class="flex justify-between">
                   <span>Desconto</span>
-                  <span>- R$ {{ cart.discount.toFixed(2) }}</span>
+                  <span>- R$ {{ cartSumary.discount.toFixed(2) }}</span>
                 </div>
                 <div class="flex justify-between">
                   <span>Frete</span>
-                  <span>R$ {{ cart.shipping.toFixed(2) }}</span>
+                  <span>R$ {{ cartSumary.shipping.toFixed(2) }}</span>
                 </div>
                 <div class="border-t border-gray-200 pt-2 mt-2 flex justify-between font-medium text-base">
                   <span>Total</span>
-                  <span>R$ {{ cart.total.toFixed(2) }}</span>
+                  <span>R$ {{ cartSumary.total.toFixed(2) }}</span>
                 </div>
               </div>
             </div>
           </div>
 
           <div class="mt-8 flex justify-between">
-            <router-link to="/products"
+            <router-link to="/produtos"
               class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
               Continuar Comprando
             </router-link>
@@ -222,37 +222,8 @@
 
           <div>
             <label for="state" class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
-            <select id="state" v-model="shipping.state" required
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-              <option value="">Selecione o estado</option>
-              <option value="AC">Acre</option>
-              <option value="AL">Alagoas</option>
-              <option value="AP">Amapá</option>
-              <option value="AM">Amazonas</option>
-              <option value="BA">Bahia</option>
-              <option value="CE">Ceará</option>
-              <option value="DF">Distrito Federal</option>
-              <option value="ES">Espírito Santo</option>
-              <option value="GO">Goiás</option>
-              <option value="MA">Maranhão</option>
-              <option value="MT">Mato Grosso</option>
-              <option value="MS">Mato Grosso do Sul</option>
-              <option value="MG">Minas Gerais</option>
-              <option value="PA">Pará</option>
-              <option value="PB">Paraíba</option>
-              <option value="PR">Paraná</option>
-              <option value="PE">Pernambuco</option>
-              <option value="PI">Piauí</option>
-              <option value="RJ">Rio de Janeiro</option>
-              <option value="RN">Rio Grande do Norte</option>
-              <option value="RS">Rio Grande do Sul</option>
-              <option value="RO">Rondônia</option>
-              <option value="RR">Roraima</option>
-              <option value="SC">Santa Catarina</option>
-              <option value="SP">São Paulo</option>
-              <option value="SE">Sergipe</option>
-              <option value="TO">Tocantins</option>
-            </select>
+            <input type="text" id="state" v-model="shipping.state" required
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">             
           </div>
 
           <div class="md:col-span-2">
@@ -342,12 +313,7 @@
               <label for="installments" class="block text-sm font-medium text-gray-700 mb-1">Parcelamento</label>
               <select id="installments" v-model="payment.installments" required
                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                <option value="1">1x de R$ {{ cart.total.toFixed(2) }} (sem juros)</option>
-                <option value="2">2x de R$ {{ (cart.total / 2).toFixed(2) }} (sem juros)</option>
-                <option value="3">3x de R$ {{ (cart.total / 3).toFixed(2) }} (sem juros)</option>
-                <option value="4">4x de R$ {{ (cart.total / 4).toFixed(2) }} (sem juros)</option>
-                <option value="5">5x de R$ {{ (cart.total / 5).toFixed(2) }} (sem juros)</option>
-                <option value="6">6x de R$ {{ (cart.total / 6).toFixed(2) }} (sem juros)</option>
+                <option value="1">1x de R$ 200.00 (sem juros)</option>                
               </select>
             </div>
           </div>
@@ -460,51 +426,28 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import serviceAddress from '@/services/addressService'
+import { useAuthStore } from '@/store/modules/useAuthStore'
+import { useCartStore } from '@/store/modules/userCartStore'
+import { ref, reactive, computed, watch, onMounted } from 'vue'
+
+
+const cartStore = useCartStore()
+const auth = useAuthStore()
 
 // Passos do checkout
 const steps = ['Carrinho', 'Entrega', 'Pagamento', 'Confirmação']
 const currentStep = ref(0)
 
 // Dados do carrinho
-const cart = reactive({
-  items: [
-    {
-      id: 1,
-      name: 'Ração Premium para Cães',
-      price: 89.90,
-      image: '/images/product-dog-food.jpg',
-      quantity: 1,
-      stock: 15,
-      discount: 0
-    },
-    {
-      id: 2,
-      name: 'Arranhador para Gatos',
-      price: 129.90,
-      image: '/images/product-cat-scratcher.jpg',
-      quantity: 1,
-      stock: 8,
-      discount: 15
-    }
-  ],
-  subtotal: 0,
-  discount: 0,
-  shipping: 0,
-  total: 0
-})
+const carts = computed(() => cartStore.items)
+const cartSumary = computed(() => cartStore.summary)
+const defaultAddress = computed(() => auth.defaultAddress)
+console.log('adres', defaultAddress.value);
 
 // Calcular totais do carrinho
 const calculateTotals = () => {
-  cart.subtotal = cart.items.reduce((total, item) => {
-    const itemPrice = item.discount > 0
-      ? item.price * (100 - item.discount) / 100
-      : item.price
-    return total + itemPrice * item.quantity
-  }, 0)
-
-  cart.shipping = getSelectedShippingMethod()?.price || 0
-  cart.total = cart.subtotal - cart.discount + cart.shipping
+  cartStore.items.reduce((total, item) => total + item.price * item.quantity, 0)
 }
 
 // Total do item
@@ -516,17 +459,21 @@ const getItemTotal = (item) => {
 }
 
 // Atualizar quantidade do item
-const updateQuantity = (index, quantity) => {
+const updateQuantity = async (index, quantity) => {
   if (quantity < 1) return
-  if (quantity > cart.items[index].stock) return
 
-  cart.items[index].quantity = quantity
+  await cartStore.updateItemQuantity(index, quantity)
+  
   calculateTotals()
 }
 
 // Remover item do carrinho
-const removeItem = (index) => {
-  cart.items.splice(index, 1)
+const removeItem = async (cartItemId) => {  
+  console.log('removendo item', cartItemId)
+  await cartStore.removeItemCart(cartItemId)
+  
+  await cartStore.fetchItems()
+
   calculateTotals()
 }
 
@@ -538,11 +485,11 @@ const couponMessage = ref('')
 // Aplicar cupom
 const applyCoupon = () => {
   if (couponCode.value === 'PETSHOP10') {
-    cart.discount = cart.subtotal * 0.1
+    cartSumary.discount = cartSumary.subtotal * 0.1
     couponValid.value = true
     couponMessage.value = 'Cupom aplicado com sucesso! 10% de desconto.'
   } else {
-    cart.discount = 0
+    cartSumary.discount = 0
     couponValid.value = false
     couponMessage.value = 'Cupom inválido ou expirado.'
   }
@@ -551,16 +498,16 @@ const applyCoupon = () => {
 
 // Dados de envio
 const shipping = reactive({
-  fullName: '',
-  email: '',
-  phone: '',
-  zipCode: '',
-  address: '',
-  number: '',
-  complement: '',
-  neighborhood: '',
-  city: '',
-  state: '',
+  fullName: auth.user .name,
+  email: auth.user.email,
+  phone: auth.user.phone,
+  zipCode: defaultAddress.value.zipcode,
+  address: defaultAddress.value.street,
+  number: defaultAddress.value.number,
+  complement: defaultAddress.value.complement,
+  neighborhood: defaultAddress.value.neighborhood,
+  city: defaultAddress.value.city,
+  state: defaultAddress.value.state,
   method: 'standard'
 })
 
@@ -641,6 +588,7 @@ const nextStep = () => {
     currentStep.value++
     // Atualiza custo do frete ao ir para pagamento
     if (currentStep.value === 2) {
+      serviceAddress.update(defaultAddress.value.id, shipping)
       calculateTotals()
     }
   }
@@ -659,4 +607,8 @@ const trackOrder = () => {
 
 // Inicializa totais
 calculateTotals()
+
+onMounted(async () => {
+  await cartStore.fetchItems()
+})   
 </script>

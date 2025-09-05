@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import api from '@/main'
 
 export const useCartStore = defineStore('cart', () => {
+
   // States
   const items = ref([])
   const showModal = ref(false)
@@ -21,8 +22,6 @@ export const useCartStore = defineStore('cart', () => {
   const cartItemCount = computed(() =>
     items.value.reduce((count, item) => count + item.quantity, 0)
   )
-  const totalItems = computed(() => items.value.reduce((sum, item) => sum + item.quantity, 0))
-  const subtotal = computed(() => items.value.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0))
   const isCartEmpty = computed(() => items.value.length === 0)
   const cartSummary = computed(() => summary.value)
   const isLoading = computed(() => loading.value)
@@ -43,18 +42,15 @@ export const useCartStore = defineStore('cart', () => {
     loading.value = true
     try {
       const response = await api.get('/api/cart')
-      items.value = response.data.cart.items.map(item => ({
-        id: item.id,
-        product_id: item.product_id,
-        name: item.product.name,
-        price: parseFloat(item.product.price),
-        quantity: item.quantity,
-        sku: item.product.sku,
-        slug: item.product.slug,
-        stock_quantity: item.product.stock,
-        image: item.product.image || '/images/placeholder.jpg',
+      const cartData = response.data
 
-      }))
+      items.value = cartData.items
+      summary.value.subtotal = cartData.subtotal
+      summary.value.discount = cartData.discount
+      summary.value.shipping = cartData.shipping
+      summary.value.total = cartData.total
+
+      return cartData
     } catch (err) {
       error.value = 'Erro ao carregar carrinho'
       console.error(err)
@@ -69,23 +65,21 @@ export const useCartStore = defineStore('cart', () => {
         product_id: productId,
         quantity
       })
-      items.value = response.data.cart.items.map(item => ({
-        id: item.id,
-        product_id: item.product_id,
-        name: item.product.name,
-        price: parseFloat(item.product.price),
-        quantity: item.quantity,
-        sku: item.product.sku,
-        slug: item.product.slug,
-        stock_quantity: item.product.stock,
-        image: item.product.image || '/images/placeholder.jpg',
-      })) || []
+      const cartData = response.data
+
+      items.value = cartData.items
+      summary.value.subtotal = cartData.subtotal
+      summary.value.discount = cartData.discount
+      summary.value.shipping = cartData.shipping
+      summary.value.total = cartData.total
+
+      return cartData
     } catch (err) {
       throw err
     }
   }
 
-  async function updateQuantity(itemId, quantity) {
+  async function updateItemQuantity(itemId, quantity) {
     const itemIndex = items.value.findIndex(i => i.id === itemId)
     if (itemIndex === -1) return
 
@@ -123,20 +117,12 @@ export const useCartStore = defineStore('cart', () => {
     }
   }
 
-  async function removeItem(itemId) {
+  async function removeItemCart(itemId) {
     try {
       const response = await api.delete(`/api/cart/items/${itemId}`)
-      items.value = response.data.cart.items.map(item => ({
-        id: item.id,
-        product_id: item.product_id,
-        name: item.product.name,
-        price: parseFloat(item.product.price),
-        quantity: item.quantity,
-        sku: item.product.sku,
-        slug: item.product.slug,
-        stock_quantity: item.product.stock,
-        image: item.product.image || '/images/placeholder.jpg',
-      })) || []
+      const cartData = response.data
+      console.log(cartData)
+      items.value = cartData.items
     } catch (err) {
       throw err
     }
@@ -248,12 +234,10 @@ export const useCartStore = defineStore('cart', () => {
     cartSummary,
     isLoading,
     getError,
-    totalItems,
-    subtotal,
 
     // mutations
     setCartItems,
-    updateQuantity,
+    updateItemQuantity,
     clearCart,
     toggleCartModal,
     setLoading,
@@ -266,6 +250,6 @@ export const useCartStore = defineStore('cart', () => {
     checkout,
     fetchItems,
     addItemToCart,
-    removeItem,
+    removeItemCart,
   }
 })

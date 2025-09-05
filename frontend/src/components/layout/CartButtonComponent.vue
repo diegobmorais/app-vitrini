@@ -48,16 +48,11 @@
 
             <!-- Cart Actions -->
             <div class="flex space-x-2">
-              <router-link to="/carrinho"
+              <router-link to="/checkout"
                 class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-medium py-2 px-4 rounded-md text-center transition"
                 @click="isCartOpen = false">
                 Ver Carrinho
-              </router-link>
-              <router-link to="/checkout"
-                class="flex-1 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium py-2 px-4 rounded-md text-center transition"
-                @click="isCartOpen = false">
-                Checkout
-              </router-link>
+              </router-link>             
             </div>
           </div>
         </div>

@@ -3,7 +3,6 @@ import { createRouter, createWebHistory } from "vue-router"
 import HomePage from "../pages/HomePage.vue"
 import ProductsPage from "../pages/ProductsPage.vue"
 import ProductDetailPage from "../pages/ProductDetailPage.vue"
-import CartPage from "../pages/CartPage.vue"
 import CheckoutPage from "../pages/CheckoutPage.vue"
 import RegisterPage from "../pages/RegisterPage.vue"
 import LoginPage from "../pages/LoginPage.vue"
@@ -60,12 +59,6 @@ const routes = [
     component: ProductsPage,
     props: true,
     meta: { title: "Categoria" },
-  },
-  {
-    path: "/carrinho",
-    name: "cart",
-    component: CartPage,
-    meta: { title: "Carrinho de Compras" },
   },
   {
     path: "/checkout",

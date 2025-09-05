@@ -162,9 +162,10 @@
 <script setup>
 import { useAuthStore } from '@/store/modules/useAuthStore'
 import { ref, reactive, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 
 const router = useRouter()
+const route = useRoute()
 const isRegisterMode = ref(false)
 const showPassword = ref(false)
 const isLoading = ref(false)
@@ -255,12 +256,17 @@ async function submitForm() {
         email: form.email,
         password: form.password
       }
-    const response = await authStore.login({ url, credentials })   
-      
+    await authStore.login({ url, credentials })
+
     if (authStore.user.role_id === 1) {
       router.push('/painel-administrador')
     } else {
-      router.push('/minha-conta')
+      if (route.query.redirect) {
+        router.push(route.query.redirect)
+      } else {
+        router.push('/minha-conta')
+      }
+
     }
 
   } catch (error) {
@@ -269,7 +275,7 @@ async function submitForm() {
       data: error.response?.data,
       headers: error.response?.headers
     })
- 
+
   } finally {
     isLoading.value = false
   }

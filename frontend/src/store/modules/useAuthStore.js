@@ -16,7 +16,10 @@ export const useAuthStore = defineStore('auth', {
     getSessionId: (state) => state.session_id,
     isInitialized: (state) => state.initialized,
     userRole: (state) => state.user?.role_id || null,
-    isAdmin: (state) => state.user?.role_id === 1
+    isAdmin: (state) => state.user?.role_id === 1,
+    defaultAddress: (state) => {
+      return state.user?.addresses?.find(addr => addr.for_delivery === true) || null
+    }
   },
 
   actions: {
@@ -82,7 +85,7 @@ export const useAuthStore = defineStore('auth', {
     /**
      * Verifica se o usuário já está autenticado
      */
-    async checkAuth() {     
+    async checkAuth() {
       if (this.initialized) return this.authenticated
 
       const token = localStorage.getItem('token')

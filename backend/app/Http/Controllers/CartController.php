@@ -13,18 +13,21 @@ use Illuminate\Support\Facades\Auth;
 class CartController extends Controller
 {
     public function index()
-    {   
+    {
         $user = Auth::user();
+
+        // Busca ou cria o carrinho
         $cart = Cart::firstOrCreate(['user_id' => $user->id]);
         $cart->load('items.product');
-        return response()->json(['cart' => $cart], 200);
+
+        return response()->json($this->formatCartResponse($cart), 200);
     }
 
     public function addItem(Request $request)
-    {          
+    {
         $request->validate([
             'product_id' => 'required|integer|exists:products,id',
-            'quantity' => 'nullable|integer|min:1',           
+            'quantity' => 'nullable|integer|min:1',
         ]);
 
         $user = Auth::user();
@@ -32,25 +35,77 @@ class CartController extends Controller
 
         $product = Product::findOrFail($request->product_id);
         $qty = $request->quantity ?? 1;
-      
+
         if ($product->stock < $qty) {
             return response()->json(['message' => 'Estoque insuficiente'], 422);
         }
-    
-        $price = $product->price;
 
-        $item = CartItem::create(
-            [
+        // Verifica se o item já existe no carrinho
+        $item = CartItem::where('cart_id', $cart->id)
+            ->where('product_id', $product->id)
+            ->first();
+
+        if ($item) {
+            // Atualiza a quantidade
+            $item->quantity += $qty;
+            $item->save();
+        } else {
+            // Cria um novo item
+            $item = CartItem::create([
                 'cart_id' => $cart->id,
-                'product_id' => $product->id,  
+                'product_id' => $product->id,
                 'quantity' => $qty,
-                'price_at_time' => $price
-            ]
-        );         
-         
+                'price_at_time' => $product->price
+            ]);
+        }
+
         $cart->load('items.product');
 
-        return response()->json(['cart' => $cart], 201);
+        return response()->json($this->formatCartResponse($cart), 201);
+    }
+
+    /**
+     * Formata o JSON de resposta do carrinho
+     */
+    private function formatCartResponse($cart)
+    {   
+        $items = [];
+        $subtotal = 0;
+        $discount = 0;
+        $shipping = 0;
+
+        foreach ($cart->items as $item) {
+            $price = (float) $item->product->price;
+            $qty = $item->quantity;
+            $itemDiscount = $item->product->discount ?? 0;
+
+            $items[] = [
+                'cart_item_id' => $item->id,
+                'id' => $item->product->id,
+                'name' => $item->product->name,
+                'price' => $price,
+                'image' => $item->product->main_image ?? '/images/placeholder.jpg',
+                'quantity' => $qty,
+                'stock' => $item->product->stock,
+                'discount' => $itemDiscount
+            ];
+     
+            $subtotal += $price * $qty;
+       
+            if ($itemDiscount > 0) {
+                $discount += ($price * $itemDiscount / 100) * $qty;
+            }
+        }
+
+        $total = $subtotal - $discount + $shipping;
+
+        return [
+            'items' => $items,
+            'subtotal' => $subtotal,
+            'discount' => $discount,
+            'shipping' => $shipping,
+            'total' => $total
+        ];
     }
 
     public function updateItem(Request $request, $itemId)
@@ -65,18 +120,21 @@ class CartController extends Controller
             return response()->json(['message' => 'Estoque insuficiente'], 422);
         }
 
-        // $item->quantity = $request->quantity;
-        // $item->save();
+        $item->quantity = $request->quantity;
+        $item->save();
+        
         UpdateCartItemQuantity::dispatch($cart->id, $product->id, $request->quantity);
         $cart->load('items.product');
         return response()->json(['cart' => $cart], 200);
     }
 
     public function removeItem($itemId)
-    {
-        $user = Auth::user();
+    {   
+        $user = Auth::user();       
         $cart = Cart::where('user_id', $user->id)->firstOrFail();
+        
         $item = $cart->items()->where('id', $itemId)->firstOrFail();
+   
         $item->delete();
 
         $cart->load('items.product');

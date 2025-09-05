@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\AddressController;
 use App\Http\Controllers\AppointmentController;
-use App\Http\Controllers\AvailabilityController;
 use App\Http\Controllers\AvailabilityRuleController;
 use App\Http\Controllers\AvailabilitySlotController;
 use App\Http\Controllers\CalendarController;
