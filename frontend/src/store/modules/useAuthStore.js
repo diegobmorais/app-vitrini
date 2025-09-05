@@ -7,7 +7,7 @@ export const useAuthStore = defineStore('auth', {
     token: null,
     session_id: null,
     initialized: false,
-    authenticated: false
+    authenticated: false,  
   }),
 
   getters: {
@@ -18,7 +18,7 @@ export const useAuthStore = defineStore('auth', {
     userRole: (state) => state.user?.role_id || null,
     isAdmin: (state) => state.user?.role_id === 1,
     defaultAddress: (state) => {
-      return state.user?.addresses?.find(addr => addr.for_delivery === true) || null
+      return state.user.addresses?.find(addr => addr.for_delivery === true) || null
     }
   },
 
@@ -111,6 +111,17 @@ export const useAuthStore = defineStore('auth', {
       }
 
       return this.authenticated
+    },
+
+    async fetchUser() {
+      try {
+        const { data } = await axios.get('/api/me')
+        this.user = data.user        
+        console.log('User data fetched:', data);
+        
+      } catch (error) {
+        console.error('Erro ao buscar dados do usuário:', error)
+      }
     }
   }
 })

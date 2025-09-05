@@ -20,7 +20,6 @@ use App\Http\Controllers\StockMovementController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\UserController;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login']);
@@ -31,11 +30,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //user
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::put('me/update', [UserController::class, 'updateProfile']);
-    Route::get('me', function () {
-        return response()->json([
-            'user' => Auth::user()
-        ]);
-    });
+    Route::get('me', [UserController::class, 'me']);    
 
     //Brands
     Route::apiResource('brands', BrandController::class);

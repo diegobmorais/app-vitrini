@@ -56,8 +56,7 @@
               <div class="sm:col-span-2 text-right">Subtotal</div>
             </div>
 
-            <div v-for="(item, index) in carts" :key="item.id"
-              class="py-4 border-t border-gray-100 first:border-t-0">
+            <div v-for="(item, index) in carts" :key="item.id" class="py-4 border-t border-gray-100 first:border-t-0">
               <div class="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
                 <div class="sm:col-span-6 flex items-center">
                   <img :src="item.image" :alt="item.name" class="w-16 h-16 object-cover rounded-md mr-4" />
@@ -223,7 +222,7 @@
           <div>
             <label for="state" class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
             <input type="text" id="state" v-model="shipping.state" required
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">             
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
           </div>
 
           <div class="md:col-span-2">
@@ -313,7 +312,7 @@
               <label for="installments" class="block text-sm font-medium text-gray-700 mb-1">Parcelamento</label>
               <select id="installments" v-model="payment.installments" required
                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                <option value="1">1x de R$ 200.00 (sem juros)</option>                
+                <option value="1">1x de R$ 200.00 (sem juros)</option>
               </select>
             </div>
           </div>
@@ -443,7 +442,6 @@ const currentStep = ref(0)
 const carts = computed(() => cartStore.items)
 const cartSumary = computed(() => cartStore.summary)
 const defaultAddress = computed(() => auth.defaultAddress)
-console.log('adres', defaultAddress.value);
 
 // Calcular totais do carrinho
 const calculateTotals = () => {
@@ -463,15 +461,14 @@ const updateQuantity = async (index, quantity) => {
   if (quantity < 1) return
 
   await cartStore.updateItemQuantity(index, quantity)
-  
+
   calculateTotals()
 }
 
 // Remover item do carrinho
-const removeItem = async (cartItemId) => {  
-  console.log('removendo item', cartItemId)
+const removeItem = async (cartItemId) => {
   await cartStore.removeItemCart(cartItemId)
-  
+
   await cartStore.fetchItems()
 
   calculateTotals()
@@ -498,18 +495,18 @@ const applyCoupon = () => {
 
 // Dados de envio
 const shipping = reactive({
-  fullName: auth.user .name,
-  email: auth.user.email,
-  phone: auth.user.phone,
-  zipCode: defaultAddress.value.zipcode,
-  address: defaultAddress.value.street,
-  number: defaultAddress.value.number,
-  complement: defaultAddress.value.complement,
-  neighborhood: defaultAddress.value.neighborhood,
-  city: defaultAddress.value.city,
-  state: defaultAddress.value.state,
+  fullName: auth.user.name || '',
+  email: auth.user.email || '',
+  phone: auth.user.phone || '',
+  zipCode: auth.defaultAddress ? auth.defaultAddress.zipcode : '',
+  address: auth.defaultAddress ? auth.defaultAddress.street : '',
+  number: auth.defaultAddress ? auth.defaultAddress.number : '',
+  complement: '',
+  neighborhood: '',
+  city: '',
+  state: '',
   method: 'standard'
-})
+});
 
 // Métodos de envio disponíveis
 const shippingMethods = [
@@ -583,8 +580,9 @@ const getPaymentMethodName = () => {
 const orderId = ref(Math.floor(100000 + Math.random() * 900000))
 
 // Navegação entre passos
-const nextStep = () => {
+const nextStep = async () => {
   if (currentStep.value < steps.length - 1) {
+    await auth.fetchUser()
     currentStep.value++
     // Atualiza custo do frete ao ir para pagamento
     if (currentStep.value === 2) {

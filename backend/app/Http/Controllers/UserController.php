@@ -47,6 +47,12 @@ class UserController extends Controller
     {
         //
     }
+    public function me(Request $request)
+    {
+        return response()->json([
+            'user' => $request->user()->load('addresses')
+        ]);
+    }
     public function updateProfile(Request $request)
     {
         $user = $request->user();

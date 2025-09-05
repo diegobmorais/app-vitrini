@@ -31,7 +31,7 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useCartStore } from "@/store/modules/userCartStore";
 
@@ -47,4 +47,8 @@ const cartTotal = computed(() => cartStore.cartSummary.total || 0);
 const goToCart = () => {
     router.push({ name: "checkout" });
 };
+
+onMounted(async () => {  
+    await cartStore.fetchItems();
+});
 </script>

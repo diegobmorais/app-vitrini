@@ -13,11 +13,11 @@
           </span>
           <router-link :to="accountRoute" class="hover:text-primary-200 transition">
             Minha Conta
-          </router-link>
+          </router-link>          
+          <cart-button v-if="isAuthenticated" />
           <button v-if="isAuthenticated" @click="logout" class="hover:text-primary-dark transition underline">
             Sair
           </button>
-          <cart-button :cart-items="cartItems" :cart-total="cartTotal" />
         </div>
 
       </div>

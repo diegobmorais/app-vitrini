@@ -16,6 +16,7 @@ export const useCartStore = defineStore('cart', () => {
     tax: 0,
     total: 0,
   })
+  
 
   // Getters
   const cartItems = computed(() => items.value)
