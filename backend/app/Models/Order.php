@@ -22,6 +22,8 @@ class Order extends Model
         'shipping_address' => 'array',
         'payment_meta' => 'array',
     ];
+    protected $appends = ['items_count'];
+    
     public function items()
     {
         return $this->hasMany(OrderItem::class);
@@ -29,5 +31,13 @@ class Order extends Model
     public function statusLogs()
     {
         return $this->hasMany(OrderStatusLog::class);
+    }
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+    public function getItemsCountAttribute()
+    {
+        return $this->items()->sum('quantity');
     }
 }

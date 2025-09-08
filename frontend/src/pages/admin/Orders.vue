@@ -28,7 +28,7 @@
               </dt>
               <dd class="flex items-baseline">
                 <div class="text-2xl font-semibold text-gray-900">
-                  {{ orders.length }}
+                  {{ storeOrders.orders.length }}
                 </div>
               </dd>
             </div>
@@ -51,7 +51,7 @@
               </dt>
               <dd class="flex items-baseline">
                 <div class="text-2xl font-semibold text-gray-900">
-                  {{ pendingOrdersCount }}
+                  {{ storeOrders.pendingOrdersCount }}
                 </div>
               </dd>
             </div>
@@ -73,7 +73,7 @@
               </dt>
               <dd class="flex items-baseline">
                 <div class="text-2xl font-semibold text-gray-900">
-                  {{ completedOrdersCount }}
+                  {{ storeOrders.completedOrdersCount }}
                 </div>
               </dd>
             </div>
@@ -96,7 +96,7 @@
               </dt>
               <dd class="flex items-baseline">
                 <div class="text-2xl font-semibold text-gray-900">
-                  {{ formatCurrency(totalRevenue) }}
+                  {{ formatCurrency(storeOrders.totalRevenue) }}
                 </div>
               </dd>
             </div>
@@ -152,21 +152,16 @@
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="order in filteredOrders" :key="order.id">
+            <tr v-for="order in storeOrders.filteredOrders" :key="order.id">
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-gray-900">#{{ order.number }}</div>
+                <div class="text-sm font-medium text-gray-900">#{{ order.order_number }}</div>
                 <div class="text-sm text-gray-500">{{ order.items_count }} itens</div>
               </td>
               <td class="px-6 py-4">
                 <div class="flex items-center">
-                  <div class="flex-shrink-0 h-8 w-8 bg-gray-200 rounded-full flex items-center justify-center">
-                    <span v-if="!order.customer.avatar" class="text-gray-500 font-medium text-xs">{{
-                      getInitials(order.customer.name) }}</span>
-                    <img v-else :src="order.customer.avatar" alt="" class="h-8 w-8 rounded-full">
-                  </div>
                   <div class="ml-3">
-                    <div class="text-sm font-medium text-gray-900">{{ order.customer.name }}</div>
-                    <div class="text-sm text-gray-500">{{ order.customer.email }}</div>
+                    <div class="text-sm font-medium text-gray-900">{{ order.user.name }}</div>
+                    <div class="text-sm text-gray-500">{{ order.user.email }}</div>
                   </div>
                 </div>
               </td>
@@ -200,7 +195,7 @@
                 </button>
               </td>
             </tr>
-            <tr v-if="filteredOrders.length === 0">
+            <tr v-if="storeOrders.filteredOrders.length === 0">
               <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
                 Nenhum pedido encontrado
               </td>
@@ -212,8 +207,9 @@
       <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
         <div class="flex justify-between items-center">
           <div class="text-sm text-gray-700">
-            Mostrando <span class="font-medium">{{ filteredOrders.length }}</span> de <span class="font-medium">{{
-              orders.length }}</span> pedidos
+            Mostrando <span class="font-medium">{{ storeOrders.filteredOrders.length }}</span> de <span
+              class="font-medium">{{
+                storeOrders.orders.length }}</span> pedidos
           </div>
           <div class="flex-1 flex justify-end">
             <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
@@ -227,103 +223,13 @@
 </template>
 
 <script setup>
-import { useCustomerStore } from '@/store/modules/useCustomerStore'
-import { ref, computed, onMounted } from 'vue'
+import { useOrderStore } from '@/store/modules/useOrderStore'
+import { onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
 
-const store = useCustomerStore()
-
-const orders = ref([])
-const search = ref('')
-const statusFilter = ref('')
-const dateFilter = ref('all')
-const loading = ref(false)
-
-const filteredOrders = computed(() => {
-  let result = orders.value
-
-  if (statusFilter.value) {
-    result = result.filter(order => order.status === statusFilter.value)
-  }
-
-  if (dateFilter.value !== 'all') {
-    const now = new Date()
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    const startOfWeek = new Date(now)
-    startOfWeek.setDate(now.getDate() - now.getDay())
-    startOfWeek.setHours(0, 0, 0, 0)
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-
-    result = result.filter(order => {
-      const orderDate = new Date(order.created_at)
-
-      if (dateFilter.value === 'today') {
-        return orderDate >= today
-      } else if (dateFilter.value === 'week') {
-        return orderDate >= startOfWeek
-      } else if (dateFilter.value === 'month') {
-        return orderDate >= startOfMonth
-      }
-      return true
-    })
-  }
-
-  if (search.value) {
-    const searchLower = search.value.toLowerCase()
-    result = result.filter(order =>
-      order.number.toString().includes(searchLower) ||
-      order.customer.name.toLowerCase().includes(searchLower) ||
-      order.customer.email.toLowerCase().includes(searchLower)
-    )
-  }
-
-  return result
-})
-
-const pendingOrdersCount = computed(() =>
-  orders.value.filter(order => ['pending', 'processing'].includes(order.status)).length
-)
-
-const completedOrdersCount = computed(() =>
-  orders.value.filter(order => order.status === 'delivered').length
-)
-
-const totalRevenue = computed(() =>
-  orders.value
-    .filter(order => order.status !== 'cancelled')
-    .reduce((sum, order) => sum + order.total, 0)
-)
-
-function fetchOrders() {
-  loading.value = true
-  setTimeout(() => {
-    orders.value = [
-      {
-        id: 1,
-        number: '1001',
-        customer: {
-          name: 'Ana Silva',
-          email: 'ana.silva@email.com',
-          avatar: null
-        },
-        created_at: '2023-06-15T10:30:00',
-        total: 125.90,
-        status: 'delivered',
-        items_count: 3
-      }
-    ]
-    loading.value = false
-  }, 500)
-}
-
-function getInitials(name) {
-  return name
-    .split(' ')
-    .map(word => word[0])
-    .join('')
-    .toUpperCase()
-    .substring(0, 2)
-}
-
+const storeOrders = useOrderStore()
+const { search, statusFilter, dateFilter } = storeToRefs(storeOrders) 
+  
 function formatDate(dateString) {
   const date = new Date(dateString)
   return new Intl.DateTimeFormat('pt-BR', {
@@ -336,10 +242,11 @@ function formatDate(dateString) {
 }
 
 function formatCurrency(value) {
+  const number = Number(value) || 0
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL'
-  }).format(value)
+  }).format(number)
 }
 
 function getStatusClass(status) {
@@ -388,6 +295,6 @@ function updateOrderStatus(orderId, newStatus) {
 }
 
 onMounted(() => {
-  fetchOrders()
+  storeOrders.fetchOrders()
 })
 </script>

@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Address;
 use App\Models\Order;
 use App\Models\OrderItem;
-use App\Models\OrderStatusLog;
 use App\Models\ShippingMethod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,7 +16,11 @@ class OrderController extends Controller
      */
     public function index()
     {
-        //
+        $orders = Order::with('items', 'user')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json(['orders' => $orders]); 
     }
 
     /**

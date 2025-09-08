@@ -31,7 +31,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //user
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::put('me/update', [UserController::class, 'updateProfile']);
-    Route::get('me', [UserController::class, 'me']);    
+    Route::get('me', [UserController::class, 'me']);
 
     //Brands
     Route::apiResource('brands', BrandController::class);
@@ -100,6 +100,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //shipping methods
     Route::apiResource('shipping-methods', ShippingMethodController::class);
+
+    //oders
+    Route::apiResource('orders', OrderController::class);
 });
 
 //category
@@ -120,6 +123,3 @@ Route::prefix('products/{product}')->group(function () {
     Route::get('images', [ProductImageController::class, 'index']);
     Route::post('images', [ProductImageController::class, 'store']);
 });
-
-//oders
-Route::apiResource('orders', OrderController::class);
