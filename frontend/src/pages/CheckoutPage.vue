@@ -163,82 +163,60 @@
       <!-- Shipping Step -->
       <div v-else-if="currentStep === 1" class="bg-white rounded-lg shadow-md p-6">
         <h2 class="text-xl font-semibold mb-4">Informações de Entrega</h2>
-
-        <form @submit.prevent="nextStep" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="md:col-span-2">
-            <label for="fullname" class="block text-sm font-medium text-gray-700 mb-1">Nome Completo</label>
-            <input type="text" id="fullname" v-model="shipping.fullName" required
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+        <form @submit.prevent="nextStep" class="grid grid-cols-1 md:grid-cols-1 gap-6">
+          <div v-if="addresses.length === 0" class="text-center py-10">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-400 mx-auto mb-4" fill="none"
+              viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <p class="text-gray-500">Você ainda não cadastrou nenhum endereço</p>
+            <button @click="createAddress"
+              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+              Adicionar endereço
+            </button>
           </div>
 
-          <div>
-            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
-            <input type="email" id="email" v-model="shipping.email" required
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-          </div>
+          <div v-else class="space-y-3">
+            <div v-for="(address) in addresses" :key="address.id" class="border border-gray-200 rounded-lg p-4">
+              <label :for="`shipping-${address.id}`" class="flex items-start gap-3 cursor-pointer">
+                <!-- Radio -->
+                <input type="radio" name="shippingAddress" :id="`shipping-${address.id}`" :value="address.id"
+                  v-model="shipping.address" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 mt-1"
+                  required />
 
-          <div>
-            <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
-            <input type="tel" id="phone" v-model="shipping.phone" required
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-          </div>
-
-          <div>
-            <label for="zipcode" class="block text-sm font-medium text-gray-700 mb-1">CEP</label>
-            <input type="text" id="zipcode" v-model="shipping.zipCode" required
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-          </div>
-
-          <div>
-            <label for="address" class="block text-sm font-medium text-gray-700 mb-1">Endereço</label>
-            <input type="text" id="address" v-model="shipping.address" required
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-          </div>
-
-          <div>
-            <label for="number" class="block text-sm font-medium text-gray-700 mb-1">Número</label>
-            <input type="text" id="number" v-model="shipping.number" required
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-          </div>
-
-          <div>
-            <label for="complement" class="block text-sm font-medium text-gray-700 mb-1">Complemento</label>
-            <input type="text" id="complement" v-model="shipping.complement"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-          </div>
-
-          <div>
-            <label for="neighborhood" class="block text-sm font-medium text-gray-700 mb-1">Bairro</label>
-            <input type="text" id="neighborhood" v-model="shipping.neighborhood" required
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-          </div>
-
-          <div>
-            <label for="city" class="block text-sm font-medium text-gray-700 mb-1">Cidade</label>
-            <input type="text" id="city" v-model="shipping.city" required
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-          </div>
-
-          <div>
-            <label for="state" class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
-            <input type="text" id="state" v-model="shipping.state" required
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <!-- Informações do endereço -->
+                <div class="flex-1">
+                  <div class="flex items-center gap-2">
+                    <p class="font-medium text-gray-900">{{ address.name }}</p>
+                    <span v-if="address.for_delivery" class="px-2 py-0.5 text-xs bg-green-100 text-green-800 rounded">
+                      Endereço para entrega
+                    </span>
+                  </div>
+                  <p class="text-gray-600">{{ address.street }}, {{ address.number }}</p>
+                  <p class="text-gray-600">{{ address.neighborhood }} - {{ address.city }}/{{ address.state }}</p>
+                  <p class="text-gray-600">CEP: {{ address.zipcode }}</p>
+                </div>
+              </label>
+            </div>
           </div>
 
           <div class="md:col-span-2">
             <h3 class="text-lg font-medium mb-3">Método de Entrega</h3>
             <div class="space-y-3">
-              <div v-for="(method, index) in shippingMethods" :key="index"
+              <div v-for="(method, index) in shippingMethodsStore.shippingMethods" :key="index"
                 class="flex items-center p-4 border rounded-lg"
                 :class="{ 'border-blue-500 bg-blue-50': shipping.method === method.id, 'border-gray-200': shipping.method !== method.id }">
                 <input type="radio" :id="`shipping-${method.id}`" :value="method.id" v-model="shipping.method"
-                  class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300" />
+                  name="shippingMethod" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300" required />
                 <label :for="`shipping-${method.id}`" class="ml-3 flex flex-grow justify-between cursor-pointer">
                   <div>
                     <span class="block font-medium text-gray-900">{{ method.name }}</span>
                     <span class="block text-sm text-gray-500">{{ method.description }}</span>
+                    <span class="font-medium text-gray-900">R$ {{ method.price }}</span>
                   </div>
-                  <span class="font-medium text-gray-900">R$ {{ method.price.toFixed(2) }}</span>
                 </label>
               </div>
             </div>
@@ -257,118 +235,8 @@
         </form>
       </div>
 
-      <!-- Payment Step -->
-      <div v-else-if="currentStep === 2" class="bg-white rounded-lg shadow-md p-6">
-        <h2 class="text-xl font-semibold mb-4">Informações de Pagamento</h2>
-
-        <form @submit.prevent="nextStep" class="space-y-6">
-          <div>
-            <h3 class="text-lg font-medium mb-3">Método de Pagamento</h3>
-            <div class="space-y-3">
-              <div v-for="(method, index) in paymentMethods" :key="index"
-                class="flex items-center p-4 border rounded-lg"
-                :class="{ 'border-blue-500 bg-blue-50': payment.method === method.id, 'border-gray-200': payment.method !== method.id }"
-                @click="payment.method = method.id">
-                <input type="radio" :id="`payment-${method.id}`" :value="method.id" v-model="payment.method"
-                  class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300" />
-                <label :for="`payment-${method.id}`" class="ml-3 flex items-center cursor-pointer">
-                  <img :src="method.icon" :alt="method.name" class="h-8 w-auto mr-3" />
-                  <span class="font-medium text-gray-900">{{ method.name }}</span>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <!-- Credit Card Form -->
-          <div v-if="payment.method === 'credit-card'" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="md:col-span-2">
-              <label for="card-number" class="block text-sm font-medium text-gray-700 mb-1">Número do Cartão</label>
-              <input type="text" id="card-number" v-model="payment.cardNumber" placeholder="0000 0000 0000 0000"
-                required
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-            </div>
-
-            <div>
-              <label for="card-name" class="block text-sm font-medium text-gray-700 mb-1">Nome no Cartão</label>
-              <input type="text" id="card-name" v-model="payment.cardName" required
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label for="card-expiry" class="block text-sm font-medium text-gray-700 mb-1">Validade</label>
-                <input type="text" id="card-expiry" v-model="payment.cardExpiry" placeholder="MM/AA" required
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-              </div>
-
-              <div>
-                <label for="card-cvv" class="block text-sm font-medium text-gray-700 mb-1">CVV</label>
-                <input type="text" id="card-cvv" v-model="payment.cardCvv" placeholder="123" required
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-              </div>
-            </div>
-
-            <div class="md:col-span-2">
-              <label for="installments" class="block text-sm font-medium text-gray-700 mb-1">Parcelamento</label>
-              <select id="installments" v-model="payment.installments" required
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                <option value="1">1x de R$ 200.00 (sem juros)</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Pix Form -->
-          <div v-else-if="payment.method === 'pix'" class="text-center">
-            <div class="bg-gray-100 p-6 rounded-lg mb-4">
-              <img src="/images/pix-qrcode.png" alt="QR Code PIX" class="w-48 h-48 mx-auto mb-4" />
-              <div class="text-sm text-gray-600 mb-2">Escaneie o QR Code ou copie o código abaixo:</div>
-              <div class="flex">
-                <input type="text"
-                  value="00020126580014br.gov.bcb.pix0136a629532e-7693-4846-852d-1bbff817b5a8520400005303986540510.005802BR5925Loja Pet Shop Exemplo6009Sao Paulo62090505123456304B14A"
-                  readonly class="flex-grow px-4 py-2 border border-gray-300 rounded-l-lg bg-white" />
-                <button type="button"
-                  class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-r-lg transition-colors">
-                  Copiar
-                </button>
-              </div>
-            </div>
-            <p class="text-sm text-gray-600">
-              O pagamento via PIX é processado instantaneamente. Após o pagamento, você receberá a confirmação por
-              e-mail.
-            </p>
-          </div>
-
-          <!-- Boleto Form -->
-          <div v-else-if="payment.method === 'boleto'" class="text-center">
-            <div class="bg-gray-100 p-6 rounded-lg mb-4">
-              <img src="/images/barcode.png" alt="Código de Barras" class="h-16 mx-auto mb-4" />
-              <div class="text-sm text-gray-600 mb-2">Copie o código de barras abaixo:</div>
-              <div class="flex">
-                <input type="text" value="34191.79001 01043.510047 91020.150008 9 87770026000" readonly
-                  class="flex-grow px-4 py-2 border border-gray-300 rounded-l-lg bg-white" />
-                <button type="button"
-                  class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-r-lg transition-colors">
-                  Copiar
-                </button>
-              </div>
-            </div>
-            <p class="text-sm text-gray-600">
-              O boleto tem vencimento em 3 dias úteis. Após o pagamento, a compensação pode levar até 3 dias úteis.
-            </p>
-          </div>
-
-          <div class="mt-6 flex justify-between">
-            <button type="button" @click="prevStep"
-              class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
-              Voltar para Entrega
-            </button>
-            <button type="submit"
-              class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
-              Finalizar Pedido
-            </button>
-          </div>
-        </form>
-      </div>
+      <AddressForm v-if="showAddressForm" :address="currentAddress" :isEdit="isEdit" @close="showAddressForm = false"
+        @saved="saveAddress" />
 
       <!-- Confirmation Step -->
       <div v-else-if="currentStep === 3" class="bg-white rounded-lg shadow-md p-6 text-center">
@@ -381,7 +249,7 @@
           </div>
           <h2 class="text-2xl font-bold text-gray-900 mb-2">Pedido Confirmado!</h2>
           <p class="text-gray-600 mb-4">
-            Seu pedido #{{ orderId }} foi recebido e está sendo processado.
+            Seu pedido #000 foi recebido e está sendo processado.
           </p>
         </div>
 
@@ -393,13 +261,7 @@
               <div class="text-gray-900">{{ new Date().toLocaleDateString() }}</div>
 
               <div class="text-gray-600">Total:</div>
-              <div class="text-gray-900">R$ {{ cart.total.toFixed(2) }}</div>
-
-              <div class="text-gray-600">Pagamento:</div>
-              <div class="text-gray-900">{{ getPaymentMethodName() }}</div>
-
-              <div class="text-gray-600">Entrega:</div>
-              <div class="text-gray-900">{{ getShippingMethodName() }}</div>
+              <div class="text-gray-900">R$ {{ cartSumary.total.toFixed(2) }}</div>
             </div>
           </div>
         </div>
@@ -414,8 +276,7 @@
             class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
             Voltar para a Loja
           </router-link>
-          <button @click="trackOrder"
-            class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+          <button class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
             Acompanhar Pedido
           </button>
         </div>
@@ -425,14 +286,15 @@
 </template>
 
 <script setup>
-import serviceAddress from '@/services/addressService'
 import { useAuthStore } from '@/store/modules/useAuthStore'
 import { useCartStore } from '@/store/modules/userCartStore'
+import { useShippingMethod } from '@/store/modules/useShippingMethod'
 import { ref, reactive, computed, watch, onMounted } from 'vue'
 
 
 const cartStore = useCartStore()
 const auth = useAuthStore()
+const shippingMethodsStore = useShippingMethod()
 
 // Passos do checkout
 const steps = ['Carrinho', 'Entrega', 'Pagamento', 'Confirmação']
@@ -442,6 +304,7 @@ const currentStep = ref(0)
 const carts = computed(() => cartStore.items)
 const cartSumary = computed(() => cartStore.summary)
 const defaultAddress = computed(() => auth.defaultAddress)
+const addresses = computed(() => auth.addresses)
 
 // Calcular totais do carrinho
 const calculateTotals = () => {
@@ -494,100 +357,32 @@ const applyCoupon = () => {
 }
 
 // Dados de envio
-const shipping = reactive({
-  fullName: auth.user.name || '',
-  email: auth.user.email || '',
-  phone: auth.user.phone || '',
-  zipCode: auth.defaultAddress ? auth.defaultAddress.zipcode : '',
-  address: auth.defaultAddress ? auth.defaultAddress.street : '',
-  number: auth.defaultAddress ? auth.defaultAddress.number : '',
-  complement: '',
-  neighborhood: '',
-  city: '',
-  state: '',
-  method: 'standard'
+const shipping = ref({
+  address: '',
+  method: ''
 });
 
-// Métodos de envio disponíveis
-const shippingMethods = [
-  {
-    id: 'standard',
-    name: 'Entrega Padrão',
-    description: 'Entrega em 3-5 dias úteis',
-    price: 15.90
+watch(
+  defaultAddress,
+  (newDefault) => {
+    if (newDefault && !shipping.value.address) {
+      shipping.address = newDefault.id;
+    }
   },
-  {
-    id: 'express',
-    name: 'Entrega Expressa',
-    description: 'Entrega em 1-2 dias úteis',
-    price: 25.90
-  },
-  {
-    id: 'pickup',
-    name: 'Retirada na Loja',
-    description: 'Retire na loja em até 24h',
-    price: 0
-  }
-]
-
-// Método de envio selecionado
-const getSelectedShippingMethod = () => {
-  return shippingMethods.find(method => method.id === shipping.method)
-}
-
-// Nome do método de envio
-const getShippingMethodName = () => {
-  const method = getSelectedShippingMethod()
-  return method ? method.name : ''
-}
-
-// Dados de pagamento
-const payment = reactive({
-  method: 'credit-card',
-  cardNumber: '',
-  cardName: '',
-  cardExpiry: '',
-  cardCvv: '',
-  installments: '1'
-})
-
-// Métodos de pagamento disponíveis
-const paymentMethods = [
-  {
-    id: 'credit-card',
-    name: 'Cartão de Crédito',
-    icon: '/images/credit-card-icon.png'
-  },
-  {
-    id: 'pix',
-    name: 'PIX',
-    icon: '/images/pix-icon.png'
-  },
-  {
-    id: 'boleto',
-    name: 'Boleto Bancário',
-    icon: '/images/boleto-icon.png'
-  }
-]
-
-// Nome do método de pagamento
-const getPaymentMethodName = () => {
-  const method = paymentMethods.find(m => m.id === payment.method)
-  return method ? method.name : ''
-}
-
-// ID do pedido gerado aleatoriamente
-const orderId = ref(Math.floor(100000 + Math.random() * 900000))
+  { immediate: true }
+);
 
 // Navegação entre passos
 const nextStep = async () => {
   if (currentStep.value < steps.length - 1) {
     await auth.fetchUser()
     currentStep.value++
-    // Atualiza custo do frete ao ir para pagamento
+
     if (currentStep.value === 2) {
-      serviceAddress.update(defaultAddress.value.id, shipping)
       calculateTotals()
+
+      const order = await createOrder()
+      console.log('Ordem criada:', order)
     }
   }
 }
@@ -598,15 +393,33 @@ const prevStep = () => {
   }
 }
 
-// Acompanhar pedido (placeholder)
-const trackOrder = () => {
-  alert(`Acompanhamento do pedido #${orderId.value} ainda não disponível.`)
-}
+const createOrder = async () => {
+  try {
+    const orderData = {
+      customer_name: auth.user.name,
+      customer_email: auth.user.email,
+      customer_phone: auth.user.phone,
+      discount: 0,
+      shipping: shipping.value.method,    
+      items: cartStore.items.map(item => ({
+        product_id: item.id,
+        quantity: item.quantity,
+        price_unit: item.price
+      })),
+      shipping_address: shipping.value.address
+    }
 
+    const response = await cartStore.checkout(orderData)
+    return response.data.order
+  } catch (err) {
+    console.error('Erro ao criar pedido', err)
+  }
+}
 // Inicializa totais
 calculateTotals()
 
 onMounted(async () => {
   await cartStore.fetchItems()
+  await shippingMethodsStore.fetchShippingMethods()
 })   
 </script>

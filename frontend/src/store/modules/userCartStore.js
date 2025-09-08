@@ -122,7 +122,7 @@ export const useCartStore = defineStore('cart', () => {
     try {
       const response = await api.delete(`/api/cart/items/${itemId}`)
       const cartData = response.data
-      console.log(cartData)
+    
       items.value = cartData.items
     } catch (err) {
       throw err
@@ -190,20 +190,9 @@ export const useCartStore = defineStore('cart', () => {
 
   async function checkout(checkoutData) {
     try {
-      setLoading(true)
+      setLoading(true)   
 
-      const payload = {
-        items: items.value.map((item) => ({
-          product_id: item.id,
-          quantity: item.quantity,
-          price: item.sale_price || item.price,
-        })),
-        shipping_address: checkoutData.shippingAddress,
-        billing_address: checkoutData.billingAddress,
-        payment_method: checkoutData.paymentMethod,
-      }
-
-      const response = await api.post('api/checkout', payload)
+      const response = await api.post('api/orders', checkoutData)
 
       clearCart()
       updateCartSummary()

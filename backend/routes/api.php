@@ -15,6 +15,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductImageController;
 use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\ShippingMethodController;
 use App\Http\Controllers\SlotController;
 use App\Http\Controllers\StockMovementController;
 use App\Http\Controllers\SupplierController;
@@ -96,6 +97,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //checkout
     Route::post('/checkout', [CheckoutController::class, 'checkout']);
+
+    //shipping methods
+    Route::apiResource('shipping-methods', ShippingMethodController::class);
 });
 
 //category
