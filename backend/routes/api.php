@@ -11,6 +11,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductImageController;
@@ -103,6 +104,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //oders
     Route::apiResource('orders', OrderController::class);
+
+    //notifications
+    Route::apiResource('/notifications', NotificationController::class);
 });
 
 //category

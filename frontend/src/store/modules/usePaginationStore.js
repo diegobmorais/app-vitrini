@@ -1,8 +1,6 @@
 import { ref, computed } from 'vue'
 
-export function usePaginationStore(getList, searchKey = 'name') {
-  console.log('getList:', getList)
-  console.log('Result of getList():', getList()) 
+export function usePaginationStore(getList, searchKey = 'name') { 
   const search = ref('')
   const page = ref(1)
   const perPage = 10

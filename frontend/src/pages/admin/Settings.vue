@@ -176,59 +176,7 @@
 
         <!-- Notificações -->
         <div v-if="activeTab === 'notifications'" class="space-y-6">
-          <div class="mb-4">
-            <h2 class="text-lg font-medium">Configurações de Notificações</h2>
-            <p class="text-sm text-gray-500">Configure as mensagens de notificação do sistema</p>
-          </div>
-
-          <form @submit.prevent="saveNotificationSettings" class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Mensagem de Boas-vindas</label>
-              <textarea v-model="notificationSettings.welcome" rows="3"
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"></textarea>
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Mensagem de Confirmação de Pedido</label>
-              <textarea v-model="notificationSettings.orderConfirmation" rows="3"
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"></textarea>
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Mensagem de Envio de Pedido</label>
-              <textarea v-model="notificationSettings.orderShipped" rows="3"
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"></textarea>
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Mensagem de Produto Fora de Estoque</label>
-              <textarea v-model="notificationSettings.outOfStock" rows="3"
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"></textarea>
-            </div>
-
-            <div class="flex items-center">
-              <input id="enableEmailNotifications" v-model="notificationSettings.enableEmail" type="checkbox"
-                class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded" />
-              <label for="enableEmailNotifications" class="ml-2 block text-sm text-gray-900">
-                Habilitar notificações por e-mail
-              </label>
-            </div>
-
-            <div class="flex items-center">
-              <input id="enableSmsNotifications" v-model="notificationSettings.enableSms" type="checkbox"
-                class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded" />
-              <label for="enableSmsNotifications" class="ml-2 block text-sm text-gray-900">
-                Habilitar notificações por SMS
-              </label>
-            </div>
-
-            <div>
-              <button type="submit"
-                class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
-                Salvar Configurações
-              </button>
-            </div>
-          </form>
+          <NotificationsContainer />
         </div>
       </div>
     </div>
@@ -256,15 +204,17 @@ import { useBrandStore } from '@/store/modules/useBrandStore'
 import { useCategoryStore } from '@/store/modules/useCategoryStore'
 import { useTagStore } from '@/store/modules/useTagStore'
 import { useToast } from 'vue-toastification'
-import { ref, reactive, onMounted, watch } from 'vue'
 import { useNotificationStore } from '@/store/modules/useNotificationStore'
+import { usePaginationStore } from '@/store/modules/usePaginationStore'
+import { ref, reactive, onMounted, watch } from 'vue'
+
+// Componentes
+import NotificationsContainer from '@/components/settings/NotificationSettings.vue'
 import SettingCategoryModal from '@/components/modals/settings-modals/SettingCategoryModal.vue'
 import SettingBrandModal from '@/components/modals/settings-modals/SettingBrandModal.vue'
 import SettingTagsModal from '@/components/modals/settings-modals/SettingTagsModal.vue'
 import ConfirmDeleteModal from '@/components/ui/ConfirmDeleteModal.vue'
-import { usePaginationStore } from '@/store/modules/usePaginationStore'
 import Pagination from '@/components/ui/Pagination.vue'
-
 
 const toast = useToast()
 const categoryStore = useCategoryStore()
@@ -311,7 +261,6 @@ const modalOpen = ref(null)
 const categories = ref([])
 const brands = ref([])
 const tags = ref([])
-const notificationSettings = ref({})
 const showConfirmModal = ref(false)
 const deleteTarget = ref({ type: null, id: null, name: null })
 
@@ -334,11 +283,6 @@ const editingTag = reactive({
   id: null,
   name: ''
 })
-
-const fetchNotifications = async () => {
-  notificationSettings.value = await notificationStore.addNotification()
-}
-
 
 function openModal(type, data = null) {
   if (type === 'category') {
@@ -552,15 +496,10 @@ const getDeleteItemType = () => {
   return types[deleteTarget.value.type] || 'este item'
 }
 
-const saveNotificationSettings = () => {
-  toast.success('Configurações salvas com sucesso!')
-}
-
 onMounted(async () => {
   await categoryStore.fetchCategories(1, 10, '')
   await brandStore.fetchBrands(1, 10, '')
   await tagStore.fetchTags()
-  await fetchNotifications()
 })
 
 </script>

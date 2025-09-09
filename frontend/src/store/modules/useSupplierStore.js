@@ -87,8 +87,7 @@ export const useSupplierStore = defineStore('suppliers', () => {
 
   async function createSupplier(payload) {
     try {
-      const response = await api.post("api/suppliers", payload)
-      console.log('response', response, 'payload', payload);
+      const response = await api.post("api/suppliers", payload)  
       
       return response.data
     } catch (error) {

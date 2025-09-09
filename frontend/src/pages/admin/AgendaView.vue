@@ -97,9 +97,7 @@ const loadSlots = async () => {
     slotsData.value = slots
 }
 
-const unblockSelectedSlot = async (slot) => {
-    console.log('slot', slot);
-    
+const unblockSelectedSlot = async (slot) => {    
     try {
         await serviceAvailabilityStore.unblockSlot(slot.slot_id)
         toast.success("Horário liberado!")

@@ -1,114 +1,59 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import api from '@/main'
 
 export const useNotificationStore = defineStore('notifications', () => {
   // State
-  const notifications = ref([])
-  const nextId = ref(1)
+  const loading = ref(false)
+  const templates = ref([])
 
-  // Getters
-  const allNotifications = computed(() => notifications.value)
-  const unreadCount = computed(() => notifications.value.filter(n => !n.read).length)
 
   // Actions
-  function addNotification(notification) {
-    const defaults = {
-      type: 'info',
-      read: false,
-      timeout: 5000,
-      dismissible: true,
-    }
+  async function fetchTemplates() {
+    loading.value = true
+    try {
+      const response = await api.get('/api/notifications')
 
-    const newNotification = {
-      ...defaults,
-      ...notification,
-      id: nextId.value++,
-      timestamp: new Date(),
-    }
-
-    notifications.value.unshift(newNotification)
-
-    if (newNotification.timeout > 0) {
-      setTimeout(() => {
-        removeNotification(newNotification.id)
-      }, newNotification.timeout)
-    }
-
-    return newNotification.id
-  }
-
-  function removeNotification(id) {
-    const index = notifications.value.findIndex(n => n.id === id)
-    if (index !== -1) {
-      notifications.value.splice(index, 1)
+      if (!response.status || response.status !== 200) {
+        throw new Error('Failed to fetch notification templates')
+      }
+      templates.value = await response.data
+    } catch (error) {
+      console.error('Error fetching notification templates:', error)
+    } finally {
+      loading.value = false
     }
   }
 
-  function markAsRead(id) {
-    const notification = notifications.value.find(n => n.id === id)
-    if (notification) {
-      notification.read = true
+  async function saveTemplate() {
+    loading.value = true
+    try {
+      const response = await api.post('/api/notifications', { template: templates.value })
+      if (!response.status || response.status !== 200) {
+        throw new Error('Failed to save notification template')
+      }
+    } catch (error) {
+      console.error('Error saving notification template:', error)
+    } finally {
+      loading.value = false
     }
   }
 
-  function markAllAsRead() {
-    notifications.value.forEach(n => (n.read = true))
-  }
-
-  function clearAll() {
-    notifications.value = []
-  }
-
-  // Conveniência para tipos específicos
-  function success(message) {
-    return addNotification({
-      type: 'success',
-      message,
-      icon: 'check-circle',
-    })
-  }
-
-  function error(message) {
-    return addNotification({
-      type: 'error',
-      message,
-      icon: 'alert-circle',
-      timeout: 0, 
-    })
-  }
-
-  function warning(message) {
-    return addNotification({
-      type: 'warning',
-      message,
-      icon: 'alert-triangle',
-    })
-  }
-
-  function info(message) {
-    return addNotification({
-      type: 'info',
-      message,
-      icon: 'info',
-    })
+  async function updateTemplate(id, updatedTemplate) {
+    const { data } = await api.patch(`/api/notifications/${id}`, updatedTemplate);
+    const index = this.templates.findIndex((t) => t.id === id);
+    if (index !== -1) this.templates[index] = data.template;
   }
 
   return {
-    notifications,
-    nextId,
+    //state
+    loading,
+    templates,
 
-    allNotifications,
-    unreadCount,
-
-    addNotification,
-    removeNotification,
-    markAsRead,
-    markAllAsRead,
-    clearAll,
-
-    success,
-    error,
-    warning,
-    info,
+    //actions
+    fetchTemplates,
+    saveTemplate,
+    updateTemplate
   }
+
 })

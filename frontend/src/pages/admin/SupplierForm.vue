@@ -172,9 +172,7 @@ async function saveSupplier() {
 
   const payload = {
     ...form.value,
-  }
-  console.log('payload antes do envio', payload);
-  
+  }  
   try {
     if (isEditing.value) {
       await supplierStore.updateSupplier({
@@ -182,9 +180,7 @@ async function saveSupplier() {
         data: payload
       })
       toast.success(`Fornecedor "${form.value.company_name}" atualizado com sucesso!`)
-    } else {
-      console.log('payload form', payload);
-      
+    } else {          
       await supplierStore.createSupplier(payload)
       toast.success(`Fornecedor "${form.value.company_name}" criado com sucesso!`)
     }

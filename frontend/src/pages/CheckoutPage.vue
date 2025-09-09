@@ -381,8 +381,7 @@ const nextStep = async () => {
     if (currentStep.value === 2) {
       calculateTotals()
 
-      const order = await createOrder()
-      console.log('Ordem criada:', order)
+      const order = await createOrder()  
     }
   }
 }

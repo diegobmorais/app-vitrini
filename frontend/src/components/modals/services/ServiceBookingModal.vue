@@ -183,9 +183,8 @@ const selectTime = (time) => {
 }
 
 const submitBooking = async () => {
-
     isSubmitting.value = true
-    console.log('aqui 2');
+
     try {
         const payload = {
             service_id: props.selectedService.id,
@@ -194,8 +193,7 @@ const submitBooking = async () => {
             pet_name: form.value.pet_name,
             transport_option: form.value.transport_option,
             notes: form.value.notes
-        }
-        console.log('payload', payload);
+        } 
         await appointmentStore.createAppointment(payload)
         emit('scheduled')
         emit('close')
