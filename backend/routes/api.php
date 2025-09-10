@@ -104,6 +104,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //oders
     Route::apiResource('orders', OrderController::class);
+    Route::get('orders/user/{id}', [OrderController::class, 'userOrders']);
 
     //notifications
     Route::apiResource('/notifications', NotificationController::class);

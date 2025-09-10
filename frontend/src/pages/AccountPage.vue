@@ -183,7 +183,7 @@
             <div v-if="activeTab === 'orders'" class="space-y-6">
               <h3 class="text-xl font-semibold text-gray-900 mb-4">Meus Pedidos</h3>
 
-              <div v-if="orders.length === 0" class="text-center py-8">
+              <div v-if="orderStore.ordersUser.length === 0" class="text-center py-8">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-400 mx-auto mb-4" fill="none"
                   viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -197,12 +197,12 @@
               </div>
 
               <div v-else class="space-y-4">
-                <div v-for="(order, index) in orders" :key="index"
+                <div v-for="(order, index) in orderStore.ordersUser" :key="index"
                   class="border border-gray-200 rounded-lg overflow-hidden">
                   <div class="bg-gray-50 p-4 flex justify-between items-center">
                     <div>
                       <p class="font-medium text-gray-900">Pedido #{{ order.id }}</p>
-                      <p class="text-sm text-gray-500">{{ formatDate(order.date) }}</p>
+                      <p class="text-sm text-gray-500">{{ formatDate(order.created_at) }}</p>
                     </div>
                     <div>
                       <span :class="[
@@ -218,14 +218,14 @@
                       <div v-for="(item, itemIndex) in order.items" :key="itemIndex" class="flex justify-between">
                         <div class="flex">
                           <span class="text-gray-600">{{ item.quantity }}x</span>
-                          <span class="ml-2 text-gray-900">{{ item.name }}</span>
+                          <span class="ml-2 text-gray-900">{{ item.product.name }}</span>
                         </div>
-                        <span class="text-gray-900">{{ formatCurrency(item.price * item.quantity) }}</span>
+                        <span class="text-gray-900">{{ formatCurrency(item.price_unit) }}</span>
+                        <div class="mt-4 pt-4 border-t border-gray-200 flex justify-between">
+                          <span class="font-medium text-gray-900">Total: </span>
+                          <span class="font-medium text-gray-900">{{ formatCurrency(item.total) }}</span>
+                        </div>
                       </div>
-                    </div>
-                    <div class="mt-4 pt-4 border-t border-gray-200 flex justify-between">
-                      <span class="font-medium text-gray-900">Total</span>
-                      <span class="font-medium text-gray-900">{{ formatCurrency(order.total) }}</span>
                     </div>
                   </div>
                   <div class="bg-gray-50 p-4 flex justify-end">
@@ -308,7 +308,7 @@
                     <div>
                       <p class="font-medium text-gray-900">{{ notification.title }}</p>
                       <p class="text-gray-600 mt-1">{{ notification.message }}</p>
-                      <p class="text-xs text-gray-500 mt-2">{{ formatDate(notification.date) }}</p>
+                      <p class="text-xs text-gray-500 mt-2">{{ notification.date }}</p>
                     </div>
                     <div>
                       <button v-if="!notification.read" @click="markAsRead(index)"
@@ -334,9 +334,10 @@ import axios from 'axios'
 import addressService from '@/services/addressService.js'
 import AddressForm from '@/components/address/AddressForm.vue'
 import { useAuthStore } from '@/store/modules/useAuthStore'
-
+import { useOrderStore } from '@/store/modules/useOrderStore'
 
 const authStore = useAuthStore()
+const orderStore = useOrderStore()
 
 // Refs locais
 const user = computed(() => authStore.user)
@@ -417,20 +418,6 @@ async function saveAddress(address) {
   await loadAddresses()
   showAddressForm.value = false
 }
-
-// Dados simulados para pedidos, favoritos e notificações (podem migrar para store ou API)
-const orders = ref([
-  {
-    id: '10001',
-    date: '2023-05-15T14:30:00',
-    status: 'delivered',
-    items: [
-      { name: 'Ração Premium para Cães', quantity: 2, price: 89.90 },
-      { name: 'Brinquedo Interativo', quantity: 1, price: 45.50 }
-    ],
-    total: 225.30
-  }
-])
 
 const favorites = ref([
   {
@@ -522,23 +509,25 @@ function markAsRead(index) {
   notifications.value[index].read = true
 }
 
-function formatDate(dateString) {
-  const date = new Date(dateString)
-  return new Intl.DateTimeFormat('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  }).format(date)
-}
-
 function formatCurrency(value) {
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL'
   }).format(value)
 }
+
+function formatDate(dateString) {
+  if (!dateString) return '';
+
+  const date = new Date(dateString);
+
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+
+  return `${day}/${month}/${year}`;
+}
+
 
 function getStatusText(status) {
   const statusMap = {
@@ -563,10 +552,12 @@ function getStatusClass(status) {
 }
 
 onMounted(async () => {
-  try {    
+  try {
     await loadAddresses()
   } catch (error) {
     console.error('Erro ao buscar usuário:', error)
   }
+
+  orderStore.userOrders(user.value.id)
 })
 </script>

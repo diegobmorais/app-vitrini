@@ -113,4 +113,9 @@ class Product extends Model
             return $totalIn - $totalOut;
         }
     }
+    
+    public function orderItems()
+    {
+        return $this->hasMany(OrderItem::class);
+    }
 }

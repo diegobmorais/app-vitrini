@@ -5,6 +5,7 @@ import api from '@/main'
 export const useOrderStore = defineStore('orders', () => {
   // State
   const orders = ref([])
+  const ordersUser = ref([])
   const loading = ref(false)
   const error = ref(null)
   const search = ref('')
@@ -12,9 +13,8 @@ export const useOrderStore = defineStore('orders', () => {
   const dateFilter = ref('all')
 
   // Getters
-  const allOrders = computed(() => orders.value)
+  const allOrders = computed(() => orders.value) 
 
-  const orderById = (id) => orders.value.find(order => order.id === id)
   const pendingOrders = computed(() =>
     orders.value.filter(order => ['pending', 'processing'].includes(order.status))
   )
@@ -95,6 +95,22 @@ export const useOrderStore = defineStore('orders', () => {
     } finally {
       loading.value = false
     }
+  } 
+
+  async function userOrders(id) {
+    try {
+      loading.value = true
+
+      const response = await api.get(`api/orders/user/${id}`)
+
+      ordersUser.value = response.data.orders
+      return response.data.order
+    } catch (err) {
+      error.value = err.message
+      return null
+    } finally {
+      loading.value = false
+    }
   }
 
   async function updateOrderStatus({ orderId, status }) {
@@ -122,9 +138,9 @@ export const useOrderStore = defineStore('orders', () => {
     search,
     statusFilter,
     dateFilter,
+    ordersUser,
 
-    allOrders,
-    orderById,
+    allOrders,   
     pendingOrders,
     completedOrders,
     totalRevenue,
@@ -136,5 +152,6 @@ export const useOrderStore = defineStore('orders', () => {
 
     fetchOrders,
     updateOrderStatus,
+    userOrders,
   }
 })

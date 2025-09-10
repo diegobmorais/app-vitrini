@@ -20,7 +20,7 @@ class OrderController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return response()->json(['orders' => $orders]); 
+        return response()->json(['orders' => $orders]);
     }
 
     /**
@@ -56,7 +56,7 @@ class OrderController extends Controller
             $shippingValue = $shippingMethod->price;
 
             $address = Address::findOrFail($data['shipping_address']);
-           
+
             $tax = 0;
 
             $total = $subtotal - ($data['discount'] ?? 0) + $shippingValue + $tax;
@@ -111,9 +111,13 @@ class OrderController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Order $order)
+    public function show($id)
     {
-        //
+        $order = Order::with(['items', 'shippingAddress'])->findOrFail($id);
+
+        return response()->json([
+            'order' => $order
+        ]);
     }
 
     /**
@@ -130,5 +134,23 @@ class OrderController extends Controller
     public function destroy(Order $order)
     {
         //
+    }
+    public function userOrders(Request $request)
+    {
+        $user = $request->user();
+
+        $orders = $user->orders()
+            ->with(['items.product'] )
+            ->orderBy('created_at', 'desc')
+            ->get();
+    
+        $orders->transform(function ($order) {
+            $order->total = (float) $order->total;
+            return $order;
+        });
+
+        return response()->json([
+            'orders' => $orders
+        ]);
     }
 }
