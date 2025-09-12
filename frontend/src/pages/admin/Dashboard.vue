@@ -5,11 +5,12 @@
       <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center justify-between">
           <h3 class="text-gray-500 text-sm font-medium">Total de Vendas</h3>
-          <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">+{{ salesGrowth
+          <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">+{{
+            dashboardStore.salesGrowth
             }}%</span>
         </div>
         <div class="flex items-baseline mt-4">
-          <span class="text-3xl font-bold">R$ {{ formatNumber(totalSales) }}</span>
+          <span class="text-3xl font-bold">R$ {{ formatNumber(dashboardStore.totalSales) }}</span>
           <span class="ml-2 text-sm text-gray-500">este mês</span>
         </div>
         <div class="mt-4">
@@ -23,11 +24,12 @@
       <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center justify-between">
           <h3 class="text-gray-500 text-sm font-medium">Pedidos</h3>
-          <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">+{{ ordersGrowth
+          <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">+{{
+            dashboardStore.ordersGrowth
             }}%</span>
         </div>
         <div class="flex items-baseline mt-4">
-          <span class="text-3xl font-bold">{{ totalOrders }}</span>
+          <span class="text-3xl font-bold">{{ dashboardStore.totalOrders }}</span>
           <span class="ml-2 text-sm text-gray-500">este mês</span>
         </div>
         <div class="mt-4">
@@ -41,11 +43,12 @@
       <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center justify-between">
           <h3 class="text-gray-500 text-sm font-medium">Clientes</h3>
-          <span class="bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded-full">+{{ customersGrowth
+          <span class="bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded-full">+{{
+            dashboardStore.customersGrowth
             }}%</span>
         </div>
         <div class="flex items-baseline mt-4">
-          <span class="text-3xl font-bold">{{ totalCustomers }}</span>
+          <span class="text-3xl font-bold">{{ dashboardStore.totalCustomers }}</span>
           <span class="ml-2 text-sm text-gray-500">total</span>
         </div>
         <div class="mt-4">
@@ -59,11 +62,12 @@
       <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center justify-between">
           <h3 class="text-gray-500 text-sm font-medium">Produtos</h3>
-          <span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">{{ lowStockCount }}
+          <span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">{{
+            dashboardStore.lowStockCount }}
             com baixo estoque</span>
         </div>
         <div class="flex items-baseline mt-4">
-          <span class="text-3xl font-bold">{{ totalProducts }}</span>
+          <span class="text-3xl font-bold">{{ dashboardStore.totalProducts }}</span>
           <span class="ml-2 text-sm text-gray-500">total</span>
         </div>
         <div class="mt-4">
@@ -88,9 +92,13 @@
           </div>
         </div>
         <div class="h-64">
-          <!-- Aqui entraria o componente de gráfico -->
+          <!-- Agráfico -->
           <div class="h-full flex items-center justify-center text-gray-400">
-            Gráfico de vendas por período
+            <apexchart        
+            type="line"
+            height="100%"
+            :options="dashboardStore.chartOptions"
+            :series="dashboardStore.series" />
           </div>
         </div>
       </div>
@@ -102,7 +110,7 @@
           <div v-for="(product, index) in topProducts" :key="product.id" class="flex items-center">
             <span
               class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-800">{{
-              index + 1 }}</span>
+                index + 1 }}</span>
             <img :src="product.image" :alt="product.name" class="w-10 h-10 rounded object-cover mx-3">
             <div class="flex-1">
               <h4 class="text-sm font-medium">{{ product.name }}</h4>
@@ -115,7 +123,8 @@
           </div>
         </div>
         <div class="mt-4 pt-4 border-t">
-          <router-link to="/admin/products" class="text-sm font-medium text-blue-600 hover:text-blue-800">
+          <router-link to="/painel-administrador/produtos"
+            class="text-sm font-medium text-blue-600 hover:text-blue-800">
             Ver todos os produtos →
           </router-link>
         </div>
@@ -152,18 +161,18 @@
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="order in recentOrders" :key="order.id">
+            <tr v-for="order in ordersStore.orders" :key="order.id">
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-gray-900">#{{ order.id }}</div>
+                <div class="text-sm font-medium text-gray-900">{{ order.order_number }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center">
                   <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600">
-                    {{ order.customer.name.charAt(0) }}
+                    {{ order.user.name.charAt(0) }}
                   </div>
                   <div class="ml-3">
-                    <div class="text-sm font-medium text-gray-900">{{ order.customer.name }}</div>
-                    <div class="text-sm text-gray-500">{{ order.customer.email }}</div>
+                    <div class="text-sm font-medium text-gray-900">{{ order.user.name }}</div>
+                    <div class="text-sm text-gray-500">{{ order.user.email }}</div>
                   </div>
                 </div>
               </td>
@@ -187,19 +196,19 @@
                 <router-link :to="`/admin/orders/${order.id}`" class="text-blue-600 hover:text-blue-900 mr-3">
                   Ver
                 </router-link>
-                <button class="text-gray-600 hover:text-gray-900">
+                <!-- <button class="text-gray-600 hover:text-gray-900">
                   <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                   </svg>
-                </button>
+                </button> -->
               </td>
             </tr>
           </tbody>
         </table>
       </div>
       <div class="px-6 py-4 border-t">
-        <router-link to="/admin/orders" class="text-sm font-medium text-blue-600 hover:text-blue-800">
+        <router-link to="/painel-administrador/pedidos" class="text-sm font-medium text-blue-600 hover:text-blue-800">
           Ver todos os pedidos →
         </router-link>
       </div>
@@ -208,21 +217,18 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { useOrderStore } from '@/store/modules/useOrderStore'
+import { useDashboardStore } from '@/store/modules/useDashboardStore'
+import { ref, onMounted } from 'vue'
+
+const ordersStore = useOrderStore()
+const dashboardStore = useDashboardStore()
 
 const selectedPeriod = ref('30D')
-const totalSales = ref(15750.85)
-const salesGrowth = ref(12.5)
-const salesProgress = ref(75)
-const totalOrders = ref(124)
-const ordersGrowth = ref(8.3)
-const ordersProgress = ref(65)
-const totalCustomers = ref(1458)
-const customersGrowth = ref(5.2)
-const customersProgress = ref(80)
-const totalProducts = ref(342)
-const lowStockCount = ref(15)
-const productsProgress = ref(90)
+const salesProgress = ref(100)
+const ordersProgress = ref(100)
+const customersProgress = ref(100)
+const productsProgress = ref(100)
 
 const topProducts = ref([
   { id: 1, name: 'Ração Premium para Cães', category: 'Alimentação', revenue: 3250.50, sales: 45, image: '/placeholder.svg?height=40&width=40' },
@@ -232,43 +238,6 @@ const topProducts = ref([
   { id: 5, name: 'Shampoo Hipoalergênico', category: 'Higiene', revenue: 1450.30, sales: 29, image: '/placeholder.svg?height=40&width=40' }
 ])
 
-const recentOrders = ref([
-  {
-    id: '10458',
-    customer: { name: 'João Silva', email: 'joao@example.com' },
-    date: new Date(2023, 5, 15),
-    total: 350.75,
-    status: 'completed'
-  },
-  {
-    id: '10457',
-    customer: { name: 'Maria Oliveira', email: 'maria@example.com' },
-    date: new Date(2023, 5, 14),
-    total: 125.50,
-    status: 'processing'
-  },
-  {
-    id: '10456',
-    customer: { name: 'Pedro Santos', email: 'pedro@example.com' },
-    date: new Date(2023, 5, 14),
-    total: 780.25,
-    status: 'shipped'
-  },
-  {
-    id: '10455',
-    customer: { name: 'Ana Costa', email: 'ana@example.com' },
-    date: new Date(2023, 5, 13),
-    total: 95.80,
-    status: 'completed'
-  },
-  {
-    id: '10454',
-    customer: { name: 'Carlos Ferreira', email: 'carlos@example.com' },
-    date: new Date(2023, 5, 12),
-    total: 210.45,
-    status: 'cancelled'
-  }
-])
 
 function formatNumber(value) {
   return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -293,11 +262,9 @@ function changePeriod(period) {
   // Aqui você faria uma chamada para atualizar os dados com base no período selecionado
 }
 
-// Se usar store para buscar dados reais, importar e despachar aqui:
-// import { useStore } from 'vuex'
-// import { onMounted } from 'vue'
-// const store = useStore()
-// onMounted(() => {
-//   store.dispatch('dashboard/fetchSummary')
-// })
+onMounted(() => {
+  ordersStore.fetchOrders()
+  dashboardStore.fetchStats()
+  dashboardStore.fetchSalesData()
+})
 </script>

@@ -222,4 +222,13 @@ class ProductController extends Controller
             'related_products' => $relatedProducts
         ]);
     }
+
+    public function getTopProducts()
+    {
+        $query = Product::with('images')
+            ->withCount('orders')
+            ->orderBy('orders_count', 'desc')
+            ->limit(10);        
+        return response()->json($query->get());
+    }
 }

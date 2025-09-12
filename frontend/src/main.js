@@ -7,6 +7,7 @@ import "./assets/css/tailwind.css"
 import { useAuthStore } from "./store/modules/useAuthStore"
 import Toast from 'vue-toastification'
 import 'vue-toastification/dist/index.css'
+import VueApexCharts from "vue3-apexcharts";
 
 // Ícones que você deseja usar
 import { faUser, faShoppingCart } from '@fortawesome/free-solid-svg-icons'
@@ -55,6 +56,7 @@ export default axios
 const app = createApp(App)
 const pinia = createPinia()
 app.component('font-awesome-icon', FontAwesomeIcon)
+app.use(VueApexCharts)
 app.use(Toast)
 app.use(pinia)
 app.use(router)

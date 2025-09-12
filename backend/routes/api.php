@@ -11,6 +11,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
@@ -29,6 +30,10 @@ Route::get('check-auth', [AuthController::class, 'checkAuth']);
 Route::post('register', [AuthController::class, 'register']);
 
 Route::middleware('auth:sanctum')->group(function () {
+    //dashboard
+    Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
+    Route::get('/dashboard/sales', [DashboardController::class, 'salesByPeriod']);
+
     //user
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::put('me/update', [UserController::class, 'updateProfile']);
