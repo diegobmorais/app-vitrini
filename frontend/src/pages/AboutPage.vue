@@ -84,52 +84,6 @@
             </div>
           </div>
         </section>
-        
-        <!-- Seção de equipe -->
-        <section class="mb-16">
-          <h2 class="text-3xl font-bold text-gray-900 mb-6">Nossa Equipe</h2>
-          <p class="text-gray-700 mb-8">
-            Contamos com profissionais apaixonados e dedicados, que trabalham diariamente para oferecer o melhor atendimento e os melhores produtos para você e seu pet.
-          </p>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <!-- Membro da equipe 1 -->
-            <div class="bg-white rounded-lg overflow-hidden shadow-md">
-              <img src="/placeholder.svg?height=300&width=300" alt="Membro da equipe" class="w-full h-64 object-cover" />
-              <div class="p-4">
-                <h3 class="text-lg font-semibold text-gray-900">Ana Silva</h3>
-                <p class="text-primary">CEO & Fundadora</p>
-              </div>
-            </div>
-            
-            <!-- Membro da equipe 2 -->
-            <div class="bg-white rounded-lg overflow-hidden shadow-md">
-              <img src="/placeholder.svg?height=300&width=300" alt="Membro da equipe" class="w-full h-64 object-cover" />
-              <div class="p-4">
-                <h3 class="text-lg font-semibold text-gray-900">Carlos Santos</h3>
-                <p class="text-primary">Diretor de Operações</p>
-              </div>
-            </div>
-            
-            <!-- Membro da equipe 3 -->
-            <div class="bg-white rounded-lg overflow-hidden shadow-md">
-              <img src="/placeholder.svg?height=300&width=300" alt="Membro da equipe" class="w-full h-64 object-cover" />
-              <div class="p-4">
-                <h3 class="text-lg font-semibold text-gray-900">Mariana Costa</h3>
-                <p class="text-primary">Veterinária Chefe</p>
-              </div>
-            </div>
-            
-            <!-- Membro da equipe 4 -->
-            <div class="bg-white rounded-lg overflow-hidden shadow-md">
-              <img src="/placeholder.svg?height=300&width=300" alt="Membro da equipe" class="w-full h-64 object-cover" />
-              <div class="p-4">
-                <h3 class="text-lg font-semibold text-gray-900">Pedro Oliveira</h3>
-                <p class="text-primary">Gerente de Marketing</p>
-              </div>
-            </div>
-          </div>
-        </section>
-        
         <!-- Seção de compromisso social -->
         <section>
           <h2 class="text-3xl font-bold text-gray-900 mb-6">Compromisso Social</h2>

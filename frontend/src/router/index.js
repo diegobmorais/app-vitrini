@@ -26,6 +26,7 @@ import { useAuthStore } from "@/store/modules/useAuthStore"
 import CustomerDetails from "../pages/admin/CustomerDetails.vue"
 import AgendaView from "../pages/admin/AgendaView.vue"
 import ServiceAppointments from "@/pages/admin/ServiceAppointments.vue"
+import AdminProfile from "@/pages/admin/AdminProfile.vue"
 
 const routes = [
   {
@@ -107,6 +108,12 @@ const routes = [
     component: AdminLayout,
     meta: { title: 'Painel Administador', requiresAuth: true },
     children: [
+      {
+        path: "/painel-administrador/perfil",
+        name: "admin-profile",
+        component: AdminProfile,
+        meta: { title: 'Perfil' }
+      },
       {
         path: "",
         name: "/dashboard",

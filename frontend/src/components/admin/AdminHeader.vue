@@ -38,10 +38,10 @@
 
           <!-- Dropdown menu -->
           <div v-show="profileMenuOpen" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-            <router-link to="/admin/profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+            <router-link to="/painel-administrador/perfil" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
               Meu Perfil
             </router-link>
-            <router-link to="/admin/settings" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+            <router-link to="/painel-administrador/configuracoes" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
               Configurações
             </router-link>
             <div class="border-t border-gray-100"></div>
