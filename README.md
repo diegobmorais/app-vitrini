@@ -26,5 +26,5 @@ Aplicação web de vitrine para petshop, construída com **Vue 3** no frontend e
 
 ```bash
 git clone do repositorio
-cd petshop-vitrine
+cd app-vitrini
 build da aplicação
